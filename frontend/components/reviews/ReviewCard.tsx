@@ -42,7 +42,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
   const [helpfulCount, setHelpfulCount] = useState(review.helpful);
   const [hasMarkedHelpful, setHasMarkedHelpful] = useState(false);
 
-  const isOwner = user?._id === review.user._id;
+  const isOwner = user?.id === review.user._id;
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -202,8 +202,8 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
           onClick={handleMarkHelpful}
           disabled={hasMarkedHelpful}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${hasMarkedHelpful
-              ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
             }`}
         >
           <ThumbsUp className={`w-4 h-4 ${hasMarkedHelpful ? 'fill-current' : ''}`} />
