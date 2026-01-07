@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSelector, useDispatch } from 'react-redux';
+import { useAppSelector, useAppDispatch } from '@/hooks/useRedux';
 import { RootState } from '@/store/store';
 import { logout } from '@/store/slices/authSlice';
 import { Clock, AlertTriangle, LogIn, X } from 'lucide-react';
@@ -16,8 +16,8 @@ const CHECK_INTERVAL = 10 * 1000; // Check every 10 seconds
 
 export default function SessionManager() {
   const router = useRouter();
-  const dispatch = useDispatch();
-  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const dispatch = useAppDispatch();
+  const { user, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
 
   const [showWarning, setShowWarning] = useState(false);
   const [showExpiredModal, setShowExpiredModal] = useState(false);
