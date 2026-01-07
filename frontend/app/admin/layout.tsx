@@ -160,7 +160,7 @@ function AdminLayoutContent({
       if (productsRes?.ok) {
         const data = await productsRes.json();
         if (data.success && data.data?.products) {
-          const currencySymbol = currency === 'PKR' ? 'Rs' : currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : '$';
+          const currencySymbol = currency === 'PKR' ? 'Rs' : '$';
           data.data.products.slice(0, 3).forEach((product: any) => {
             results.push({
               type: 'product',
@@ -176,7 +176,7 @@ function AdminLayoutContent({
       if (ordersRes?.ok) {
         const data = await ordersRes.json();
         if (data.success && data.data?.orders) {
-          const currencySymbol = currency === 'PKR' ? 'Rs' : currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : '$';
+          const currencySymbol = currency === 'PKR' ? 'Rs' : '$';
           data.data.orders.slice(0, 3).forEach((order: any) => {
             results.push({
               type: 'order',

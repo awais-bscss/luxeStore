@@ -12,18 +12,6 @@ export const CURRENCY_CONFIG = {
     name: 'Pakistani Rupee',
     position: 'before',
   },
-  EUR: {
-    symbol: '€',
-    code: 'EUR',
-    name: 'Euro',
-    position: 'before',
-  },
-  GBP: {
-    symbol: '£',
-    code: 'GBP',
-    name: 'British Pound',
-    position: 'before',
-  },
 } as const;
 
 export type CurrencyCode = keyof typeof CURRENCY_CONFIG;
