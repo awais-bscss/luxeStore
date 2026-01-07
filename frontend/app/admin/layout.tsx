@@ -176,12 +176,13 @@ function AdminLayoutContent({
       if (ordersRes?.ok) {
         const data = await ordersRes.json();
         if (data.success && data.data?.orders) {
+          const currencySymbol = currency === 'PKR' ? 'Rs' : currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : '$';
           data.data.orders.slice(0, 3).forEach((order: any) => {
             results.push({
               type: 'order',
               id: order._id,
               title: `Order #${order.orderNumber || order._id.slice(-6)}`,
-              subtitle: `${order.user?.name || 'Unknown'} - $${order.totalAmount}`,
+              subtitle: `${order.user?.name || 'Unknown'} - ${currencySymbol}${order.totalAmount}`,
               link: `/admin/orders`,
             });
           });
