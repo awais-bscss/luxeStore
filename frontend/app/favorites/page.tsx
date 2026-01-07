@@ -78,8 +78,8 @@ export default function FavoritesPage() {
               // Authenticated users - show products from API (FavoriteProduct)
               displayProducts?.map((product) => (
                 <ProductCard key={product._id} product={{
-                  id: parseInt(product._id) || 0, // Fallback for Props
-                  _id: product._id,
+                  id: parseInt(product._id || '0') || 0, // Fallback for Props
+                  _id: product._id || '',
                   name: product.name,
                   price: product.price,
                   image: product.thumbnail || '/placeholder-product.jpg',
@@ -101,7 +101,7 @@ export default function FavoritesPage() {
                 return (
                   <ProductCard key={prod._id || prod.id} product={{
                     ...prod,
-                    id: prod.id || parseInt(prod._id) || 0,
+                    id: prod.id || parseInt(prod._id || '0') || 0,
                     image: prod.image || prod.thumbnail || '/placeholder-product.jpg',
                   }} />
                 );
