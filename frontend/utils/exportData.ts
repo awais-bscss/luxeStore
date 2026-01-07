@@ -69,14 +69,14 @@ export const exportToExcel = (data: any[], options: ExportOptions) => {
   // Empty row for spacing
   headerRows.push([]);
 
-  // Convert data to worksheet format
-  const ws = XLSX.utils.json_to_sheet(data, {
+  // Convert data to worksheet format - Start with headers
+  const ws = XLSX.utils.aoa_to_sheet(headerRows);
+
+  // Add JSON data below headers
+  XLSX.utils.sheet_add_json(ws, data, {
     origin: headerRows.length,
     skipHeader: false
   });
-
-  // Add header rows
-  XLSX.utils.sheet_add_aoa(ws, headerRows, { origin: 'A1' });
 
   // Auto-size columns
   const colWidths: any[] = [];
@@ -135,14 +135,14 @@ export const exportMultipleSheets = (
 
     headerRows.push([]);
 
-    // Create worksheet
-    const ws = XLSX.utils.json_to_sheet(data, {
+    // Create worksheet - Start with headers
+    const ws = XLSX.utils.aoa_to_sheet(headerRows);
+
+    // Add JSON data below headers
+    XLSX.utils.sheet_add_json(ws, data, {
       origin: headerRows.length,
       skipHeader: false
     });
-
-    // Add headers
-    XLSX.utils.sheet_add_aoa(ws, headerRows, { origin: 'A1' });
 
     // Auto-size columns
     if (data.length > 0) {
