@@ -1,0 +1,547 @@
+@import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
+@theme {
+  /* Your custom theme configuration can go here */
+  /* For example:
+  --color-primary: #3b82f6;
+  --color-secondary: #8b5cf6;
+  */
+}
+
+/* Custom Scrollbar Styles */
+/* For Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 12px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+  border-radius: 10px;
+  border: 2px solid #f1f5f9;
+  transition: all 0.3s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #2563eb, #7c3aed);
+  border: 2px solid #e2e8f0;
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3b82f6 #f1f5f9;
+}
+
+/* Custom Cursor Styles - Shows alongside default cursor */
+
+/* Cursor Dot - Immediate follower */
+.cursor-dot {
+  position: fixed;
+  width: 11px;
+  height: 11px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s ease, height 0.2s ease, opacity 0.2s ease;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5),
+              0 0 20px rgba(139, 92, 246, 0.3);
+  opacity: 0.9;
+  border:1px solid #3b82f6;
+}
+
+.cursor-dot.clicking {
+  width: 6px;
+  height: 6px;
+  opacity: 0.7;
+}
+
+/* Cursor Ring - Smooth trailer WITHOUT blur */
+.cursor-ring {
+  position: fixed;
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(59, 130, 246, 0.5);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99998;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.3s ease,
+              border-width 0.3s ease;
+  background: transparent;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3),
+              0 0 30px rgba(139, 92, 246, 0.15);
+}
+
+/* Hovering state - expand and glow WITHOUT blur */
+.cursor-ring.hovering {
+  width: 30px;
+  height: 30px;
+  border-color: rgba(139, 92, 246, 0.7);
+  border-width: 2.5px;
+  background: transparent;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4),
+              0 0 40px rgba(59, 130, 246, 0.2);
+  animation: cursor-ring-pulse 1.5s ease-in-out infinite;
+}
+
+/* Clicking state - contract */
+.cursor-ring.clicking {
+  width: 20px;
+  height: 20px;
+  border-color: rgba(59, 130, 246, 0.9);
+  border-width: 2.5px;
+  background: transparent;
+}
+
+/* Pulse animation for hover state */
+@keyframes cursor-ring-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.4),
+                0 0 40px rgba(59, 130, 246, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(139, 92, 246, 0.5),
+                0 0 50px rgba(59, 130, 246, 0.25);
+  }
+}
+
+/* Hide custom cursor on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .cursor-dot,
+  .cursor-ring {
+    display: none;
+  }
+}
+
+/* Toast Notification System */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 100000;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 420px;
+  pointer-events: none;
+}
+
+.toast-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1),
+              0 0 0 1px rgba(0, 0, 0, 0.05);
+  pointer-events: auto;
+  overflow: hidden;
+  animation: toast-slide-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s ease;
+  min-width: 320px;
+}
+
+.toast-item:hover {
+  transform: translateX(-4px);
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.15),
+              0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+/* Toast Icon Wrapper */
+.toast-icon-wrapper {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  padding: 4px;
+}
+
+.toast-icon {
+  width: 100%;
+  height: 100%;
+  stroke-width: 2.5px;
+}
+
+/* Toast Content */
+.toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 2px;
+  color: #1f2937;
+}
+
+.toast-message {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+/* Close Button */
+.toast-close {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #9ca3af;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.toast-close:hover {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.toast-close svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Progress Bar */
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  transform-origin: left;
+  animation: toast-progress linear forwards;
+}
+
+/* Toast Type Styles */
+.toast-success .toast-icon-wrapper {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
+
+.toast-success .toast-progress {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.toast-success {
+  border-left: 4px solid #10b981;
+}
+
+.toast-error .toast-icon-wrapper {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+}
+
+.toast-error .toast-progress {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.toast-error {
+  border-left: 4px solid #ef4444;
+}
+
+.toast-warning .toast-icon-wrapper {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+}
+
+.toast-warning .toast-progress {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.toast-warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.toast-info .toast-icon-wrapper {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: white;
+}
+
+.toast-info .toast-progress {
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+}
+
+.toast-info {
+  border-left: 4px solid #3b82f6;
+}
+
+/* Animations */
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .toast-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+  
+  .toast-item {
+    min-width: auto;
+    padding: 14px 16px;
+  }
+  
+  .toast-title {
+    font-size: 13px;
+  }
+  
+  .toast-message {
+    font-size: 12px;
+  }
+}
+
+/* Modal Animations */
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-modal-in {
+  animation: modal-in 0.2s ease-out;
+}
+
+/* Leaflet Map Styles */
+.leaflet-container {
+  z-index: 1 !important;
+  position: relative;
+}
+
+/* REMOVE ALL PADDING/MARGIN FROM POPUP */
+.leaflet-popup-content-wrapper {
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  padding: 0 !important;
+  min-width: 190px !important;
+  max-width: 190px !important;
+}
+
+.leaflet-popup-tip {
+  background: white;
+}
+
+/* REMOVE WHITE TIP UNDER POPUP */
+.leaflet-popup-tip-container {
+  display: none !important;
+}
+
+/* CLOSE BUTTON ON TOP OF IMAGE */
+.custom-popup .leaflet-popup-close-button {
+  position: absolute !important;
+  top: 4px !important;
+  right: 4px !important;
+  z-index: 1000 !important;
+  background: white !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+  padding: 0 !important;
+  color: #374151 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+  transition: all 0.2s ease !important;
+}
+
+.custom-popup .leaflet-popup-close-button:hover {
+  background: #f3f4f6 !important;
+  transform: scale(1.1) !important;
+}
+
+/* FIX POPUP WIDTH */
+.custom-popup {
+  width: 190px !important;
+  max-width: 190px !important;
+}
+
+/* Hide Scrollbar Utility */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+/* WhatsApp Floating Button */
+.whatsapp-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+  color: white;
+  border-radius: 50%;
+  box-shadow: 0 3px 15px rgba(37, 211, 102, 0.3);
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: whatsapp-pulse 2s ease-in-out infinite;
+}
+
+.whatsapp-button:hover {
+  transform: translateY(-3px) scale(1.08);
+  box-shadow: 0 6px 25px rgba(37, 211, 102, 0.5);
+  background: linear-gradient(135deg, #128c7e 0%, #075e54 100%);
+}
+
+.whatsapp-button:active {
+  transform: translateY(-2px) scale(1.04);
+}
+
+.whatsapp-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Pulse Animation */
+@keyframes whatsapp-pulse {
+  0%, 100% {
+    box-shadow: 0 3px 15px rgba(37, 211, 102, 0.3);
+  }
+  50% {
+    box-shadow: 0 3px 20px rgba(37, 211, 102, 0.5);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .whatsapp-button {
+    bottom: 16px;
+    right: 16px;
+    width: 52px;
+    height: 52px;
+  }
+  
+  .whatsapp-icon {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+@media (max-width: 480px) {
+  .whatsapp-button {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .whatsapp-icon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* Compact View Styles */
+.compact .space-y-6 {
+  gap: 1rem;
+}
+
+.compact .space-y-4 {
+  gap: 0.75rem;
+}
+
+.compact .p-6 {
+  padding: 1rem;
+}
+
+.compact .p-4 {
+  padding: 0.75rem;
+}
+
+.compact .py-4 {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.compact .px-6 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.compact .gap-6 {
+  gap: 1rem;
+}
+
+.compact .gap-4 {
+  gap: 0.75rem;
+}
+
+.compact .text-2xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+.compact .text-lg {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+/* Shimmer Animation for Skeleton Loading */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
