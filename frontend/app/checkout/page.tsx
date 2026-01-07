@@ -317,8 +317,8 @@ export default function CheckoutPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-8">Checkout</h1>
 
-        {/* Email Verification Warning Banner - Only for customers */}
-        {user && !user.isEmailVerified && user.role === 'customer' && (
+        {/* Email Verification Warning Banner - Only for standard users */}
+        {user && !user.isEmailVerified && user.role === 'user' && (
           <div className="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-4 rounded-lg">
             <div className="flex items-start">
               <AlertTriangle className="h-5 w-5 text-yellow-400 mt-0.5 mr-3" />
