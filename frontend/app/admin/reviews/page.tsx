@@ -16,7 +16,8 @@ import {
   CheckCircle,
   XCircle,
   Search,
-  Filter
+  Filter,
+  ThumbsUp
 } from 'lucide-react';
 import { useToast } from '../../../hooks/useToast';
 import CustomDropdown from '../../../components/ui/CustomDropdown';
@@ -381,8 +382,9 @@ export default function AdminReviewsPage() {
                       <Calendar className="w-4 h-4" />
                       <span>{formatDate(review.createdAt)}</span>
                     </div>
-                    <div className="text-gray-500 font-medium">
-                      👍 {review.helpful}
+                    <div className="flex items-center gap-1.5 text-gray-500 font-medium">
+                      <ThumbsUp className="w-4 h-4" />
+                      <span>{review.helpful}</span>
                     </div>
                   </div>
 
