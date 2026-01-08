@@ -520,17 +520,19 @@ function AdminLayoutContent({
             {/* View Store Button */}
             <Link
               href="/"
-              className="hidden sm:flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap"
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap"
+              title="View Store"
             >
               <Store className="h-4 w-4" />
-              <span>View Store</span>
-              <ArrowUpRight className="h-4 w-4" />
+              <span className="hidden md:inline">View Store</span>
+              <ArrowUpRight className="h-4 w-4 hidden sm:inline" />
             </Link>
 
             {/* Profile Button */}
             <Link
               href="/admin/profile"
-              className="hidden sm:flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all group whitespace-nowrap"
+              className="flex items-center gap-2.5 px-2 sm:px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all group whitespace-nowrap"
+              title="Profile"
             >
               <div className="relative">
                 {user?.profileImage ? (
@@ -546,7 +548,7 @@ function AdminLayoutContent({
                 )}
                 <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
               </div>
-              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Profile</span>
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 hidden md:inline">Profile</span>
             </Link>
 
             {/* Notifications */}
