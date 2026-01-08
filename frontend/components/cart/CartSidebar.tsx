@@ -41,7 +41,12 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
     }
   }, [isOpen]);
 
-  const handleUpdateQuantity = async (productId: string, newQuantity: number) => {
+  const handleUpdateQuantity = async (productId: string, newQuantity: number, maxStock: number) => {
+    if (newQuantity > maxStock) {
+      // Don't allow quantity to exceed stock
+      return;
+    }
+
     if (newQuantity > 0) {
       await updateQuantity(productId, newQuantity);
     } else {
@@ -131,8 +136,12 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
                       <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-0.5">
                         {item.name}
                       </h3>
-                      <p className="text-blue-600 dark:text-blue-400 font-bold text-sm mb-2">
+                      <p className="text-blue-600 dark:text-blue-400 font-bold text-sm mb-1">
                         {formatPrice(item.price, currency, exchangeRate)}
+                      </p>
+                      {/* Stock Info */}
+                      <p className={`text-xs mb-2 ${item.stock < 10 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                        {item.stock > 0 ? `${item.stock} in stock` : 'Out of stock'}
                       </p>
 
                       {/* Quantity Controls */}
@@ -140,7 +149,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
                         <div className="flex items-center gap-1.5 bg-white dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600">
                           <button
                             onClick={() =>
-                              handleUpdateQuantity(item.productId, item.quantity - 1)
+                              handleUpdateQuantity(item.productId, item.quantity - 1, item.stock)
                             }
                             className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-l-lg transition-colors"
                           >
@@ -151,9 +160,10 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
                           </span>
                           <button
                             onClick={() =>
-                              handleUpdateQuantity(item.productId, item.quantity + 1)
+                              handleUpdateQuantity(item.productId, item.quantity + 1, item.stock)
                             }
-                            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-r-lg transition-colors"
+                            disabled={item.quantity >= item.stock}
+                            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-r-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                           >
                             <Plus className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />
                           </button>

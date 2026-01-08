@@ -9,6 +9,7 @@ export interface CartItem {
   price: number;
   quantity: number;
   thumbnail?: string;
+  stock: number; // Available stock for this product
 }
 
 interface CartState {
@@ -53,6 +54,7 @@ export const fetchCart = createAsyncThunk(
         price: item.price,
         quantity: item.quantity,
         thumbnail: item.product.thumbnail,
+        stock: item.product.stock || 0,
       }));
     } catch (error: any) {
       return rejectWithValue(error.message);
