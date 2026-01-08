@@ -515,176 +515,181 @@ function AdminLayoutContent({
             )}
           </div>
 
-          {/* View Store Button */}
-          <Link
-            href="/"
-            className="hidden sm:flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg transition-all shadow-sm hover:shadow-md -mr-10"
-          >
-            <Store className="h-4 w-4" />
-            <span>View Store</span>
-            <ArrowUpRight className="h-4 w-4" />
-          </Link>
-
-          {/* Profile Button */}
-          <Link
-            href="/admin/profile"
-            className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all -mr-12 group"
-          >
-            {user?.profileImage ? (
-              <img
-                src={user.profileImage}
-                alt={user.name || 'Admin'}
-                className="h-8 w-8 rounded-full object-cover ring-2 ring-purple-500 group-hover:ring-purple-600 transition-all"
-              />
-            ) : (
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white text-sm font-semibold ring-2 ring-purple-500 group-hover:ring-purple-600 transition-all">
-                {user?.name?.charAt(0).toUpperCase() || 'A'}
-              </div>
-            )}
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Profile</span>
-          </Link>
-
-          {/* Notifications */}
-          <div className="relative">
-            <button
-              onClick={() => setNotificationsOpen(!notificationsOpen)}
-              className="relative p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+          {/* Right side actions */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* View Store Button */}
+            <Link
+              href="/"
+              className="hidden sm:flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap"
             >
-              <Bell className="h-6 w-6" />
-              {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-red-500 flex items-center justify-center text-xs text-white font-semibold">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
+              <Store className="h-4 w-4" />
+              <span>View Store</span>
+              <ArrowUpRight className="h-4 w-4" />
+            </Link>
 
-            {/* Notifications Dropdown */}
-            {notificationsOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-30"
-                  onClick={() => setNotificationsOpen(false)}
-                />
-                <div className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-40 max-h-[600px] flex flex-col">
-                  {/* Header */}
-                  <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Notifications
-                      </h3>
-                      {unreadCount > 0 && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {unreadCount} unread
-                        </p>
+            {/* Profile Button */}
+            <Link
+              href="/admin/profile"
+              className="hidden sm:flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all group whitespace-nowrap"
+            >
+              <div className="relative">
+                {user?.profileImage ? (
+                  <img
+                    src={user.profileImage}
+                    alt={user.name || 'Admin'}
+                    className="h-8 w-8 rounded-full object-cover ring-2 ring-purple-500 group-hover:ring-purple-600 transition-all"
+                  />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white text-sm font-semibold ring-2 ring-purple-500 group-hover:ring-purple-600 transition-all">
+                    {user?.name?.charAt(0).toUpperCase() || 'A'}
+                  </div>
+                )}
+                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
+              </div>
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Profile</span>
+            </Link>
+
+            {/* Notifications */}
+            <div className="relative">
+              <button
+                onClick={() => setNotificationsOpen(!notificationsOpen)}
+                className="relative p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+              >
+                <Bell className="h-6 w-6" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 h-4 w-4 rounded-full bg-red-500 flex items-center justify-center text-[10px] text-white font-bold ring-2 border border-white dark:border-gray-800">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Notifications Dropdown */}
+              {notificationsOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setNotificationsOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-40 max-h-[600px] flex flex-col">
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                          Notifications
+                        </h3>
+                        {unreadCount > 0 && (
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {unreadCount} unread
+                          </p>
+                        )}
+                      </div>
+                      {notifications.length > 0 && (
+                        <div className="flex items-center space-x-2">
+                          {unreadCount > 0 && (
+                            <button
+                              onClick={markAllAsRead}
+                              className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium cursor-pointer"
+                            >
+                              Mark all read
+                            </button>
+                          )}
+                          <button
+                            onClick={clearAll}
+                            className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer"
+                          >
+                            Clear all
+                          </button>
+                        </div>
                       )}
                     </div>
-                    {notifications.length > 0 && (
-                      <div className="flex items-center space-x-2">
-                        {unreadCount > 0 && (
-                          <button
-                            onClick={markAllAsRead}
-                            className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium cursor-pointer"
-                          >
-                            Mark all read
-                          </button>
-                        )}
-                        <button
-                          onClick={clearAll}
-                          className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer"
-                        >
-                          Clear all
-                        </button>
-                      </div>
-                    )}
-                  </div>
 
-                  {/* Notifications List */}
-                  <div className="overflow-y-auto flex-1">
-                    {isLoadingNotifications ? (
-                      <div className="flex items-center justify-center py-12 ">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                      </div>
-                    ) : notifications.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-12 px-4 ">
-                        <Bell className="h-12 w-12 text-gray-300 dark:text-gray-600 mb-3 " />
-                        <p className="text-gray-500 dark:text-gray-400 text-center">
-                          No notifications yet
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {notifications.map((notification) => {
-                          const typeIcons: any = {
-                            order: { icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-100 dark:bg-blue-900/30' },
-                            product: { icon: Package, color: 'text-green-600', bg: 'bg-green-100 dark:bg-green-900/30' },
-                            review: { icon: MessageSquare, color: 'text-yellow-600', bg: 'bg-yellow-100 dark:bg-yellow-900/30' },
-                            customer: { icon: User, color: 'text-purple-600', bg: 'bg-purple-100 dark:bg-purple-900/30' },
-                            system: { icon: Settings, color: 'text-gray-600', bg: 'bg-gray-100 dark:bg-gray-900/30' },
-                            security: { icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-100 dark:bg-red-900/30' },
-                          };
+                    {/* Notifications List */}
+                    <div className="overflow-y-auto flex-1">
+                      {isLoadingNotifications ? (
+                        <div className="flex items-center justify-center py-12 ">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                        </div>
+                      ) : notifications.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-12 px-4 ">
+                          <Bell className="h-12 w-12 text-gray-300 dark:text-gray-600 mb-3 " />
+                          <p className="text-gray-500 dark:text-gray-400 text-center">
+                            No notifications yet
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                          {notifications.map((notification) => {
+                            const typeIcons: any = {
+                              order: { icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-100 dark:bg-blue-900/30' },
+                              product: { icon: Package, color: 'text-green-600', bg: 'bg-green-100 dark:bg-green-900/30' },
+                              review: { icon: MessageSquare, color: 'text-yellow-600', bg: 'bg-yellow-100 dark:bg-yellow-900/30' },
+                              customer: { icon: User, color: 'text-purple-600', bg: 'bg-purple-100 dark:bg-purple-900/30' },
+                              system: { icon: Settings, color: 'text-gray-600', bg: 'bg-gray-100 dark:bg-gray-900/30' },
+                              security: { icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-100 dark:bg-red-900/30' },
+                            };
 
-                          const typeConfig = typeIcons[notification.type] || typeIcons.system;
-                          const Icon = typeConfig.icon;
+                            const typeConfig = typeIcons[notification.type] || typeIcons.system;
+                            const Icon = typeConfig.icon;
 
-                          return (
-                            <div
-                              key={notification._id}
-                              onClick={() => {
-                                markAsRead(notification._id);
-                                if (notification.link) {
-                                  router.push(notification.link);
-                                  setNotificationsOpen(false);
-                                }
-                              }}
-                              className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors ${!notification.read
-                                ? 'bg-purple-50/50 dark:bg-purple-900/10'
-                                : ''
-                                }`}
-                            >
-                              <div className="flex items-start space-x-3">
-                                <div className={`p-2 rounded-lg ${typeConfig.bg} flex-shrink-0`}>
-                                  <Icon className={`h-5 w-5 ${typeConfig.color}`} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                        {notification.title}
-                                      </p>
-                                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                        {replaceCurrencySymbol(notification.message, currency)}
-                                      </p>
-                                    </div>
-                                    {!notification.read && (
-                                      <div className="ml-2 h-2 w-2 rounded-full bg-purple-600 flex-shrink-0"></div>
-                                    )}
+                            return (
+                              <div
+                                key={notification._id}
+                                onClick={() => {
+                                  markAsRead(notification._id);
+                                  if (notification.link) {
+                                    router.push(notification.link);
+                                    setNotificationsOpen(false);
+                                  }
+                                }}
+                                className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors ${!notification.read
+                                  ? 'bg-purple-50/50 dark:bg-purple-900/10'
+                                  : ''
+                                  }`}
+                              >
+                                <div className="flex items-start space-x-3">
+                                  <div className={`p-2 rounded-lg ${typeConfig.bg} flex-shrink-0`}>
+                                    <Icon className={`h-5 w-5 ${typeConfig.color}`} />
                                   </div>
-                                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-                                    {new Date(notification.createdAt).toLocaleString()}
-                                  </p>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex-1">
+                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                          {notification.title}
+                                        </p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                          {replaceCurrencySymbol(notification.message, currency)}
+                                        </p>
+                                      </div>
+                                      {!notification.read && (
+                                        <div className="ml-2 h-2 w-2 rounded-full bg-purple-600 flex-shrink-0"></div>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                                      {new Date(notification.createdAt).toLocaleString()}
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
 
-                  {/* Footer */}
-                  {
-                    notifications.length > 0 && (
-                      <div className="p-3 border-t border-gray-200 dark:border-gray-700">
-                        <button className="w-full text-center text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium py-2">
-                          View all notifications
-                        </button>
-                      </div>
-                    )
-                  }
-                </div >
-              </>
-            )}
-          </div >
+                    {/* Footer */}
+                    {
+                      notifications.length > 0 && (
+                        <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+                          <button className="w-full text-center text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium py-2">
+                            View all notifications
+                          </button>
+                        </div>
+                      )
+                    }
+                  </div >
+                </>
+              )}
+            </div >
         </header >
 
         {/* Page content */}
