@@ -64,13 +64,9 @@ router.get('/debug/applications', protect, authorize('superadmin'), debugApplica
 
 
 
-// Health check
-router.get('/health', (_, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'API is running',
-    timestamp: new Date().toISOString(),
-  });
-});
+import healthRoutes from './health.routes';
+
+// Health check with database diagnostics
+router.use('/health', healthRoutes);
 
 export default router;
