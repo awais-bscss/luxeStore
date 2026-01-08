@@ -114,7 +114,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     fetchProducts();
-  }, [pagination.page, selectedCategory, selectedStatus, debouncedSearch]);
+  }, [token, pagination.page, selectedCategory, selectedStatus, debouncedSearch]);
 
   const fetchProducts = async () => {
     try {

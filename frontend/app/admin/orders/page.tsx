@@ -30,6 +30,7 @@ export default function AdminOrdersPage() {
   const { settings } = useSettings();
   const toast = useToast();
 
+  const { user, token } = useSelector((state: RootState) => state.auth);
   const { orders, isLoading, pagination, statistics } = useSelector((state: RootState) => state.orders);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -48,7 +49,7 @@ export default function AdminOrdersPage() {
       page: currentPage,
       limit: itemsPerPage,
     }));
-  }, [dispatch, statusFilter, paymentFilter, currentPage, itemsPerPage]);
+  }, [dispatch, token, statusFilter, paymentFilter, currentPage, itemsPerPage]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

@@ -188,7 +188,7 @@ export default function AdminDashboard() {
     };
 
     fetchProductsWithGrowth();
-  }, [timeRange]);
+  }, [token, timeRange]);
 
   // Fetch customers and calculate growth
   useEffect(() => {
@@ -286,7 +286,7 @@ export default function AdminDashboard() {
     };
 
     fetchCustomersWithGrowth();
-  }, [timeRange]);
+  }, [token, timeRange]);
 
   // Fetch order statistics
   useEffect(() => {
@@ -362,7 +362,7 @@ export default function AdminDashboard() {
     };
 
     fetchRecentOrders();
-  }, []);
+  }, [token]);
 
   const getStatusColor = (status: string) => {
     switch (status) {

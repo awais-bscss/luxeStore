@@ -126,7 +126,7 @@ function AdminLayoutContent({
 
       return () => clearInterval(interval);
     }
-  }, [user]);
+  }, [user, token]);
 
   // Global search function
   const handleSearch = async (query: string) => {

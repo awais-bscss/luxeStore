@@ -87,7 +87,7 @@ export default function CustomersPage() {
     };
 
     fetchCustomers();
-  }, []);
+  }, [token]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
