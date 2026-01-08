@@ -6,7 +6,7 @@ let stripeInstance: Stripe | null = null;
 
 function getStripe(): Stripe {
   if (!stripeInstance) {
-    const secretKey = process.env.STRIPE_SECRET_KEY;
+    const secretKey = process.env.STRIPE_SECRET_KEY?.trim(); // Trim to remove hidden spaces/newlines
 
     if (!secretKey) {
       throw new ValidationError(
@@ -14,12 +14,7 @@ function getStripe(): Stripe {
       );
     }
 
-    stripeInstance = new Stripe(secretKey, {
-      // apiVersion: '...', // Removed invalid version to use account default
-      typescript: true,
-      maxNetworkRetries: 3,
-      timeout: 30000,
-    });
+    stripeInstance = new Stripe(secretKey); // Use account defaults and standard connection settings
   }
 
   return stripeInstance;
