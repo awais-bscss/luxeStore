@@ -21,7 +21,7 @@ router.get('/health', async (_req: Request, res: Response) => {
 
     // Try to ping the database
     let dbPingSuccess = false;
-    if (isConnected) {
+    if (isConnected && mongoose.connection.db) {
       try {
         await mongoose.connection.db.admin().ping();
         dbPingSuccess = true;
