@@ -142,6 +142,8 @@ class AuthController {
     res.cookie('token', 'none', {
       expires: new Date(Date.now() + 10 * 1000),
       httpOnly: true,
+      secure: config.env === 'production',
+      sameSite: config.env === 'production' ? 'none' : 'lax',
     });
 
     return ApiResponse.success(res, 200, null, 'Logout successful');
@@ -157,7 +159,7 @@ class AuthController {
       ),
       httpOnly: true,
       secure: config.env === 'production', // Use secure cookies in production
-      sameSite: 'lax' as const,
+      sameSite: config.env === 'production' ? 'none' as const : 'lax' as const,
     };
 
     res.cookie('token', token, options);
