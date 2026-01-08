@@ -297,7 +297,13 @@ export default function AdminJobsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Top Loading Bar */}
+      {isLoading && (
+        <div className="absolute top-0 left-0 right-0 h-1 z-50 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 animate-loading-bar w-full" />
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -375,8 +381,35 @@ export default function AdminJobsPage() {
 
       {/* Jobs List */}
       {isLoading ? (
-        <div className="flex justify-center items-center py-20">
-          <div className="inline-block w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+        <div className="space-y-4">
+          {[...Array(3)].map((_, index) => (
+            <div
+              key={index}
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 animate-pulse"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex-1 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded" />
+                    <div className="h-5 w-20 bg-gray-100 dark:bg-gray-800 rounded-full" />
+                    <div className="h-5 w-16 bg-gray-100 dark:bg-gray-800 rounded-full" />
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="h-4 w-24 bg-gray-100 dark:bg-gray-800 rounded" />
+                    <div className="h-4 w-24 bg-gray-100 dark:bg-gray-800 rounded" />
+                    <div className="h-4 w-24 bg-gray-100 dark:bg-gray-800 rounded" />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <div className="h-9 w-9 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                  <div className="h-9 w-9 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                  <div className="h-9 w-9 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                </div>
+              </div>
+              <div className="h-4 w-full bg-gray-50 dark:bg-gray-900/10 rounded mb-2" />
+              <div className="h-4 w-2/3 bg-gray-50 dark:bg-gray-900/10 rounded" />
+            </div>
+          ))}
         </div>
       ) : jobs.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">

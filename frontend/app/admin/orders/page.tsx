@@ -133,7 +133,13 @@ export default function AdminOrdersPage() {
   const deliveredOrders = statistics.deliveredOrders;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 relative">
+      {/* Top Loading Bar */}
+      {isLoading && (
+        <div className="absolute top-0 left-0 right-0 h-1 z-50 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 animate-loading-bar w-full" />
+        </div>
+      )}
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div>
@@ -255,8 +261,48 @@ export default function AdminOrdersPage() {
         {/* Orders Table */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           {isLoading ? (
-            <div className="flex justify-center items-center py-20">
-              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            // Skeleton Loader for Orders
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                  <tr>
+                    {Array.from({ length: 7 }).map((_, i) => (
+                      <th key={i} className="px-6 py-3 text-left animate-pulse">
+                        <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {Array.from({ length: 10 }).map((_, index) => (
+                    <tr key={index}>
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 animate-pulse rounded mb-2" />
+                        <div className="h-3 w-16 bg-gray-100 dark:bg-gray-800 animate-pulse rounded" />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 animate-pulse rounded mb-2" />
+                        <div className="h-3 w-40 bg-gray-100 dark:bg-gray-800 animate-pulse rounded" />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-6 w-20 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-full" />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-6 w-20 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-full" />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-12 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           ) : filteredOrders.length === 0 ? (
             <div className="text-center py-20">

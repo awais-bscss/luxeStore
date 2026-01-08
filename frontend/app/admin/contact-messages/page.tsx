@@ -187,7 +187,13 @@ export default function ContactMessagesPage() {
   }
 
   return (
-    <div className={`min-h-screen p-6 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen p-6 relative ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      {/* Top Loading Bar */}
+      {loading && (
+        <div className="absolute top-0 left-0 right-0 h-1 z-50 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 animate-loading-bar w-full" />
+        </div>
+      )}
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -222,7 +228,35 @@ export default function ContactMessagesPage() {
 
         {/* Messages List */}
         <div className="space-y-4">
-          {messages.length === 0 ? (
+          {loading ? (
+            // Skeleton Loader for Messages
+            Array.from({ length: 5 }).map((_, index) => (
+              <div
+                key={index}
+                className={`p-4 sm:p-6 rounded-xl border animate-pulse ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
+                  }`}
+              >
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded" />
+                      <div className="h-5 w-20 bg-gray-100 dark:bg-gray-900/30 rounded-full" />
+                    </div>
+                    <div className="h-4 w-64 bg-gray-100 dark:bg-gray-700 rounded" />
+                    <div className="space-y-2">
+                      <div className="h-4 w-full bg-gray-50 dark:bg-gray-900/10 rounded" />
+                      <div className="h-4 w-2/3 bg-gray-50 dark:bg-gray-900/10 rounded" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="h-9 w-20 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                    <div className="h-9 w-20 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                    <div className="h-9 w-9 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : messages.length === 0 ? (
             <div className={`text-center py-12 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
               <Mail className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
               <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>

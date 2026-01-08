@@ -271,7 +271,13 @@ export default function AnalyticsPage() {
   ];
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 relative">
+      {/* Top Loading Bar */}
+      {loading && (
+        <div className="absolute top-0 left-0 right-0 h-1 z-50 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 animate-loading-bar w-full" />
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -303,8 +309,49 @@ export default function AnalyticsPage() {
 
       {/* Loading State */}
       {loading && (
-        <div className="flex justify-center items-center py-20">
-          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        <div className="space-y-6">
+          {/* Stats Grid Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 animate-pulse">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="h-12 w-12 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                  <div className="h-4 w-12 bg-gray-100 dark:bg-gray-800 rounded" />
+                </div>
+                <div className="h-4 w-24 bg-gray-100 dark:bg-gray-800 rounded mb-2" />
+                <div className="h-8 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
+              </div>
+            ))}
+          </div>
+
+          {/* Large Card Skeleton */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 animate-pulse">
+            <div className="h-7 w-48 bg-gray-200 dark:bg-gray-700 rounded mb-6" />
+            <div className="space-y-6">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <div className="flex justify-between">
+                    <div className="h-4 w-24 bg-gray-100 dark:bg-gray-800 rounded" />
+                    <div className="h-4 w-32 bg-gray-100 dark:bg-gray-800 rounded" />
+                  </div>
+                  <div className="h-2 w-full bg-gray-50 dark:bg-gray-900/10 rounded-full" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 animate-pulse">
+                <div className="h-7 w-48 bg-gray-200 dark:bg-gray-700 rounded mb-6" />
+                <div className="space-y-4">
+                  {[...Array(3)].map((_, j) => (
+                    <div key={j} className="h-16 w-full bg-gray-50 dark:bg-gray-900/10 rounded-lg" />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

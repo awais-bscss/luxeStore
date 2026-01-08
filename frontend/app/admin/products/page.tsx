@@ -289,7 +289,13 @@ export default function ProductsPage() {
   const categories = ['all', ...new Set(products.map(p => p.category))];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Top Loading Bar */}
+      {isLoading && (
+        <div className="absolute top-0 left-0 right-0 h-1 z-50 overflow-hidden rounded-t-xl">
+          <div className="h-full bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 animate-loading-bar w-full" />
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -378,13 +384,41 @@ export default function ProductsPage() {
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center">
-                    <div className="flex justify-center items-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    </div>
-                  </td>
-                </tr>
+                // Skeleton Rows
+                Array.from({ length: 5 }).map((_, index) => (
+                  <tr key={`skeleton-${index}`}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-12 w-12 rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                        <div className="space-y-2">
+                          <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+                          <div className="h-3 w-20 bg-gray-100 dark:bg-gray-800 animate-pulse rounded" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-6 w-20 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-full" />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="space-y-2">
+                        <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+                        <div className="h-3 w-32 bg-gray-100 dark:bg-gray-800 animate-pulse rounded" />
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg ml-auto" />
+                    </td>
+                  </tr>
+                ))
               ) : products.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center">
