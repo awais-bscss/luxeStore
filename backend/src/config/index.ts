@@ -39,8 +39,13 @@ const config: Config = {
   },
   rateLimit: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10), // 1 minute
-    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '10000', 10), // 10000 requests per minute (increased for development)
+    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '10000', 10), // 10000 requests per minute
   },
 };
+
+// Validation for production
+if (config.env === 'production' && !process.env.MONGODB_URI) {
+  console.error('❌ CRITICAL: MONGODB_URI is not defined in environment variables!');
+}
 
 export default config;

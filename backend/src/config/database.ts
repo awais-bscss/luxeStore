@@ -1,19 +1,32 @@
 import mongoose from 'mongoose';
 import config from './index';
 
-const connectDB = async (): Promise<void> => {
-  try {
-    const conn = await mongoose.connect(config.mongodb.uri);
+let isConnected = false;
 
+const connectDB = async (): Promise<void> => {
+  if (isConnected) {
+    console.log('Using existing MongoDB connection');
+    return;
+  }
+
+  try {
+    const conn = await mongoose.connect(config.mongodb.uri, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+
+    isConnected = !!conn.connections[0].readyState;
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
 
     // Handle connection events
     mongoose.connection.on('error', (err) => {
       console.error('❌ MongoDB connection error:', err);
+      isConnected = false;
     });
 
     mongoose.connection.on('disconnected', () => {
       console.log('⚠️  MongoDB disconnected');
+      isConnected = false;
     });
 
     // Graceful shutdown
@@ -25,7 +38,7 @@ const connectDB = async (): Promise<void> => {
 
   } catch (error) {
     console.error('❌ Error connecting to MongoDB:', error);
-    // Throw error instead of exiting - let the caller handle it
+    isConnected = false;
     throw error;
   }
 };

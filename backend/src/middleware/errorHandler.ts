@@ -50,6 +50,12 @@ export const errorHandler = (
     error = new AppError(message, 401);
   }
 
+  // Handle Mongoose buffering timeout
+  if (err.message.includes('buffering timed out')) {
+    const message = 'Database connection error. Please check your MONGODB_URI and IP whitelist.';
+    error = new AppError(message, 503); // Service Unavailable is more appropriate than 500
+  }
+
   res.status(error.statusCode || 500).json({
     success: false,
     message: error.message || 'Server Error',
