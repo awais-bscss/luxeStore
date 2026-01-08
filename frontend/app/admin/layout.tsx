@@ -686,17 +686,20 @@ function AdminLayoutContent({
                         </div>
                       )
                     }
-                  </div >
+                  </div>
                 </>
               )}
-            </div >
-        </header >
+            </div>
+          </div>
+        </header>
 
         {/* Page content */}
-        < main className="min-h-[calc(100vh-4rem-4rem)] p-4 sm:p-6 lg:p-8" > {children}</main >
+        <main className="min-h-[calc(100vh-4rem-4rem)] p-4 sm:p-6 lg:p-8">
+          {children}
+        </main>
 
         {/* Footer */}
-        < footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800" >
+        <footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           <div className="px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               {/* Copyright */}
@@ -733,9 +736,9 @@ function AdminLayoutContent({
               </div>
             </div>
           </div>
-        </footer >
-      </div >
-    </div >
+        </footer>
+      </div>
+    </div>
   );
 }
 
