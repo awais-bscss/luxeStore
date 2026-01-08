@@ -207,11 +207,16 @@ export default function AdminBlogsPage() {
     }
   };
 
-  const filteredBlogs = blogs.filter(blog =>
-    blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    blog.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    blog.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredBlogs = blogs.filter(blog => {
+    const query = searchQuery.toLowerCase();
+    return (
+      blog.title.toLowerCase().includes(query) ||
+      blog.excerpt.toLowerCase().includes(query) ||
+      blog.category.toLowerCase().includes(query) ||
+      blog.author.name.toLowerCase().includes(query) ||
+      blog.tags.some(tag => tag.toLowerCase().includes(query))
+    );
+  });
 
   return (
     <div className="p-6">
