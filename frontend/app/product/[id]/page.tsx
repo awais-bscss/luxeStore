@@ -126,6 +126,7 @@ export default function ProductDetailPage() {
         price: product.price,
         quantity,
         thumbnail: product.thumbnail,
+        stock: product.stock,
       })
     );
     toast.success('Added to Cart', `${quantity} ${quantity > 1 ? 'items' : 'item'} added to your cart`);
