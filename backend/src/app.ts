@@ -7,6 +7,7 @@ import rateLimit from 'express-rate-limit';
 import config from './config';
 import routes from './routes';
 import { errorHandler, notFound } from './middleware/errorHandler';
+import { ensureDbConnection } from './middleware/dbConnection';
 
 const app: Application = express();
 
@@ -57,6 +58,9 @@ if (config.env === 'development') {
 } else {
   app.use(morgan('combined'));
 }
+
+// Ensure database connection (critical for serverless)
+app.use('/api', ensureDbConnection);
 
 // API routes
 app.use('/api', routes);
