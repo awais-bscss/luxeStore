@@ -187,13 +187,7 @@ export default function ContactMessagesPage() {
   }
 
   return (
-    <div className={`min-h-screen p-6 relative ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Top Loading Bar */}
-      {loading && (
-        <div className="absolute top-0 left-0 right-0 h-1 z-50 overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 animate-loading-bar w-full" />
-        </div>
-      )}
+    <div className={`min-h-screen p-6 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">

@@ -297,13 +297,7 @@ export default function AdminJobsPage() {
   };
 
   return (
-    <div className="space-y-6 relative">
-      {/* Top Loading Bar */}
-      {isLoading && (
-        <div className="absolute top-0 left-0 right-0 h-1 z-50 overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 animate-loading-bar w-full" />
-        </div>
-      )}
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

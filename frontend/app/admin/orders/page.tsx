@@ -133,13 +133,7 @@ export default function AdminOrdersPage() {
   const deliveredOrders = statistics.deliveredOrders;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 relative">
-      {/* Top Loading Bar */}
-      {isLoading && (
-        <div className="absolute top-0 left-0 right-0 h-1 z-50 overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 animate-loading-bar w-full" />
-        </div>
-      )}
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div>
