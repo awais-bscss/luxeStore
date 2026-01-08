@@ -115,6 +115,34 @@ export default function CheckoutPage() {
   const tax = includeTaxInPrices ? 0 : total * (taxRate / 100);
   const grandTotal = total + shippingCost + tax;
 
+  // Persistence: Restore pending payment/data on mount
+  useEffect(() => {
+    const savedPaymentId = localStorage.getItem('pending_payment_intent_id');
+    const savedClientSecret = localStorage.getItem('pending_stripe_client_secret');
+    const savedFormData = localStorage.getItem('pending_checkout_form_data');
+
+    if (savedPaymentId && savedClientSecret) {
+      setPaymentIntentId(savedPaymentId);
+      setClientSecret(savedClientSecret);
+      setShowStripeForm(true); // Keep the form in "verified" state
+    }
+
+    if (savedFormData) {
+      try {
+        const parsed = JSON.parse(savedFormData);
+        setFormData(prev => ({ ...prev, ...parsed }));
+      } catch (e) {
+        console.error('Failed to parse saved form data', e);
+      }
+    }
+  }, []);
+
+  // Persistence: Save form data when it changes (except payment method)
+  useEffect(() => {
+    const dataToSave = { ...formData };
+    localStorage.setItem('pending_checkout_form_data', JSON.stringify(dataToSave));
+  }, [formData]);
+
   // Rate limiting for resend verification email
   const [isResending, setIsResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -235,9 +263,11 @@ export default function CheckoutPage() {
 
       setOrderPlaced(true); // Mark order as successfully placed
 
-      // Clear the cart from frontend state immediately after successful order
-      // Backend already cleared it, this syncs the frontend
+      // Clear the cart and persistence
       dispatch(clearCartLocal());
+      localStorage.removeItem('pending_payment_intent_id');
+      localStorage.removeItem('pending_stripe_client_secret');
+      localStorage.removeItem('pending_checkout_form_data');
 
       toast.success('Order Placed!', 'Your order has been placed successfully');
 
@@ -417,75 +447,6 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {/* Payment Method */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
-                <div className="flex items-center gap-3 mb-6">
-                  <Wallet className="w-6 h-6 text-blue-600" />
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Payment Method</h2>
-                </div>
-                <CustomDropdown
-                  value={formData.paymentMethod}
-                  onChange={(value) => setFormData({ ...formData, paymentMethod: value as "cod" | "card" })}
-                  options={[
-                    { value: 'cod', label: 'Cash on Delivery' },
-                    { value: 'card', label: 'Credit/Debit Card' },
-                  ]}
-                />
-
-                {/* Card Payment Integration */}
-                {formData.paymentMethod === 'card' && !showStripeForm && (
-                  <div className="mt-4">
-                    <button
-                      type="button"
-                      onClick={createPaymentIntent}
-                      disabled={isCreatingPaymentIntent}
-                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 shadow-lg flex items-center justify-center gap-2"
-                    >
-                      {isCreatingPaymentIntent ? (
-                        <>
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Initializing Payment...
-                        </>
-                      ) : (
-                        <>
-                          <CreditCard className="w-5 h-5" />
-                          Continue to Payment
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
-
-                {/* Stripe Payment Form */}
-                {formData.paymentMethod === 'card' && showStripeForm && clientSecret && (
-                  <div className="mt-4">
-                    <Elements
-                      stripe={getStripe()}
-                      options={{
-                        clientSecret,
-                        appearance: {
-                          theme: 'stripe',
-                        },
-                        loader: 'auto',
-                      }}
-                    >
-                      <StripePaymentForm
-                        amount={grandTotal}
-                        onSuccess={(paymentId) => {
-                          setPaymentIntentId(paymentId);
-                          toast.success('Payment Successful!', 'You can now place your order');
-                        }}
-                        onError={(error) => {
-                          toast.error('Payment Failed', error);
-                          setShowStripeForm(false);
-                          setClientSecret(null);
-                        }}
-                      />
-                    </Elements>
-                  </div>
-                )}
-              </div>
-
               {/* Shipping Method */}
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
                 <div className="flex items-center gap-3 mb-6">
@@ -517,7 +478,7 @@ export default function CheckoutPage() {
                       className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${(showStripeForm || !!paymentIntentId || isPlacingOrder) ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-300 dark:hover:border-blue-700'
                         } ${formData.shippingMethod === 'standard'
                           ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700'
+                          : 'border-gray-200 dark:border-gray-700'
                         }`}
                     >
                       <div className="flex items-center justify-between">
@@ -554,7 +515,7 @@ export default function CheckoutPage() {
                         className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${(showStripeForm || !!paymentIntentId || isPlacingOrder) ? 'opacity-50 cursor-not-allowed' : 'hover:border-purple-300 dark:hover:border-purple-700'
                           } ${formData.shippingMethod === 'express'
                             ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/20'
-                            : 'border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-700'
+                            : 'border-gray-200 dark:border-gray-700'
                           }`}
                       >
                         <div className="flex items-center justify-between">
@@ -588,6 +549,102 @@ export default function CheckoutPage() {
                       </div>
                     )}
                   </div>
+                )}
+              </div>
+
+              {/* Payment Method */}
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+                <div className="flex items-center gap-3 mb-6">
+                  <Wallet className="w-6 h-6 text-blue-600" />
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Payment Method</h2>
+                </div>
+
+                {/* Payment Status after successful card payment */}
+                {paymentIntentId ? (
+                  <div className="p-4 bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-xl mb-4">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
+                      <div>
+                        <p className="font-semibold text-green-900 dark:text-green-300">
+                          Payment Verified
+                        </p>
+                        <p className="text-sm text-green-700 dark:text-green-400">
+                          Your card payment has been successfully processed.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <CustomDropdown
+                      value={formData.paymentMethod}
+                      onChange={(value) => setFormData({ ...formData, paymentMethod: value as "cod" | "card" })}
+                      options={[
+                        { value: 'cod', label: 'Cash on Delivery' },
+                        { value: 'card', label: 'Credit/Debit Card' },
+                      ]}
+                    />
+
+                    {/* Card Payment Integration */}
+                    {formData.paymentMethod === 'card' && !showStripeForm && (
+                      <div className="mt-4">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            createPaymentIntent();
+                            // Optional: Save client secret temporarily
+                          }}
+                          disabled={isCreatingPaymentIntent}
+                          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 shadow-lg flex items-center justify-center gap-2"
+                        >
+                          {isCreatingPaymentIntent ? (
+                            <>
+                              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              Initializing Payment...
+                            </>
+                          ) : (
+                            <>
+                              <CreditCard className="w-5 h-5" />
+                              Continue to Payment
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Stripe Payment Form */}
+                    {formData.paymentMethod === 'card' && showStripeForm && clientSecret && (
+                      <div className="mt-4">
+                        <Elements
+                          stripe={getStripe()}
+                          options={{
+                            clientSecret,
+                            appearance: {
+                              theme: 'stripe',
+                            },
+                            loader: 'auto',
+                          }}
+                        >
+                          <StripePaymentForm
+                            amount={grandTotal}
+                            onSuccess={(paymentId) => {
+                              setPaymentIntentId(paymentId);
+                              // Sync persistence
+                              localStorage.setItem('pending_payment_intent_id', paymentId);
+                              localStorage.setItem('pending_stripe_client_secret', clientSecret);
+                              toast.success('Payment Successful!', 'You can now place your order');
+                            }}
+                            onError={(error) => {
+                              toast.error('Payment Failed', error);
+                              setShowStripeForm(false);
+                              setClientSecret(null);
+                              localStorage.removeItem('pending_stripe_client_secret');
+                            }}
+                          />
+                        </Elements>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
