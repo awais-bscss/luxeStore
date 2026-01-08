@@ -48,7 +48,7 @@ interface Review {
 export default function AdminReviewsPage() {
   const router = useRouter();
   const toast = useToast();
-  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { user, isAuthenticated, token } = useSelector((state: RootState) => state.auth);
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,8 +75,10 @@ export default function AdminReviewsPage() {
       router.push('/');
       return;
     }
-    fetchReviews();
-  }, [isAuthenticated, user, pagination.page, filters]);
+    if (token) {
+      fetchReviews();
+    }
+  }, [isAuthenticated, user, token, pagination.page, filters]);
 
   // Debounced search effect
   useEffect(() => {
@@ -90,6 +92,7 @@ export default function AdminReviewsPage() {
   }, [searchTerm]);
 
   const fetchReviews = async () => {
+    if (!token) return;
     try {
       setIsLoading(true);
       const params = new URLSearchParams({
@@ -101,6 +104,9 @@ export default function AdminReviewsPage() {
       if (filters.verified) params.append('verified', filters.verified);
 
       const response = await fetch(`${API_URL}/reviews?${params}`, {
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
       });
 
@@ -145,7 +151,10 @@ export default function AdminReviewsPage() {
     try {
       const response = await fetch(`${API_URL}/reviews/${reviewId}/status`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
         body: JSON.stringify({ isApproved: !currentStatus }),
       });
@@ -180,6 +189,9 @@ export default function AdminReviewsPage() {
     try {
       const response = await fetch(`${API_URL}/reviews/${reviewId}`, {
         method: 'DELETE',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
       });
 
@@ -214,20 +226,20 @@ export default function AdminReviewsPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-3">
-            <MessageSquare className="w-8 h-8" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-3">
+            <MessageSquare className="w-6 h-6 sm:w-8 sm:h-8" />
             Review Management
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
             Manage customer reviews and feedback
           </p>
         </div>
 
         {/* Filters */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Search */}
-            <div className="md:col-span-2">
+            <div className="sm:col-span-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
@@ -235,7 +247,7 @@ export default function AdminReviewsPage() {
                   placeholder="Search reviews, products, or users..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base"
                 />
               </div>
             </div>
@@ -245,10 +257,11 @@ export default function AdminReviewsPage() {
               value={filters.status}
               onChange={(value) => setFilters({ ...filters, status: value })}
               options={[
-                { value: 'all', label: 'All Reviews' },
+                { value: 'all', label: 'All Status' },
                 { value: 'approved', label: 'Published' },
                 { value: 'hidden', label: 'Hidden' },
               ]}
+              className="text-sm sm:text-base"
             />
 
             {/* Rating Filter */}
@@ -263,6 +276,7 @@ export default function AdminReviewsPage() {
                 { value: '2', label: '2 Stars' },
                 { value: '1', label: '1 Star' },
               ]}
+              className="text-sm sm:text-base"
             />
           </div>
         </div>
@@ -283,23 +297,23 @@ export default function AdminReviewsPage() {
                   : 'border-yellow-500 dark:border-yellow-600 bg-yellow-50 dark:bg-yellow-900/10'
                   }`}
               >
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
                   {/* Product Info */}
-                  <div className="flex items-center gap-4 flex-1">
+                  <div className="flex items-center gap-3 sm:gap-4 flex-1">
                     <img
                       src={review.product.thumbnail}
                       alt={review.product.name}
-                      className="w-16 h-16 object-cover rounded-lg"
+                      className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg shadow-sm"
                     />
-                    <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white">
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base truncate">
                         {review.product.name}
                       </h3>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-1 mt-1">
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-4 h-4 ${i < review.rating
+                            className={`w-3 h-3 sm:w-4 sm:h-4 ${i < review.rating
                               ? 'fill-yellow-400 text-yellow-400'
                               : 'text-gray-300 dark:text-gray-600'
                               }`}
@@ -309,21 +323,21 @@ export default function AdminReviewsPage() {
                     </div>
                   </div>
 
-                  {/* Status Badge */}
-                  <div className="flex items-center gap-2">
+                  {/* Status Badges */}
+                  <div className="flex flex-wrap items-center gap-2">
                     {review.isApproved ? (
-                      <span className="flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-full text-sm font-medium">
-                        <CheckCircle className="w-4 h-4" />
+                      <span className="flex items-center gap-1 px-2.5 py-1 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-full text-xs font-medium">
+                        <CheckCircle className="w-3.5 h-3.5" />
                         Published
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 px-3 py-1 bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 rounded-full text-sm font-medium">
-                        <XCircle className="w-4 h-4" />
+                      <span className="flex items-center gap-1 px-2.5 py-1 bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 rounded-full text-xs font-medium">
+                        <XCircle className="w-3.5 h-3.5" />
                         Hidden
                       </span>
                     )}
                     {review.verified && (
-                      <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-full text-sm font-medium">
+                      <span className="px-2.5 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-full text-xs font-medium">
                         Verified
                       </span>
                     )}
@@ -332,20 +346,20 @@ export default function AdminReviewsPage() {
 
                 {/* Review Content */}
                 <div className="mb-4">
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm sm:text-base">
                     {review.title}
                   </h4>
-                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm sm:text-base">
                     {review.comment}
                   </p>
                   {review.images && review.images.length > 0 && (
-                    <div className="flex gap-2 mt-3">
+                    <div className="flex flex-wrap gap-2 mt-3">
                       {review.images.map((img, idx) => (
                         <img
                           key={idx}
                           src={img}
                           alt={`Review ${idx + 1}`}
-                          className="w-20 h-20 object-cover rounded-lg"
+                          className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg"
                         />
                       ))}
                     </div>
@@ -353,31 +367,31 @@ export default function AdminReviewsPage() {
                 </div>
 
                 {/* User Info & Actions */}
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center gap-6 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700 gap-4">
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4" />
                       <span className="font-medium">{review.user.name}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 max-w-[200px] sm:max-w-none">
                       <Mail className="w-4 h-4" />
-                      <span>{review.user.email}</span>
+                      <span className="truncate">{review.user.email}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
                       <span>{formatDate(review.createdAt)}</span>
                     </div>
-                    <div className="text-gray-500">
-                      👍 {review.helpful} helpful
+                    <div className="text-gray-500 font-medium">
+                      👍 {review.helpful}
                     </div>
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex items-center gap-2">
-                    {/* Hide/Publish Button - Both Admin & Superadmin */}
+                  <div className="flex items-center gap-2 mt-2 lg:mt-0">
+                    {/* Hide/Publish Button */}
                     <button
                       onClick={() => handleToggleApproval(review._id, review.isApproved)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${review.isApproved
+                      className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors text-sm sm:text-base ${review.isApproved
                         ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-900/30'
                         : 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/30'
                         }`}
@@ -385,24 +399,24 @@ export default function AdminReviewsPage() {
                       {review.isApproved ? (
                         <>
                           <EyeOff className="w-4 h-4" />
-                          Hide
+                          <span className="hidden sm:inline">Hide</span>
                         </>
                       ) : (
                         <>
                           <Eye className="w-4 h-4" />
-                          Publish
+                          <span className="hidden sm:inline">Publish</span>
                         </>
                       )}
                     </button>
 
-                    {/* Delete Button - Only Superadmin */}
+                    {/* Delete Button */}
                     {user?.role === 'superadmin' && (
                       <button
                         onClick={() => handleDeleteReview(review._id)}
-                        className="flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg font-medium hover:bg-red-200 dark:hover:bg-red-900/30 transition-colors"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg font-medium hover:bg-red-200 dark:hover:bg-red-900/30 transition-colors text-sm sm:text-base"
                       >
                         <Trash2 className="w-4 h-4" />
-                        Delete
+                        <span className="hidden sm:inline">Delete</span>
                       </button>
                     )}
                   </div>
