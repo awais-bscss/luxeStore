@@ -353,8 +353,9 @@ export default function CheckoutPage() {
                       value={formData.street}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="123 Main Street"
+                      disabled={showStripeForm || !!paymentIntentId || isPlacingOrder}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -366,8 +367,9 @@ export default function CheckoutPage() {
                         value={formData.city}
                         onChange={handleInputChange}
                         required
-                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="Lahore"
+                        disabled={showStripeForm || !!paymentIntentId || isPlacingOrder}
                       />
                     </div>
                     <div>
@@ -378,8 +380,9 @@ export default function CheckoutPage() {
                         value={formData.state}
                         onChange={handleInputChange}
                         required
-                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="Punjab"
+                        disabled={showStripeForm || !!paymentIntentId || isPlacingOrder}
                       />
                     </div>
                   </div>
@@ -392,8 +395,9 @@ export default function CheckoutPage() {
                         value={formData.zipCode}
                         onChange={handleInputChange}
                         required
-                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="54000"
+                        disabled={showStripeForm || !!paymentIntentId || isPlacingOrder}
                       />
                     </div>
                     <div>
@@ -404,8 +408,9 @@ export default function CheckoutPage() {
                         value={formData.phone}
                         onChange={handleInputChange}
                         required
-                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="03001234567"
+                        disabled={showStripeForm || !!paymentIntentId || isPlacingOrder}
                       />
                     </div>
                   </div>
@@ -505,10 +510,14 @@ export default function CheckoutPage() {
                 ) : (
                   <div className="space-y-3">
                     <div
-                      onClick={() => setFormData({ ...formData, shippingMethod: 'standard' })}
-                      className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${formData.shippingMethod === 'standard'
-                        ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700'
+                      onClick={() => {
+                        if (showStripeForm || !!paymentIntentId || isPlacingOrder) return;
+                        setFormData({ ...formData, shippingMethod: 'standard' });
+                      }}
+                      className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${(showStripeForm || !!paymentIntentId || isPlacingOrder) ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-300 dark:hover:border-blue-700'
+                        } ${formData.shippingMethod === 'standard'
+                          ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700'
                         }`}
                     >
                       <div className="flex items-center justify-between">
@@ -538,10 +547,14 @@ export default function CheckoutPage() {
 
                     {shippingSettings.expressShippingEnabled && (
                       <div
-                        onClick={() => setFormData({ ...formData, shippingMethod: 'express' })}
-                        className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${formData.shippingMethod === 'express'
-                          ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/20'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-700'
+                        onClick={() => {
+                          if (showStripeForm || !!paymentIntentId || isPlacingOrder) return;
+                          setFormData({ ...formData, shippingMethod: 'express' });
+                        }}
+                        className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${(showStripeForm || !!paymentIntentId || isPlacingOrder) ? 'opacity-50 cursor-not-allowed' : 'hover:border-purple-300 dark:hover:border-purple-700'
+                          } ${formData.shippingMethod === 'express'
+                            ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/20'
+                            : 'border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-700'
                           }`}
                       >
                         <div className="flex items-center justify-between">
