@@ -15,10 +15,10 @@ function getStripe(): Stripe {
     }
 
     stripeInstance = new Stripe(secretKey, {
-      apiVersion: '2025-12-15.clover',
+      // apiVersion: '...', // Removed invalid version to use account default
       typescript: true,
-      maxNetworkRetries: 3, // Retry failed requests up to 3 times
-      timeout: 30000, // 30 second timeout
+      maxNetworkRetries: 3,
+      timeout: 30000,
     });
   }
 
@@ -72,15 +72,20 @@ class StripeService {
         paymentIntentId: paymentIntent.id,
       };
     } catch (error: any) {
-      console.error('Stripe payment intent creation error:', error);
+      console.error('--- STRIPE DIAGNOSTIC ERROR ---');
+      console.error('Type:', error.type);
+      console.error('Message:', error.message);
+      if (error.code) console.error('Code:', error.code);
+      if (error.detail) console.error('Detail:', error.detail);
+      console.error('--------------------------------');
 
       // Provide more specific error messages
       if (error.type === 'StripeConnectionError') {
-        throw new ValidationError('Unable to connect to Stripe. Please check your internet connection and try again.');
+        throw new ValidationError(`Unable to connect to Stripe (${error.message || 'System error'}). Please verify your server's outgoing internet connection.`);
       }
 
       if (error.type === 'StripeAuthenticationError') {
-        throw new ValidationError('Stripe authentication failed. Please contact support.');
+        throw new ValidationError('Stripe authentication failed. Please verify that your STRIPE_SECRET_KEY environment variable is correct.');
       }
 
       if (error.type === 'StripeAPIError') {
