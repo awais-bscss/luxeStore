@@ -9,6 +9,7 @@ interface SystemSettings {
   usdToPkrRate: number;
   storeName: string;
   storeEmail: string;
+  maintenanceMode: boolean;
   // Add other settings as needed
 }
 
@@ -29,12 +30,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     usdToPkrRate: 279.89,
     storeName: 'LuxeStore',
     storeEmail: 'admin@luxestore.com',
+    maintenanceMode: false,
   });
   const [loading, setLoading] = useState(true);
 
-  const fetchSettings = async (isInitial = false) => {
+  const fetchSettings = async (isInitial = false, retryCount = 0) => {
     try {
-      if (isInitial) {
+      if (isInitial && retryCount === 0) {
         console.log('Fetching settings from API...');
       }
 
@@ -42,14 +44,20 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         credentials: 'include',
       });
 
-      if (isInitial) {
+      if (response.status === 503 && retryCount < 3) {
+        console.log(`Settings API returned 503, retrying (${retryCount + 1}/3)...`);
+        await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
+        return fetchSettings(isInitial, retryCount + 1);
+      }
+
+      if (isInitial && retryCount === 0) {
         console.log('Settings response status:', response.status);
       }
 
       if (response.ok) {
         const data = await response.json();
 
-        if (isInitial) {
+        if (isInitial && retryCount === 0) {
           console.log('Settings data received:', data);
         }
 
@@ -60,9 +68,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             usdToPkrRate: data.data.settings.usdToPkrRate || 279.89,
             storeName: data.data.settings.storeName || 'LuxeStore',
             storeEmail: data.data.settings.storeEmail || 'admin@luxestore.com',
+            maintenanceMode: data.data.settings.maintenanceMode || false,
           };
 
-          if (isInitial) {
+          if (isInitial && retryCount === 0) {
             console.log('Setting new settings:', newSettings);
           }
 
@@ -72,13 +81,19 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         console.error('Failed to fetch settings, status:', response.status);
       }
     } catch (error) {
+      if (retryCount < 3) {
+        console.log(`Settings fetch error, retrying (${retryCount + 1}/3)...`, error);
+        await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
+        return fetchSettings(isInitial, retryCount + 1);
+      }
+
       // Only log error on initial fetch to avoid console spam
       if (isInitial) {
-        console.error('Failed to fetch settings:', error);
+        console.error('Failed to fetch settings after retries:', error);
         console.log('Using default settings');
       }
     } finally {
-      if (isInitial) {
+      if (isInitial && retryCount === 0) {
         setLoading(false);
       }
     }

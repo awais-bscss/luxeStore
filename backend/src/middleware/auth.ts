@@ -83,8 +83,19 @@ export const protect = asyncHandler(
         _id: userObj._id.toString()
       };
       next();
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof AppError) throw error;
+
+      // If it's a database connection error, throw a 503 instead of 401
+      if (error.name === 'MongooseError' && error.message.includes('buffering timed out')) {
+        throw new AppError('Database connection error. Please try again later.', 503);
+      }
+
+      // Default to unauthorized only for JWT errors
+      if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+        throw new UnauthorizedError('Invalid or expired token');
+      }
+
       throw new UnauthorizedError('Not authorized to access this route');
     }
   }
