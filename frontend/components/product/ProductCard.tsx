@@ -53,6 +53,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       price: product.price,
       quantity: 1,
       thumbnail: product.image,
+      stock: product.stock,
     });
     toast.success('Added to Cart!', `${product.name} has been added to your cart`);
   };
