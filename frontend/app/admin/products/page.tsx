@@ -117,6 +117,7 @@ export default function ProductsPage() {
   }, [token, pagination.page, selectedCategory, selectedStatus, debouncedSearch]);
 
   const fetchProducts = async () => {
+    if (!token) return;
     try {
       setIsLoading(true);
       const params = new URLSearchParams({

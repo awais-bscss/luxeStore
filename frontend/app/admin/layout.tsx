@@ -118,7 +118,7 @@ function AdminLayoutContent({
 
   // Fetch notifications on mount and set up polling
   useEffect(() => {
-    if (user) {
+    if (user && token) {
       fetchNotifications(true);
 
       // Poll for new notifications every 15 seconds (faster for better UX)

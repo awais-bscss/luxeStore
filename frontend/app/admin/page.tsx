@@ -90,6 +90,7 @@ export default function AdminDashboard() {
   // Fetch products and calculate growth
   useEffect(() => {
     const fetchProductsWithGrowth = async () => {
+      if (!token) return;
       try {
         setProductsLoading(true);
 
@@ -193,6 +194,7 @@ export default function AdminDashboard() {
   // Fetch customers and calculate growth
   useEffect(() => {
     const fetchCustomersWithGrowth = async () => {
+      if (!token) return;
       try {
         // Calculate date ranges based on selected time period
         const now = new Date();
@@ -291,6 +293,7 @@ export default function AdminDashboard() {
   // Fetch order statistics
   useEffect(() => {
     const fetchOrderStats = async () => {
+      if (!token) return;
       try {
         setOrdersLoading(true);
         const response = await fetch(`${API_URL}/orders/stats/overview`, {
@@ -342,6 +345,7 @@ export default function AdminDashboard() {
 
     // Also fetch recent orders
     const fetchRecentOrders = async () => {
+      if (!token) return;
       try {
         const response = await fetch(`${API_URL}/orders?limit=5&sort=-createdAt`, {
           headers: {

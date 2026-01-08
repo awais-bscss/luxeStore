@@ -43,6 +43,7 @@ export default function AdminOrdersPage() {
   const [showBlockedModal, setShowBlockedModal] = useState(false);
 
   useEffect(() => {
+    if (!token) return;
     dispatch(fetchAllOrders({
       status: statusFilter,
       paymentStatus: paymentFilter,

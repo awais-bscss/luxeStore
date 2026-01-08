@@ -60,6 +60,7 @@ export default function CustomersPage() {
   // Fetch customers from API
   useEffect(() => {
     const fetchCustomers = async () => {
+      if (!token) return;
       try {
         setIsLoading(true);
         setError(null);
