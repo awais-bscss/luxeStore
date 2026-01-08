@@ -29,7 +29,7 @@ interface ContactMessage {
 export default function ContactMessagesPage() {
   const { isDarkMode } = useTheme();
   const router = useRouter();
-  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { user, isAuthenticated, token } = useSelector((state: RootState) => state.auth);
 
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,6 +59,7 @@ export default function ContactMessagesPage() {
 
   // Fetch messages
   const fetchMessages = async () => {
+    if (!token) return;
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -71,6 +72,9 @@ export default function ContactMessagesPage() {
       }
 
       const response = await fetch(`${API_URL}/contact?${params}`, {
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
       });
       const data = await response.json();
@@ -102,6 +106,7 @@ export default function ContactMessagesPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         credentials: 'include',
         body: JSON.stringify({ status: newStatus }),
@@ -130,6 +135,9 @@ export default function ContactMessagesPage() {
     try {
       const response = await fetch(`${API_URL}/contact/${messageToDelete}`, {
         method: 'DELETE',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
       });
       const data = await response.json();
@@ -183,16 +191,16 @@ export default function ContactMessagesPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className={`text-3xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          <h1 className={`text-2xl sm:text-3xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
             Contact Messages
           </h1>
-          <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+          <p className={`text-sm sm:text-base ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             Manage customer inquiries and support requests
           </p>
         </div>
 
         {/* Filters */}
-        <div className="mb-6 flex gap-3">
+        <div className="mb-6 flex flex-wrap gap-2 sm:gap-3">
           {['all', 'pending', 'replied', 'resolved'].map((status) => (
             <button
               key={status}
@@ -200,19 +208,14 @@ export default function ContactMessagesPage() {
                 setSelectedStatus(status as any);
                 setPagination({ ...pagination, page: 1 });
               }}
-              className={`px-4 py-2 rounded-lg font-semibold transition-all ${selectedStatus === status
-                ? 'bg-blue-600 text-white'
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg font-semibold transition-all text-sm sm:text-base ${selectedStatus === status
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
                 : isDarkMode
                   ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
                 }`}
             >
               {status.charAt(0).toUpperCase() + status.slice(1)}
-              {status !== 'all' && (
-                <span className="ml-2 text-xs opacity-75">
-                  ({messages.filter(m => m.status === status).length})
-                </span>
-              )}
             </button>
           ))}
         </div>
@@ -230,59 +233,64 @@ export default function ContactMessagesPage() {
             messages.map((message) => (
               <div
                 key={message._id}
-                className={`p-6 rounded-xl shadow-md hover:shadow-lg transition-all ${isDarkMode ? 'bg-gray-800' : 'bg-white'
+                className={`p-4 sm:p-6 rounded-xl shadow-sm hover:shadow-md transition-all border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
                   }`}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <h3 className={`text-base sm:text-lg font-bold truncate max-w-[200px] sm:max-w-none ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                         {message.subject}
                       </h3>
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${getStatusColor(message.status)}`}>
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-semibold flex items-center gap-1 ${getStatusColor(message.status)}`}>
                         {getStatusIcon(message.status)}
-                        {message.status}
+                        {message.status.toUpperCase()}
                       </span>
                     </div>
-                    <p className={`mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      <strong>From:</strong> {message.name} ({message.email})
-                    </p>
-                    <p className={`mb-3 line-clamp-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    <div className={`text-sm mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      <span className="font-semibold">From:</span> {message.name} <span className="hidden sm:inline">({message.email})</span>
+                    </div>
+                    <p className={`text-sm mb-3 line-clamp-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                       {message.message}
                     </p>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                    <p className={`text-[10px] sm:text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                       {new Date(message.createdAt).toLocaleString()}
                     </p>
                   </div>
 
-                  <div className="flex gap-2 ml-4">
+                  <div className="flex md:flex-col lg:flex-row gap-2 mt-2 md:mt-0">
                     <button
                       onClick={() => {
                         setSelectedMessage(message);
                         setShowDetailModal(true);
                       }}
-                      className="p-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                      className="flex-1 sm:flex-none p-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors flex items-center justify-center gap-2"
                       title="View Details"
                     >
-                      <Eye className="w-5 h-5" />
+                      <Eye className="w-4 h-4" />
+                      <span className="md:hidden lg:inline text-xs font-medium">View</span>
                     </button>
 
                     {message.status !== 'resolved' && (
                       <button
                         onClick={() => updateStatus(message._id, message.status === 'pending' ? 'replied' : 'resolved')}
-                        className="p-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors"
+                        className="flex-1 sm:flex-none p-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors flex items-center justify-center gap-2"
                         title={message.status === 'pending' ? 'Mark as Replied' : 'Mark as Resolved'}
                       >
-                        <CheckCircle className="w-5 h-5" />
+                        <CheckCircle className="w-4 h-4" />
+                        <span className="md:hidden lg:inline text-xs font-medium">
+                          {message.status === 'pending' ? 'Reply' : 'Resolve'}
+                        </span>
                       </button>
                     )}
 
                     <button
                       onClick={() => handleDeleteClick(message._id)}
-                      className="p-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
+                      className="flex-1 sm:flex-none p-2 rounded-lg bg-red-600/10 hover:bg-red-600 text-red-600 hover:text-white transition-colors flex items-center justify-center gap-2"
                       title="Delete"
                     >
-                      <Trash2 className="w-5 h-5" />
+                      <Trash2 className="w-4 h-4" />
+                      <span className="md:hidden lg:inline text-xs font-medium">Delete</span>
                     </button>
                   </div>
                 </div>
@@ -379,93 +387,73 @@ export default function ContactMessagesPage() {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
             onClick={() => setShowDetailModal(false)}
           />
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl mx-4 z-[60]">
-            <div className={`rounded-2xl shadow-2xl p-6 max-h-[80vh] overflow-y-auto ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-2xl z-[60]">
+            <div className={`rounded-2xl shadow-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
               <div className="flex items-start justify-between mb-6">
-                <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                <h2 className={`text-xl sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                   Message Details
                 </h2>
                 <button
                   onClick={() => setShowDetailModal(false)}
-                  className={`text-2xl ${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
+                  className={`text-2xl p-1 ${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
                 >
                   ×
                 </button>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-4 sm:space-y-6">
                 <div>
-                  <label className={`block text-sm font-semibold mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <label className={`block text-xs font-semibold mb-1 uppercase tracking-wider ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                     Subject
                   </label>
-                  <p className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  <p className={`text-base sm:text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     {selectedMessage.subject}
                   </p>
                 </div>
 
                 <div>
-                  <label className={`block text-sm font-semibold mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <label className={`block text-xs font-semibold mb-1 uppercase tracking-wider ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                     From
                   </label>
-                  <p className={isDarkMode ? 'text-white' : 'text-gray-900'}>
-                    {selectedMessage.name} ({selectedMessage.email})
+                  <p className={`text-sm sm:text-base ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                    <span className="font-semibold">{selectedMessage.name}</span>
+                    <br />
+                    <span className="text-blue-500">{selectedMessage.email}</span>
                   </p>
                 </div>
 
                 <div>
-                  <label className={`block text-sm font-semibold mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <label className={`block text-xs font-semibold mb-1 uppercase tracking-wider ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                     Message
                   </label>
-                  <p className={`whitespace-pre-wrap ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  <div className={`text-sm sm:text-base whitespace-pre-wrap p-4 rounded-xl ${isDarkMode ? 'bg-gray-900/50 text-gray-300' : 'bg-gray-50 text-gray-700'}`}>
                     {selectedMessage.message}
-                  </p>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className={`block text-sm font-semibold mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <label className={`block text-xs font-semibold mb-1 uppercase tracking-wider ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                       Status
                     </label>
-                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(selectedMessage.status)}`}>
-                      {selectedMessage.status}
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(selectedMessage.status)}`}>
+                      {selectedMessage.status.toUpperCase()}
                     </span>
                   </div>
                   <div>
-                    <label className={`block text-sm font-semibold mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <label className={`block text-xs font-semibold mb-1 uppercase tracking-wider ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                       Received
                     </label>
-                    <p className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
+                    <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                       {new Date(selectedMessage.createdAt).toLocaleString()}
                     </p>
                   </div>
                 </div>
 
-                {selectedMessage.userId && (
-                  <div>
-                    <label className={`block text-sm font-semibold mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      User Account
-                    </label>
-                    <p className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                      {selectedMessage.userId.name} ({selectedMessage.userId.email})
-                    </p>
-                  </div>
-                )}
-
-                {selectedMessage.ipAddress && (
-                  <div>
-                    <label className={`block text-sm font-semibold mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      IP Address
-                    </label>
-                    <p className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                      {selectedMessage.ipAddress}
-                    </p>
-                  </div>
-                )}
-
-                <div className="flex gap-3 pt-4">
+                <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-100 dark:border-gray-700">
                   <a
                     href={`mailto:${selectedMessage.email}?subject=Re: ${selectedMessage.subject}`}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-semibold transition-colors text-center"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-semibold transition-all text-center text-sm shadow-lg shadow-blue-500/20"
                   >
                     Reply via Email
                   </a>
@@ -474,7 +462,7 @@ export default function ContactMessagesPage() {
                       onClick={() => {
                         updateStatus(selectedMessage._id, selectedMessage.status === 'pending' ? 'replied' : 'resolved');
                       }}
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl font-semibold transition-colors"
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl font-semibold transition-all text-sm shadow-lg shadow-green-500/20"
                     >
                       Mark as {selectedMessage.status === 'pending' ? 'Replied' : 'Resolved'}
                     </button>
