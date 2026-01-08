@@ -37,9 +37,15 @@ const initialState: FavoritesState = {
 // Async thunks
 export const fetchFavorites = createAsyncThunk(
   'favorites/fetchFavorites',
-  async (_, { rejectWithValue }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
+      const state = getState() as { auth: { token: string | null } };
+      const token = state.auth.token;
+
       const response = await fetch(`${API_URL}/favorites`, {
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
       });
       const data = await response.json();
@@ -60,11 +66,17 @@ export const fetchFavorites = createAsyncThunk(
 
 export const addToFavoritesAPI = createAsyncThunk(
   'favorites/addToFavoritesAPI',
-  async (productId: string, { rejectWithValue }) => {
+  async (productId: string, { getState, rejectWithValue }) => {
     try {
+      const state = getState() as any;
+      const token = state.auth.token;
+
       const response = await fetch(`${API_URL}/favorites/add`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
         body: JSON.stringify({ productId }),
       });
@@ -86,10 +98,16 @@ export const addToFavoritesAPI = createAsyncThunk(
 
 export const removeFromFavoritesAPI = createAsyncThunk(
   'favorites/removeFromFavoritesAPI',
-  async (productId: string, { rejectWithValue }) => {
+  async (productId: string, { getState, rejectWithValue }) => {
     try {
+      const state = getState() as any;
+      const token = state.auth.token;
+
       const response = await fetch(`${API_URL}/favorites/${productId}`, {
         method: 'DELETE',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
       });
       const data = await response.json();
@@ -110,11 +128,17 @@ export const removeFromFavoritesAPI = createAsyncThunk(
 
 export const mergeFavoritesAPI = createAsyncThunk(
   'favorites/mergeFavoritesAPI',
-  async (localFavorites: string[], { rejectWithValue }) => {
+  async (localFavorites: string[], { getState, rejectWithValue }) => {
     try {
+      const state = getState() as any;
+      const token = state.auth.token;
+
       const response = await fetch(`${API_URL}/favorites/merge`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
         body: JSON.stringify({ productIds: localFavorites }),
       });
@@ -136,10 +160,16 @@ export const mergeFavoritesAPI = createAsyncThunk(
 
 export const clearFavoritesAPI = createAsyncThunk(
   'favorites/clearFavoritesAPI',
-  async (_, { rejectWithValue }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
+      const state = getState() as any;
+      const token = state.auth.token;
+
       const response = await fetch(`${API_URL}/favorites/clear`, {
         method: 'DELETE',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
       });
       const data = await response.json();

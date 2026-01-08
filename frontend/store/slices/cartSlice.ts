@@ -30,9 +30,15 @@ const initialState: CartState = {
 // Async thunks for API calls
 export const fetchCart = createAsyncThunk(
   'cart/fetchCart',
-  async (_, { rejectWithValue }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
+      const state = getState() as { auth: { token: string | null } };
+      const token = state.auth.token;
+
       const response = await fetch(`${API_URL}/cart`, {
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
       });
       const data = await response.json();
@@ -56,11 +62,17 @@ export const fetchCart = createAsyncThunk(
 
 export const addToCartAPI = createAsyncThunk(
   'cart/addToCartAPI',
-  async ({ productId, quantity = 1 }: { productId: string; quantity?: number }, { rejectWithValue }) => {
+  async ({ productId, quantity = 1 }: { productId: string; quantity?: number }, { getState, rejectWithValue }) => {
     try {
+      const state = getState() as any;
+      const token = state.auth.token;
+
       const response = await fetch(`${API_URL}/cart/add`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
         body: JSON.stringify({ productId, quantity }),
       });
@@ -85,11 +97,17 @@ export const addToCartAPI = createAsyncThunk(
 
 export const updateCartItemAPI = createAsyncThunk(
   'cart/updateCartItemAPI',
-  async ({ productId, quantity }: { productId: string; quantity: number }, { rejectWithValue }) => {
+  async ({ productId, quantity }: { productId: string; quantity: number }, { getState, rejectWithValue }) => {
     try {
+      const state = getState() as any;
+      const token = state.auth.token;
+
       const response = await fetch(`${API_URL}/cart/${productId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
         body: JSON.stringify({ quantity }),
       });
@@ -114,10 +132,16 @@ export const updateCartItemAPI = createAsyncThunk(
 
 export const removeFromCartAPI = createAsyncThunk(
   'cart/removeFromCartAPI',
-  async (productId: string, { rejectWithValue }) => {
+  async (productId: string, { getState, rejectWithValue }) => {
     try {
+      const state = getState() as any;
+      const token = state.auth.token;
+
       const response = await fetch(`${API_URL}/cart/${productId}`, {
         method: 'DELETE',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
       });
       const data = await response.json();
@@ -141,11 +165,17 @@ export const removeFromCartAPI = createAsyncThunk(
 
 export const mergeCartAPI = createAsyncThunk(
   'cart/mergeCartAPI',
-  async (localItems: CartItem[], { rejectWithValue }) => {
+  async (localItems: CartItem[], { getState, rejectWithValue }) => {
     try {
+      const state = getState() as any;
+      const token = state.auth.token;
+
       const response = await fetch(`${API_URL}/cart/merge`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
         body: JSON.stringify({ items: localItems }),
       });
@@ -170,10 +200,16 @@ export const mergeCartAPI = createAsyncThunk(
 
 export const clearCartAPI = createAsyncThunk(
   'cart/clearCartAPI',
-  async (_, { rejectWithValue }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
+      const state = getState() as any;
+      const token = state.auth.token;
+
       const response = await fetch(`${API_URL}/cart`, {
         method: 'DELETE',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
       });
       const data = await response.json();

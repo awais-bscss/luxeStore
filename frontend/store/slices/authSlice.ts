@@ -132,9 +132,15 @@ export const logout = createAsyncThunk(
 
 export const getProfile = createAsyncThunk(
   'auth/getProfile',
-  async (_, { rejectWithValue }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
+      const state = getState() as { auth: { token: string | null } };
+      const token = state.auth.token;
+
       const response = await fetch(`${API_URL}/auth/profile`, {
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
       });
 

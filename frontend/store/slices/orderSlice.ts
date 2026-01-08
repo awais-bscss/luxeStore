@@ -83,11 +83,17 @@ const initialState: OrderState = {
 // Create order
 export const createOrder = createAsyncThunk(
   'orders/create',
-  async (orderData: { shippingAddress: ShippingAddress; paymentMethod: string; notes?: string }, { rejectWithValue }) => {
+  async (orderData: { shippingAddress: ShippingAddress; paymentMethod: string; notes?: string }, { getState, rejectWithValue }) => {
     try {
+      const state = getState() as any;
+      const token = state.auth.token;
+
       const response = await fetch(`${API_URL}/orders`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
         body: JSON.stringify(orderData),
       });
@@ -107,9 +113,15 @@ export const createOrder = createAsyncThunk(
 // Fetch user's orders
 export const fetchUserOrders = createAsyncThunk(
   'orders/fetchUserOrders',
-  async (_, { rejectWithValue }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
+      const state = getState() as any;
+      const token = state.auth.token;
+
       const response = await fetch(`${API_URL}/orders/my-orders`, {
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
       });
       const data = await response.json();
@@ -171,8 +183,11 @@ export const cancelOrder = createAsyncThunk(
 // Admin: Fetch all orders
 export const fetchAllOrders = createAsyncThunk(
   'orders/fetchAll',
-  async (filters: { status?: string; paymentStatus?: string; page?: number; limit?: number } = {}, { rejectWithValue }) => {
+  async (filters: { status?: string; paymentStatus?: string; page?: number; limit?: number } = {}, { getState, rejectWithValue }) => {
     try {
+      const state = getState() as any;
+      const token = state.auth.token;
+
       const params = new URLSearchParams();
       if (filters?.status) params.append('status', filters.status);
       if (filters?.paymentStatus) params.append('paymentStatus', filters.paymentStatus);
@@ -180,6 +195,9 @@ export const fetchAllOrders = createAsyncThunk(
       if (filters?.limit) params.append('limit', filters.limit.toString());
 
       const response = await fetch(`${API_URL}/orders?${params.toString()}`, {
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
       });
       const data = await response.json();
