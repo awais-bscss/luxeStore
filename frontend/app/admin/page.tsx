@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import CustomDropdown from '../../components/ui/CustomDropdown';
+import { useAppSelector } from '../../hooks/useRedux';
 import { formatPrice } from '../../lib/currency';
 import { useSettings } from '../../contexts/SettingsContext';
 import {
@@ -26,6 +27,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const { token } = useAppSelector((state) => state.auth);
   const { settings } = useSettings();
   const [timeRange, setTimeRange] = useState('7d');
   const [products, setProducts] = useState<any[]>([]);
@@ -101,19 +103,34 @@ export default function AdminDashboard() {
         // Fetch all products for display
         const totalResponse = await fetch(
           `${API_URL}/products?limit=5&sort=-createdAt&populate=createdBy`,
-          { credentials: 'include' }
+          {
+            headers: {
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            },
+            credentials: 'include'
+          }
         );
 
         // Fetch current period products (for growth calculation)
         const currentResponse = await fetch(
           `${API_URL}/products?createdAt[gte]=${currentStart.toISOString()}`,
-          { credentials: 'include' }
+          {
+            headers: {
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            },
+            credentials: 'include'
+          }
         );
 
         // Fetch previous period products (for comparison)
         const previousResponse = await fetch(
           `${API_URL}/products?createdAt[gte]=${previousStart.toISOString()}&createdAt[lt]=${currentStart.toISOString()}`,
-          { credentials: 'include' }
+          {
+            headers: {
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            },
+            credentials: 'include'
+          }
         );
 
         if (totalResponse.ok && currentResponse.ok && previousResponse.ok) {
@@ -187,19 +204,34 @@ export default function AdminDashboard() {
         // Fetch total customers count
         const totalResponse = await fetch(
           `${API_URL}/users/customers`,
-          { credentials: 'include' }
+          {
+            headers: {
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            },
+            credentials: 'include'
+          }
         );
 
         // Fetch current period customers (for growth calculation)
         const currentResponse = await fetch(
           `${API_URL}/users/customers?createdAt[gte]=${currentStart.toISOString()}`,
-          { credentials: 'include' }
+          {
+            headers: {
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            },
+            credentials: 'include'
+          }
         );
 
         // Fetch previous period customers (for comparison)
         const previousResponse = await fetch(
           `${API_URL}/users/customers?createdAt[gte]=${previousStart.toISOString()}&createdAt[lt]=${currentStart.toISOString()}`,
-          { credentials: 'include' }
+          {
+            headers: {
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            },
+            credentials: 'include'
+          }
         );
 
         if (totalResponse.ok && currentResponse.ok && previousResponse.ok) {
@@ -262,6 +294,9 @@ export default function AdminDashboard() {
       try {
         setOrdersLoading(true);
         const response = await fetch(`${API_URL}/orders/stats/overview`, {
+          headers: {
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          },
           credentials: 'include',
         });
 
@@ -309,6 +344,9 @@ export default function AdminDashboard() {
     const fetchRecentOrders = async () => {
       try {
         const response = await fetch(`${API_URL}/orders?limit=5&sort=-createdAt`, {
+          headers: {
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          },
           credentials: 'include',
         });
 

@@ -20,6 +20,7 @@ import Image from 'next/image';
 import { useToast } from '../../../hooks/useToast';
 import { formatPrice } from '../../../lib/currency';
 import { useSettings } from '../../../contexts/SettingsContext';
+import { useAppSelector } from '../../../hooks/useRedux';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -60,6 +61,7 @@ interface Pagination {
 export default function ProductsPage() {
   const router = useRouter();
   const { settings } = useSettings();
+  const { token } = useAppSelector((state) => state.auth);
   const toast = useToast();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -127,6 +129,9 @@ export default function ProductsPage() {
       if (debouncedSearch) params.append('search', debouncedSearch);
 
       const response = await fetch(`${API_URL}/products?${params}`, {
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
       });
       const data = await response.json();
@@ -199,6 +204,9 @@ export default function ProductsPage() {
       setIsDeleting(true);
       const response = await fetch(`${API_URL}/products/${deleteModal.product._id}`, {
         method: 'DELETE',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
       });
 
@@ -252,6 +260,7 @@ export default function ProductsPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         credentials: 'include',
         body: JSON.stringify(duplicateData),

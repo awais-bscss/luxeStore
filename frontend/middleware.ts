@@ -6,6 +6,9 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Check if accessing admin routes
+  // REMOVED: Middleware cannot see cross-domain cookies. 
+  // Client-side ProtectedRoute will handle this instead.
+  /*
   if (pathname.startsWith('/admin')) {
     if (!token) {
       // Redirect to home if not authenticated
@@ -14,6 +17,7 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
   }
+  */
 
   return NextResponse.next();
 }

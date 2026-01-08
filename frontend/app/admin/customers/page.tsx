@@ -27,7 +27,7 @@ import { useSettings } from '../../../contexts/SettingsContext';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export default function CustomersPage() {
-  const { user } = useAppSelector((state) => state.auth);
+  const { user, token } = useAppSelector((state) => state.auth);
   const { settings } = useSettings();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -65,6 +65,9 @@ export default function CustomersPage() {
         setError(null);
 
         const response = await fetch(`${API_URL}/users/customers`, {
+          headers: {
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          },
           credentials: 'include',
         });
 
@@ -153,6 +156,7 @@ export default function CustomersPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         credentials: 'include',
         body: JSON.stringify(editFormData),
@@ -188,6 +192,7 @@ export default function CustomersPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         credentials: 'include',
         body: JSON.stringify({ status: newStatus }),
@@ -234,6 +239,9 @@ export default function CustomersPage() {
 
       const response = await fetch(`${API_URL}/email/send`, {
         method: 'POST',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
         body: formData,
       });

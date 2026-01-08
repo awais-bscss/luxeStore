@@ -78,7 +78,7 @@ function AdminLayoutContent({
   const router = useRouter();
   const dispatch = useAppDispatch();
   const toast = useToast();
-  const { user } = useAppSelector((state) => state.auth);
+  const { user, token } = useAppSelector((state) => state.auth);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isSidebarCollapsed } = useTheme();
   const currency = useCurrency(); // Get current currency from settings
@@ -97,6 +97,9 @@ function AdminLayoutContent({
     try {
       if (showLoading) setIsLoadingNotifications(true);
       const response = await fetch(`${API_URL}/notifications?limit=50`, {
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
       });
 
@@ -142,15 +145,27 @@ function AdminLayoutContent({
       // Search across products, orders, customers, and reviews
       const [productsRes, ordersRes, customersRes, reviewsRes] = await Promise.all([
         fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/products?search=${query}`, {
+          headers: {
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          },
           credentials: 'include',
         }).catch(() => null),
         fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/orders?search=${query}`, {
+          headers: {
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          },
           credentials: 'include',
         }).catch(() => null),
         fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/customers?search=${query}`, {
+          headers: {
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          },
           credentials: 'include',
         }).catch(() => null),
         fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/reviews?search=${query}`, {
+          headers: {
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          },
           credentials: 'include',
         }).catch(() => null),
       ]);
@@ -231,6 +246,9 @@ function AdminLayoutContent({
     try {
       const response = await fetch(`${API_URL}/notifications/${id}/read`, {
         method: 'PUT',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
       });
 
@@ -248,6 +266,9 @@ function AdminLayoutContent({
     try {
       const response = await fetch(`${API_URL}/notifications/mark-all-read`, {
         method: 'PUT',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
       });
 
@@ -272,6 +293,9 @@ function AdminLayoutContent({
 
       const response = await fetch(`${API_URL}/notifications/clear-all`, {
         method: 'DELETE',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         credentials: 'include',
       });
 
