@@ -90,6 +90,7 @@ export const addToCartAPI = createAsyncThunk(
         price: item.price,
         quantity: item.quantity,
         thumbnail: item.product.thumbnail,
+        stock: item.product.stock || 0,
       }));
     } catch (error: any) {
       return rejectWithValue(error.message);
@@ -125,6 +126,7 @@ export const updateCartItemAPI = createAsyncThunk(
         price: item.price,
         quantity: item.quantity,
         thumbnail: item.product.thumbnail,
+        stock: item.product.stock || 0,
       }));
     } catch (error: any) {
       return rejectWithValue(error.message);
@@ -158,6 +160,7 @@ export const removeFromCartAPI = createAsyncThunk(
         price: item.price,
         quantity: item.quantity,
         thumbnail: item.product.thumbnail,
+        stock: item.product.stock || 0,
       }));
     } catch (error: any) {
       return rejectWithValue(error.message);
@@ -193,6 +196,7 @@ export const mergeCartAPI = createAsyncThunk(
         price: item.price,
         quantity: item.quantity,
         thumbnail: item.product.thumbnail,
+        stock: item.product.stock || 0,
       }));
     } catch (error: any) {
       return rejectWithValue(error.message);
@@ -236,9 +240,16 @@ const cartSlice = createSlice({
       const existingItem = state.items.find(item => item.productId === action.payload.productId);
 
       if (existingItem) {
-        existingItem.quantity += action.payload.quantity || 1;
+        // Enforce stock limit
+        const totalRequested = existingItem.quantity + (action.payload.quantity || 1);
+        existingItem.quantity = Math.min(totalRequested, existingItem.stock);
       } else {
-        state.items.push(action.payload);
+        // Enforce stock limit on initial add
+        const initialQuantity = Math.min(action.payload.quantity || 1, action.payload.stock);
+        state.items.push({
+          ...action.payload,
+          quantity: initialQuantity
+        });
       }
 
       state.total = state.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -250,7 +261,9 @@ const cartSlice = createSlice({
     updateQuantityLocal: (state, action: PayloadAction<{ productId: string; quantity: number }>) => {
       const item = state.items.find(item => item.productId === action.payload.productId);
       if (item) {
-        item.quantity = Math.max(1, action.payload.quantity);
+        // Enforce stock limit
+        const validatedQuantity = Math.min(action.payload.quantity, item.stock);
+        item.quantity = Math.max(1, validatedQuantity);
         state.total = state.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       }
     },

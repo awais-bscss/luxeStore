@@ -150,21 +150,26 @@ class CartService {
     }
 
     for (const localItem of localCartItems) {
+      const product = await Product.findById(localItem.productId);
+
+      // Basic validation: product must exist and have at least 1 in stock
+      if (!product || product.stock <= 0) continue;
+
       const existingItem = cart.items.find(
         (item) => item.product.toString() === localItem.productId
       );
 
       if (existingItem) {
-        existingItem.quantity += localItem.quantity;
+        // Increment quantity but cap at available stock
+        const totalRequested = existingItem.quantity + localItem.quantity;
+        existingItem.quantity = Math.min(totalRequested, product.stock);
       } else {
-        const product = await Product.findById(localItem.productId);
-        if (product) {
-          cart.items.push({
-            product: localItem.productId,
-            quantity: localItem.quantity,
-            price: product.price,
-          } as any);
-        }
+        // Add new item but cap at available stock
+        cart.items.push({
+          product: localItem.productId,
+          quantity: Math.min(localItem.quantity, product.stock),
+          price: product.price,
+        } as any);
       }
     }
 
