@@ -17,6 +17,8 @@ function getStripe(): Stripe {
     stripeInstance = new Stripe(secretKey, {
       apiVersion: '2025-12-15.clover',
       typescript: true,
+      maxNetworkRetries: 3, // Retry failed requests up to 3 times
+      timeout: 30000, // 30 second timeout
     });
   }
 
@@ -71,6 +73,20 @@ class StripeService {
       };
     } catch (error: any) {
       console.error('Stripe payment intent creation error:', error);
+
+      // Provide more specific error messages
+      if (error.type === 'StripeConnectionError') {
+        throw new ValidationError('Unable to connect to Stripe. Please check your internet connection and try again.');
+      }
+
+      if (error.type === 'StripeAuthenticationError') {
+        throw new ValidationError('Stripe authentication failed. Please contact support.');
+      }
+
+      if (error.type === 'StripeAPIError') {
+        throw new ValidationError('Stripe service is temporarily unavailable. Please try again later.');
+      }
+
       throw new ValidationError(error.message || 'Failed to create payment intent');
     }
   }
