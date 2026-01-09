@@ -28,7 +28,7 @@ export default function HomePage() {
   const { isDarkMode } = useTheme();
 
   const categories = ["All", "Electronics", "Fashion", "Wearables", "Home"];
-  const cartItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const cartItemCount = (items || []).reduce((sum, item) => sum + (item.quantity || 0), 0);
 
   const handleDropdownEnter = () => {
     if (dropdownTimeoutRef.current) {
@@ -130,7 +130,7 @@ export default function HomePage() {
 
             {/* Results Count */}
             <div className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border whitespace-nowrap transition-all shadow-sm ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-              <span className={`font-bold text-base sm:text-lg ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>{filteredProducts.length}</span>
+              <span className={`font-bold text-base sm:text-lg ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>{filteredProducts?.length || 0}</span>
               <span className={`text-xs sm:text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Results</span>
             </div>
           </div>

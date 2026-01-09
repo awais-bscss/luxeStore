@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import CustomDropdown from '../../../components/ui/CustomDropdown';
@@ -20,48 +20,16 @@ import Image from 'next/image';
 import { useToast } from '../../../hooks/useToast';
 import { formatPrice } from '../../../lib/currency';
 import { useSettings } from '../../../contexts/SettingsContext';
-import { useAppSelector } from '../../../hooks/useRedux';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
-interface Product {
-  _id: string;
-  name: string;
-  description: string;
-  category: string;
-  subcategory?: string;
-  brand?: string;
-  price: number;
-  comparePrice?: number;
-  stock: number;
-  sku: string;
-  thumbnail: string;
-  images: string[];
-  tags: string[];
-  specifications: { key: string; value: string }[];
-  isActive: boolean;
-  isFeatured: boolean;
-  discount?: number;
-  rating: number;
-  reviewCount: number;
-  createdBy?: {
-    _id: string;
-    name: string;
-    email: string;
-  };
-}
-
-interface Pagination {
-  page: number;
-  limit: number;
-  total: number;
-  pages: number;
-}
+import { useAppSelector, useAppDispatch } from '../../../hooks/useRedux';
+import { apiClient } from '../../../lib/api/client';
+import { Product, Pagination } from '../../../types/product';
 
 export default function ProductsPage() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const { settings } = useSettings();
-  const { token } = useAppSelector((state) => state.auth);
+  const state = useAppSelector((state) => state);
+  const { token } = state.auth;
   const toast = useToast();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -87,6 +55,14 @@ export default function ProductsPage() {
   });
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDuplicating, setIsDuplicating] = useState(false);
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -116,51 +92,39 @@ export default function ProductsPage() {
     fetchProducts();
   }, [token, pagination.page, selectedCategory, selectedStatus, debouncedSearch]);
 
-  // Handle 401 Unauthorized - Session Expired
-  const handleSessionExpired = () => {
-    toast.error('Session Expired', 'Your session has expired. Please log in again to continue.');
-    router.push('/login?redirect=/admin/products&reason=session_expired');
-  };
-
   const fetchProducts = async () => {
     if (!token) return;
-    let isMounted = true;
     try {
       setIsLoading(true);
-      const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-      });
 
-      if (selectedCategory !== 'all') params.append('category', selectedCategory);
-      if (selectedStatus === 'active') params.append('isActive', 'true');
-      if (debouncedSearch) params.append('search', debouncedSearch);
+      const params: Record<string, any> = {
+        page: pagination.page,
+        limit: pagination.limit,
+      };
 
-      const response = await fetch(`${API_URL}/products?${params}`, {
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
-      });
+      if (selectedCategory !== 'all') params.category = selectedCategory;
+      if (selectedStatus === 'active') params.isActive = 'true';
+      if (debouncedSearch) params.search = debouncedSearch;
 
-      // Special check for 401 Unauthorized
+      const response = await apiClient('/products', { params }, dispatch, state);
+
       if (response.status === 401) {
-        handleSessionExpired();
+        toast.error('Session Expired', 'Your session has expired. Please log in again to continue.');
+        router.push('/login?redirect=/admin/products&reason=session_expired');
         return;
       }
 
       const data = await response.json();
 
-      if (data.success && isMounted) {
+      if (data.success && isMounted.current) {
         setProducts(data.data.products);
         setPagination(data.data.pagination);
       }
     } catch (error) {
       console.error('Failed to fetch products:', error);
     } finally {
-      if (isMounted) setIsLoading(false);
+      if (isMounted.current) setIsLoading(false);
     }
-    return () => { isMounted = false; };
   };
 
   const getStatusBadge = (product: Product) => {
@@ -218,13 +182,9 @@ export default function ProductsPage() {
 
     try {
       setIsDeleting(true);
-      const response = await fetch(`${API_URL}/products/${deleteModal.product._id}`, {
+      const response = await apiClient(`/products/${deleteModal.product._id}`, {
         method: 'DELETE',
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
-      });
+      }, dispatch, state);
 
       const data = await response.json();
 
@@ -239,7 +199,7 @@ export default function ProductsPage() {
       console.error('Delete error:', error);
       toast.error('Delete Failed', 'An error occurred while deleting the product');
     } finally {
-      setIsDeleting(false);
+      if (isMounted.current) setIsDeleting(false);
     }
   };
 
@@ -272,15 +232,10 @@ export default function ProductsPage() {
         discount: product.discount,
       };
 
-      const response = await fetch(`${API_URL}/products`, {
+      const response = await apiClient('/products', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
         body: JSON.stringify(duplicateData),
-      });
+      }, dispatch, state);
 
       const data = await response.json();
 
@@ -294,7 +249,7 @@ export default function ProductsPage() {
       console.error('Duplicate error:', error);
       toast.error('Duplication Failed', 'An error occurred while duplicating the product');
     } finally {
-      setIsDuplicating(false);
+      if (isMounted.current) setIsDuplicating(false);
     }
   };
 

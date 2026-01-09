@@ -20,14 +20,19 @@ import {
 } from 'lucide-react';
 import { Customer } from '../../../types/customer';
 import { exportToExcel, formatDateForExport } from '../../../utils/exportData';
-import { useAppSelector } from '../../../hooks/useRedux';
+import { useAppSelector, useAppDispatch } from '../../../hooks/useRedux';
 import { formatPrice } from '../../../lib/currency';
 import { useSettings } from '../../../contexts/SettingsContext';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+import { apiClient } from '../../../lib/api/client';
+import { useRouter } from 'next/navigation';
+import { useToast } from '../../../hooks/useToast';
 
 export default function CustomersPage() {
-  const { user, token } = useAppSelector((state) => state.auth);
+  const state = useAppSelector((state) => state);
+  const router = useRouter();
+  const toast = useToast();
+  const dispatch = useAppDispatch();
+  const { user, token } = state.auth;
   const { settings } = useSettings();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -59,35 +64,38 @@ export default function CustomersPage() {
 
   // Fetch customers from API
   useEffect(() => {
+    let isMounted = true;
     const fetchCustomers = async () => {
       if (!token) return;
       try {
         setIsLoading(true);
         setError(null);
 
-        const response = await fetch(`${API_URL}/users/customers`, {
-          headers: {
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-          },
-          credentials: 'include',
-        });
+        const response = await apiClient('/users/customers', {}, dispatch, state);
+
+        if (response.status === 401) {
+          toast.error('Session Expired', 'Your session has expired. Please log in again to continue.');
+          router.push('/login?redirect=/admin/customers&reason=session_expired');
+          return;
+        }
 
         const data = await response.json();
 
-        if (!data.success) {
+        if (data.success && isMounted) {
+          setCustomers(data.data.customers || []);
+        } else if (!data.success) {
           throw new Error(data.message || 'Failed to fetch customers');
         }
-
-        setCustomers(data.data.customers || []);
       } catch (err: any) {
         console.error('Error fetching customers:', err);
-        setError(err.message || 'Failed to load customers');
+        if (isMounted) setError(err.message || 'Failed to load customers');
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
     fetchCustomers();
+    return () => { isMounted = false; };
   }, [token]);
 
   // Close dropdown when clicking outside
@@ -153,15 +161,10 @@ export default function CustomersPage() {
     if (!selectedCustomer) return;
 
     try {
-      const response = await fetch(`${API_URL}/customers/${selectedCustomer._id}`, {
+      const response = await apiClient(`/customers/${selectedCustomer._id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
         body: JSON.stringify(editFormData),
-      });
+      }, dispatch, state);
 
       const data = await response.json();
 
@@ -174,12 +177,13 @@ export default function CustomersPage() {
         ));
         setShowEditModal(false);
         setSelectedCustomer(null);
+        toast.success('Customer Updated', 'The customer information has been successfully updated.');
       } else {
-        alert(data.message || 'Failed to update customer');
+        toast.error('Update Failed', data.message || 'Failed to update customer');
       }
     } catch (err: any) {
       console.error('Error updating customer:', err);
-      alert('Failed to update customer');
+      toast.error('Update Error', 'An error occurred while updating the customer');
     }
   };
 
@@ -189,15 +193,10 @@ export default function CustomersPage() {
     const newStatus = (selectedCustomer.status || 'active') === 'blocked' ? 'active' : 'blocked';
 
     try {
-      const response = await fetch(`${API_URL}/customers/${selectedCustomer._id}`, {
+      const response = await apiClient(`/customers/${selectedCustomer._id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
         body: JSON.stringify({ status: newStatus }),
-      });
+      }, dispatch, state);
 
       const data = await response.json();
 
@@ -210,12 +209,13 @@ export default function CustomersPage() {
         ));
         setShowBlockModal(false);
         setSelectedCustomer(null);
+        toast.success('Status Updated', `Customer status changed to ${newStatus}`);
       } else {
-        alert(data.message || 'Failed to update customer status');
+        toast.error('Update Failed', data.message || 'Failed to update customer status');
       }
     } catch (err: any) {
       console.error('Error updating customer status:', err);
-      alert('Failed to update customer status');
+      toast.error('Update Error', 'An error occurred while updating the customer status');
     }
   };
 
@@ -238,27 +238,23 @@ export default function CustomersPage() {
         formData.append('attachments', file);
       });
 
-      const response = await fetch(`${API_URL}/email/send`, {
+      const response = await apiClient('/email/send', {
         method: 'POST',
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
         body: formData,
-      });
+      }, dispatch, state);
 
       const data = await response.json();
 
       if (data.success) {
-        alert('Email sent successfully!');
+        toast.success('Email Sent', 'The email has been successfully sent to the customer.');
         setShowEmailModal(false);
         setEmailFormData({ subject: '', message: '', attachments: [] });
       } else {
-        alert(data.message || 'Failed to send email');
+        toast.error('Send Failed', data.message || 'Failed to send email');
       }
     } catch (err: any) {
       console.error('Error sending email:', err);
-      alert('Failed to send email');
+      toast.error('Send Error', 'An error occurred while sending the email');
     } finally {
       setIsSendingEmail(false);
     }

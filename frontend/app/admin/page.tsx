@@ -21,17 +21,15 @@ import {
   ChevronDown,
 } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
-
-
-
+import { calculateProductGrowth, getDateRangeForStats } from '../../utils/dashboardStats';
+import { apiClient } from '../../lib/api/client';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const toast = useToast();
-  const { token } = useAppSelector((state) => state.auth);
+  const state = useAppSelector((state) => state);
+  const { token } = state.auth;
   const { settings } = useSettings();
   const [timeRange, setTimeRange] = useState('7d');
   const [products, setProducts] = useState<any[]>([]);
@@ -112,34 +110,28 @@ export default function AdminDashboard() {
         setOrdersLoading(true);
         setRecentOrdersLoading(true);
 
-        const now = new Date();
-        const ranges: Record<string, number> = { '24h': 1, '7d': 7, '30d': 30, '90d': 90 };
-        const days = ranges[timeRange] || 7;
-        const currentStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-        const previousStart = new Date(currentStart.getTime() - days * 24 * 60 * 60 * 1000);
+        const { currentStart, previousStart } = getDateRangeForStats(timeRange);
 
-        const headers = { 'Authorization': `Bearer ${token}` };
-
-        // Define all API calls as promises for parallel execution
+        // Define all API calls as promises for parallel execution using unified apiClient
         const apiCalls = [
           // 0: Recent Products
-          fetch(`${API_URL}/products?limit=5&sort=-createdAt&populate=createdBy`, { headers, credentials: 'include' }),
+          apiClient('/products', { params: { limit: '5', sort: '-createdAt', populate: 'createdBy' } }, dispatch, state),
           // 1: Current Products Count
-          fetch(`${API_URL}/products?createdAt[gte]=${currentStart.toISOString()}`, { headers, credentials: 'include' }),
+          apiClient('/products', { params: { 'createdAt[gte]': currentStart } }, dispatch, state),
           // 2: Previous Products Count
-          fetch(`${API_URL}/products?createdAt[gte]=${previousStart.toISOString()}&createdAt[lt]=${currentStart.toISOString()}`, { headers, credentials: 'include' }),
+          apiClient('/products', { params: { 'createdAt[gte]': previousStart, 'createdAt[lt]': currentStart } }, dispatch, state),
           // 3: Total Customers
-          fetch(`${API_URL}/users/customers`, { headers, credentials: 'include' }),
+          apiClient('/users/customers', {}, dispatch, state),
           // 4: Current Customers Count
-          fetch(`${API_URL}/users/customers?createdAt[gte]=${currentStart.toISOString()}`, { headers, credentials: 'include' }),
+          apiClient('/users/customers', { params: { 'createdAt[gte]': currentStart } }, dispatch, state),
           // 5: Previous Customers Count
-          fetch(`${API_URL}/users/customers?createdAt[gte]=${previousStart.toISOString()}&createdAt[lt]=${currentStart.toISOString()}`, { headers, credentials: 'include' }),
+          apiClient('/users/customers', { params: { 'createdAt[gte]': previousStart, 'createdAt[lt]': currentStart } }, dispatch, state),
           // 6: Order Overview Stats
-          fetch(`${API_URL}/orders/stats/overview`, { headers, credentials: 'include' }),
+          apiClient('/orders/stats/overview', {}, dispatch, state),
           // 7: Recent Orders
-          fetch(`${API_URL}/orders?limit=5&sort=-createdAt`, { headers, credentials: 'include' }),
+          apiClient('/orders', { params: { limit: '5', sort: '-createdAt' } }, dispatch, state),
           // 8: Total Products (for growth calc fallback)
-          fetch(`${API_URL}/products`, { headers, credentials: 'include' }),
+          apiClient('/products', {}, dispatch, state),
         ];
 
         const responses = await Promise.all(apiCalls);
@@ -166,15 +158,13 @@ export default function AdminDashboard() {
           const currentCount = curProdRes.data?.pagination?.total || 0;
           const previousCount = prevProdRes.data?.pagination?.total || 0;
 
-          let percentageChange = previousCount > 0
-            ? ((currentCount - previousCount) / previousCount) * 100
-            : (currentCount > 0 ? 100 : 0);
+          const growth = calculateProductGrowth(currentCount, previousCount);
 
           setProducts(prodRes.data?.products || []);
           setProductCount(totalCount);
           setProductGrowth({
-            change: `${percentageChange >= 0 ? '+' : ''}${percentageChange.toFixed(1)}%`,
-            trend: percentageChange >= 0 ? 'up' : 'down'
+            change: growth.change,
+            trend: growth.trend
           });
         }
 
@@ -184,14 +174,12 @@ export default function AdminDashboard() {
           const currentCount = curCustRes.data?.pagination?.total || 0;
           const previousCount = prevCustRes.data?.pagination?.total || 0;
 
-          let percentageChange = previousCount > 0
-            ? ((currentCount - previousCount) / previousCount) * 100
-            : (currentCount > 0 ? 100 : 0);
+          const growth = calculateProductGrowth(currentCount, previousCount);
 
           setCustomerCount(totalCount);
           setCustomerGrowth({
-            change: `${percentageChange >= 0 ? '+' : ''}${percentageChange.toFixed(1)}%`,
-            trend: percentageChange >= 0 ? 'up' : 'down'
+            change: growth.change,
+            trend: growth.trend
           });
         }
 
