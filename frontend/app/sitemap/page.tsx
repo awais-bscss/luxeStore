@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store/store";
 import { Navbar } from "../../components/layout/Navbar";
+import { Footer } from "../../components/layout/Footer";
 import { CartSidebar } from "../../components/cart/CartSidebar";
 import {
   Map,
@@ -15,7 +16,15 @@ import {
   FileText,
   Mail,
   Info,
-  ChevronRight
+  ChevronRight,
+  Settings,
+  Package,
+  Users,
+  BarChart3,
+  MessageSquare,
+  Briefcase,
+  Lock,
+  Newspaper
 } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -34,7 +43,9 @@ export default function SitemapPage() {
         { name: "Home", href: "/" },
         { name: "Products", href: "/products" },
         { name: "About Us", href: "/about" },
-        { name: "Contact", href: "/contact" }
+        { name: "Contact", href: "/contact" },
+        { name: "Careers", href: "/careers" },
+        { name: "Blog", href: "/blog" }
       ]
     },
     {
@@ -53,37 +64,71 @@ export default function SitemapPage() {
       title: "Account",
       links: [
         { name: "My Account", href: "/account" },
+        { name: "My Orders", href: "/orders" },
         { name: "Favorites", href: "/favorites" },
         { name: "Shopping Cart", href: "/cart" },
-        { name: "Checkout", href: "/checkout" }
+        { name: "Checkout", href: "/checkout" },
+        { name: "Login", href: "/login" },
+        { name: "Forgot Password", href: "/forgot-password" }
       ]
     },
     {
       icon: Info,
-      title: "Information",
+      title: "Customer Support",
+      links: [
+        { name: "Help Center", href: "/help" },
+        { name: "Contact Us", href: "/contact" },
+        { name: "Track Order", href: "/track" },
+        { name: "Track Application", href: "/track-application" },
+        { name: "Shipping Info", href: "/shipping" },
+        { name: "Returns & Refunds", href: "/returns" },
+        { name: "Size Guide", href: "/size-guide" }
+      ]
+    },
+    {
+      icon: Newspaper,
+      title: "Company",
       links: [
         { name: "About Us", href: "/about" },
-        { name: "Contact Us", href: "/contact" },
-        { name: "Help Center", href: "/help" },
-        { name: "Track Order", href: "/track" },
-        { name: "Shipping Info", href: "/shipping" },
-        { name: "Returns", href: "/returns" }
+        { name: "Careers", href: "/careers" },
+        { name: "Blog", href: "/blog" },
+        { name: "Sustainability", href: "/sustainability" },
+        { name: "Affiliates", href: "/affiliates" }
       ]
     },
     {
       icon: FileText,
-      title: "Legal",
+      title: "Legal & Policies",
       links: [
         { name: "Privacy Policy", href: "/privacy" },
         { name: "Terms of Service", href: "/terms" },
         { name: "Cookie Policy", href: "/cookies" },
         { name: "Accessibility", href: "/accessibility" }
       ]
+    },
+    {
+      icon: Settings,
+      title: "Admin Dashboard",
+      links: [
+        { name: "Dashboard", href: "/admin" },
+        { name: "Products", href: "/admin/products" },
+        { name: "Add Product", href: "/admin/products/add" },
+        { name: "Orders", href: "/admin/orders" },
+        { name: "Customers", href: "/admin/customers" },
+        { name: "Reviews", href: "/admin/reviews" },
+        { name: "Contact Messages", href: "/admin/contact-messages" },
+        { name: "Jobs", href: "/admin/jobs" },
+        { name: "Blogs", href: "/admin/blogs" },
+        { name: "Profile", href: "/admin/profile" },
+        { name: "Account Settings", href: "/admin/account" },
+        { name: "Analytics", href: "/admin/analytics" },
+        { name: "System Settings", href: "/admin/settings" }
+      ]
     }
   ];
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800' : 'bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50'}`}>
+    <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
       <Navbar cartItemCount={cartItemCount} onCartOpen={() => setCartOpen(true)} />
 
       {/* Hero Section */}
@@ -100,7 +145,7 @@ export default function SitemapPage() {
       </div>
 
       {/* Content */}
-      <div className="max-w-6xl mx-auto px-6 py-16">
+      <div className="max-w-7xl mx-auto px-6 py-16">
         {/* Introduction */}
         <div className={`rounded-2xl shadow-lg p-8 mb-12 transition-colors duration-300 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <h2 className={`text-2xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -117,7 +162,7 @@ export default function SitemapPage() {
           {sitemapSections.map((section, index) => (
             <div
               key={index}
-              className={`rounded-2xl shadow-lg p-6 transition-colors duration-300 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}
+              className={`rounded-2xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl ${isDarkMode ? 'bg-gray-800 hover:bg-gray-750' : 'bg-white hover:bg-gray-50'}`}
             >
               <div className="flex items-center gap-3 mb-4">
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isDarkMode ? 'bg-blue-900/30' : 'bg-gradient-to-br from-blue-100 to-purple-100'}`}>
@@ -133,8 +178,8 @@ export default function SitemapPage() {
                     <Link
                       href={link.href}
                       className={`flex items-center gap-2 py-2 px-3 rounded-lg transition-all duration-200 group ${isDarkMode
-                          ? 'hover:bg-gray-700 text-gray-300 hover:text-blue-400'
-                          : 'hover:bg-blue-50 text-gray-600 hover:text-blue-600'
+                        ? 'hover:bg-gray-700 text-gray-300 hover:text-blue-400'
+                        : 'hover:bg-blue-50 text-gray-600 hover:text-blue-600'
                         }`}
                     >
                       <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -184,17 +229,17 @@ export default function SitemapPage() {
           <p className={`mb-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             If you can't find the page you're looking for, please contact us and we'll be happy to help.
           </p>
-          <a
+          <Link
             href="/contact"
             className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 shadow-lg"
           >
             Contact Support
-          </a>
+          </Link>
         </div>
       </div>
 
+      <Footer />
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
     </div>
   );
 }
-
