@@ -332,12 +332,12 @@ function AdminLayoutContent({
       >
         {/* Logo */}
         <div className="flex h-16 items-center justify-between px-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-          <Link href="/admin" className="flex items-center space-x-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
-              <Store className="h-5 w-5 text-white" />
+          <Link href="/admin" className="flex items-center space-x-3 group">
+            <div className={`rounded-xl flex items-center justify-center overflow-hidden transition-all duration-300 ${isSidebarCollapsed ? 'h-10 w-10' : 'h-10 w-10'} group-hover:scale-110`}>
+              <img src="/logo.png" alt="Logo" className="h-full w-full object-contain" />
             </div>
             {!isSidebarCollapsed && (
-              <span className="text-xl font-bold text-gray-900 dark:text-white">
+              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 LuxeStore
               </span>
             )}

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   title: "LuxeStore - Premium Shopping Experience",
   description: "Your destination for premium products and exceptional shopping experiences. Shop electronics, fashion, wearables, and more.",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.png",
   },
 };
 
