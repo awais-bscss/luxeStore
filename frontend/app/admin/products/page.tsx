@@ -106,22 +106,19 @@ export default function ProductsPage() {
       if (selectedStatus === 'active') params.isActive = 'true';
       if (debouncedSearch) params.search = debouncedSearch;
 
-      const response = await apiClient('/products', { params }, dispatch, state);
+      const data = await apiClient('/products', { params }, dispatch, state);
 
-      if (response.status === 401) {
-        toast.error('Session Expired', 'Your session has expired. Please log in again to continue.');
-        router.push('/login?redirect=/admin/products&reason=session_expired');
-        return;
-      }
-
-      const data = await response.json();
-
-      if (data.success && isMounted.current) {
+      if (isMounted.current) {
         setProducts(data.data.products);
-        setPagination(data.data.pagination);
+        setPagination(data.pagination || pagination);
       }
-    } catch (error) {
-      console.error('Failed to fetch products:', error);
+    } catch (error: any) {
+      if (error.code === 'SESSION_EXPIRED') {
+        toast.error('Session Expired', error.message);
+        router.push('/login?redirect=/admin/products&reason=session_expired');
+      } else {
+        console.error('Failed to fetch products:', error);
+      }
     } finally {
       if (isMounted.current) setIsLoading(false);
     }
@@ -182,13 +179,11 @@ export default function ProductsPage() {
 
     try {
       setIsDeleting(true);
-      const response = await apiClient(`/products/${deleteModal.product._id}`, {
+      const data = await apiClient(`/products/${deleteModal.product._id}`, {
         method: 'DELETE',
       }, dispatch, state);
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (data.success) {
         toast.success('Product Deleted', 'Product has been successfully deleted');
         setDeleteModal({ show: false, product: null });
         fetchProducts();
@@ -232,14 +227,12 @@ export default function ProductsPage() {
         discount: product.discount,
       };
 
-      const response = await apiClient('/products', {
+      const data = await apiClient('/products', {
         method: 'POST',
         body: JSON.stringify(duplicateData),
       }, dispatch, state);
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (data.success) {
         toast.success('Product Duplicated', 'Product has been successfully duplicated');
         fetchProducts();
       } else {

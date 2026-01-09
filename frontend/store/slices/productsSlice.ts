@@ -2,22 +2,21 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Product } from '../../data/products';
 import { ProductsState } from '../../data/types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+import { apiClient } from '../../lib/api/client';
 
 // THUNKS
 export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
-  async (_, { rejectWithValue }) => {
+  async (_, { dispatch, getState, rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_URL}/products`);
-      const data = await response.json();
+      const state = getState() as any;
+      const data = await apiClient('/products', {}, dispatch as any, state);
 
       if (!data.success) {
         throw new Error(data.message);
       }
 
       // Map API response to Product interface
-      // Parse SKU to get numeric ID for compatibility with existing components
       return data.data.products.map((p: any) => {
         let id = 0;
         if (p.sku && p.sku.startsWith('SKU-')) {
@@ -43,7 +42,7 @@ export const fetchProducts = createAsyncThunk(
       });
 
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Failed to fetch products');
     }
   }
 );

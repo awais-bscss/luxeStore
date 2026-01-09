@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { logout } from './authSlice';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+import { apiClient, ApiResponse } from '../../lib/api/client';
 
 export interface CartItem {
   productId: string;
@@ -28,203 +27,128 @@ const initialState: CartState = {
   isSynced: false,
 };
 
+// Helper to map API cart items to local CartItem type
+const mapApiCartItems = (items: any[]): CartItem[] => {
+  return items.map((item: any) => ({
+    productId: item.product?._id || item.productId,
+    name: item.product?.name || item.name,
+    price: item.price,
+    quantity: item.quantity,
+    thumbnail: item.product?.thumbnail || item.thumbnail,
+    stock: item.product?.stock || item.stock || 0,
+  }));
+};
+
 // Async thunks for API calls
 export const fetchCart = createAsyncThunk(
   'cart/fetchCart',
-  async (_, { getState, rejectWithValue }) => {
+  async (_, { getState, dispatch, rejectWithValue }) => {
     try {
-      const state = getState() as { auth: { token: string | null } };
-      const token = state.auth.token;
-
-      const response = await fetch(`${API_URL}/cart`, {
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
-      });
-
-      // Special check for 401 Unauthorized - Session Expired
-      if (response.status === 401) {
-        return rejectWithValue({ code: 'SESSION_EXPIRED', message: 'Session expired' });
-      }
-
-      const data = await response.json();
+      const state = getState() as any;
+      const data = await apiClient('/cart', {}, dispatch as any, state);
 
       if (!data.success) {
         throw new Error(data.message);
       }
 
-      return data.data.cart.items.map((item: any) => ({
-        productId: item.product._id,
-        name: item.product.name,
-        price: item.price,
-        quantity: item.quantity,
-        thumbnail: item.product.thumbnail,
-        stock: item.product.stock || 0,
-      }));
+      return mapApiCartItems(data.data.cart.items);
     } catch (error: any) {
-      return rejectWithValue({ code: 'ERROR', message: error.message });
+      return rejectWithValue(error.message || 'Failed to fetch cart');
     }
   }
 );
 
 export const addToCartAPI = createAsyncThunk(
   'cart/addToCartAPI',
-  async ({ productId, quantity = 1 }: { productId: string; quantity?: number }, { getState, rejectWithValue }) => {
+  async ({ productId, quantity = 1 }: { productId: string; quantity?: number }, { getState, dispatch, rejectWithValue }) => {
     try {
       const state = getState() as any;
-      const token = state.auth.token;
-
-      const response = await fetch(`${API_URL}/cart/add`, {
+      const data = await apiClient('/cart/add', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
         body: JSON.stringify({ productId, quantity }),
-      });
-      const data = await response.json();
+      }, dispatch as any, state);
 
       if (!data.success) {
         throw new Error(data.message);
       }
 
-      return data.data.cart.items.map((item: any) => ({
-        productId: item.product._id,
-        name: item.product.name,
-        price: item.price,
-        quantity: item.quantity,
-        thumbnail: item.product.thumbnail,
-        stock: item.product.stock || 0,
-      }));
+      return mapApiCartItems(data.data.cart.items);
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Failed to add to cart');
     }
   }
 );
 
 export const updateCartItemAPI = createAsyncThunk(
   'cart/updateCartItemAPI',
-  async ({ productId, quantity }: { productId: string; quantity: number }, { getState, rejectWithValue }) => {
+  async ({ productId, quantity }: { productId: string; quantity: number }, { getState, dispatch, rejectWithValue }) => {
     try {
       const state = getState() as any;
-      const token = state.auth.token;
-
-      const response = await fetch(`${API_URL}/cart/${productId}`, {
+      const data = await apiClient(`/cart/${productId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
         body: JSON.stringify({ quantity }),
-      });
-      const data = await response.json();
+      }, dispatch as any, state);
 
       if (!data.success) {
         throw new Error(data.message);
       }
 
-      return data.data.cart.items.map((item: any) => ({
-        productId: item.product._id,
-        name: item.product.name,
-        price: item.price,
-        quantity: item.quantity,
-        thumbnail: item.product.thumbnail,
-        stock: item.product.stock || 0,
-      }));
+      return mapApiCartItems(data.data.cart.items);
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Failed to update item');
     }
   }
 );
 
 export const removeFromCartAPI = createAsyncThunk(
   'cart/removeFromCartAPI',
-  async (productId: string, { getState, rejectWithValue }) => {
+  async (productId: string, { getState, dispatch, rejectWithValue }) => {
     try {
       const state = getState() as any;
-      const token = state.auth.token;
-
-      const response = await fetch(`${API_URL}/cart/${productId}`, {
+      const data = await apiClient(`/cart/${productId}`, {
         method: 'DELETE',
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
-      });
-      const data = await response.json();
+      }, dispatch as any, state);
 
       if (!data.success) {
         throw new Error(data.message);
       }
 
-      return data.data.cart.items.map((item: any) => ({
-        productId: item.product._id,
-        name: item.product.name,
-        price: item.price,
-        quantity: item.quantity,
-        thumbnail: item.product.thumbnail,
-        stock: item.product.stock || 0,
-      }));
+      return mapApiCartItems(data.data.cart.items);
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Failed to remove item');
     }
   }
 );
 
 export const mergeCartAPI = createAsyncThunk(
   'cart/mergeCartAPI',
-  async (localItems: CartItem[], { getState, rejectWithValue }) => {
+  async (localItems: CartItem[], { getState, dispatch, rejectWithValue }) => {
     try {
       const state = getState() as any;
-      const token = state.auth.token;
-
-      const response = await fetch(`${API_URL}/cart/merge`, {
+      const data = await apiClient('/cart/merge', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
         body: JSON.stringify({ items: localItems }),
-      });
-      const data = await response.json();
+      }, dispatch as any, state);
 
       if (!data.success) {
         throw new Error(data.message);
       }
 
-      return data.data.cart.items.map((item: any) => ({
-        productId: item.product._id,
-        name: item.product.name,
-        price: item.price,
-        quantity: item.quantity,
-        thumbnail: item.product.thumbnail,
-        stock: item.product.stock || 0,
-      }));
+      return mapApiCartItems(data.data.cart.items);
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Failed to merge cart');
     }
   }
 );
 
 export const clearCartAPI = createAsyncThunk(
   'cart/clearCartAPI',
-  async (_, { getState, rejectWithValue }) => {
+  async (_, { getState, dispatch, rejectWithValue }) => {
     try {
       const state = getState() as any;
-      const token = state.auth.token;
-
-      const response = await fetch(`${API_URL}/cart`, {
+      const data = await apiClient('/cart', {
         method: 'DELETE',
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
-      });
-      const data = await response.json();
+      }, dispatch as any, state);
 
       if (!data.success) {
         throw new Error(data.message);
@@ -232,7 +156,7 @@ export const clearCartAPI = createAsyncThunk(
 
       return []; // Return empty array since cart is cleared
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Failed to clear cart');
     }
   }
 );

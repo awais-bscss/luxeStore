@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAppDispatch } from "../../../../hooks/useRedux";
+import { useAppDispatch, useAppSelector } from "../../../../hooks/useRedux";
 import { addToast } from "../../../../store/slices/toastSlice";
+import { apiClient } from "../../../../lib/api/client";
 import ImageUpload from "../../../../components/admin/ImageUpload";
 import MultiImageUpload from "../../../../components/admin/MultiImageUpload";
 import CustomDropdown from "../../../../components/ui/CustomDropdown";
@@ -19,7 +20,7 @@ import {
   Layers,
 } from "lucide-react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// apiClient handles API_URL from env
 
 const categoryOptions = [
   { value: "Electronics", label: "Electronics" },
@@ -35,6 +36,7 @@ const categoryOptions = [
 export default function AddProductPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const state = useAppSelector((state) => state);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -125,20 +127,10 @@ export default function AddProductPage() {
         specifications: formData.specifications.filter((spec) => spec.key && spec.value),
       };
 
-      const response = await fetch(`${API_URL}/products`, {
+      const data = await apiClient('/products', {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
         body: JSON.stringify(productData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to create product");
-      }
+      }, dispatch as any, state);
 
       dispatch(addToast({
         type: "success",

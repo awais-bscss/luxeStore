@@ -4,10 +4,12 @@ import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store/store";
 import { useRouter } from "next/navigation";
+import { useAppDispatch, useAppSelector } from "../../../hooks/useRedux";
+import { apiClient } from "../../../lib/api/client";
 import { Mail, Clock, CheckCircle, Trash2, Eye, Filter } from "lucide-react";
 import { useTheme } from "../../../contexts/ThemeContext";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// apiClient handles API_URL from env
 
 interface ContactMessage {
   _id: string;
@@ -29,7 +31,9 @@ interface ContactMessage {
 export default function ContactMessagesPage() {
   const { isDarkMode } = useTheme();
   const router = useRouter();
-  const { user, isAuthenticated, token } = useSelector((state: RootState) => state.auth);
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((state) => state);
+  const { user, isAuthenticated, token } = state.auth;
 
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,22 +74,17 @@ export default function ContactMessagesPage() {
     if (!token) return;
     try {
       setLoading(true);
-      const params = new URLSearchParams({
+      const params: Record<string, string> = {
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
-      });
+      };
 
       if (selectedStatus !== 'all') {
-        params.append('status', selectedStatus);
+        params.status = selectedStatus;
       }
 
-      const response = await fetch(`${API_URL}/contact?${params}`, {
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
-      });
-      const data = await response.json();
+      const data = await apiClient('/contact', { params }, dispatch as any, state);
+
       if (data.success) {
         setMessages(data.data.messages);
         setPagination({
@@ -110,16 +109,11 @@ export default function ContactMessagesPage() {
   // Update message status
   const updateStatus = async (messageId: string, newStatus: 'pending' | 'replied' | 'resolved') => {
     try {
-      const response = await fetch(`${API_URL}/contact/${messageId}/status`, {
+      const data = await apiClient(`/contact/${messageId}/status`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
         body: JSON.stringify({ status: newStatus }),
-      });
-      const data = await response.json();
+      }, dispatch as any, state);
+
       if (data.success) {
         fetchMessages();
         if (selectedMessage?._id === messageId) {
@@ -141,14 +135,10 @@ export default function ContactMessagesPage() {
     if (!messageToDelete) return;
 
     try {
-      const response = await fetch(`${API_URL}/contact/${messageToDelete}`, {
+      const data = await apiClient(`/contact/${messageToDelete}`, {
         method: 'DELETE',
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
-      });
-      const data = await response.json();
+      }, dispatch as any, state);
+
       if (data.success) {
         fetchMessages();
         setShowDetailModal(false);
@@ -184,16 +174,10 @@ export default function ContactMessagesPage() {
         formData.append('attachments', file);
       });
 
-      const response = await fetch(`${API_URL}/email/send`, {
+      const data = await apiClient('/email/send', {
         method: 'POST',
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
         body: formData,
-      });
-
-      const data = await response.json();
+      }, dispatch as any, state);
 
       if (data.success) {
         // Update message status to replied

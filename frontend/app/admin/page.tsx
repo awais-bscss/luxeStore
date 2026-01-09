@@ -136,19 +136,14 @@ export default function AdminDashboard() {
 
         const responses = await Promise.all(apiCalls);
 
-        // Check if any response is 401
-        const unauthorized = responses.find(r => r.status === 401);
-        if (unauthorized) {
-          if (isMounted) handleSessionExpired();
-          return;
-        }
+        if (!isMounted) return;
 
-        // Process all data
+        // Process all data - responses are already parsed by apiClient
         const [
           prodRes, curProdRes, prevProdRes,
           custRes, curCustRes, prevCustRes,
           orderStatsRes, recentOrderRes, totalProdRes
-        ] = await Promise.all(responses.map(r => r.json()));
+        ] = responses;
 
         if (!isMounted) return;
 
@@ -210,8 +205,12 @@ export default function AdminDashboard() {
           setRecentOrders(recentOrderRes.data.orders);
         }
 
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+      } catch (error: any) {
+        if (error.code === 'SESSION_EXPIRED') {
+          if (isMounted) handleSessionExpired();
+        } else {
+          console.error('Error fetching dashboard data:', error);
+        }
       } finally {
         if (isMounted) {
           setProductsLoading(false);

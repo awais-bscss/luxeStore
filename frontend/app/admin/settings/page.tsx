@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppSelector } from '../../../hooks/useRedux';
+import { useAppSelector, useAppDispatch } from '../../../hooks/useRedux';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useSettings, useCurrency } from '../../../contexts/SettingsContext';
 import { useToast } from '../../../hooks/useToast';
 import CustomDropdown from '../../../components/ui/CustomDropdown';
+import { apiClient } from '../../../lib/api/client';
 import {
   Globe,
   Shield,
@@ -24,11 +25,13 @@ import {
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// apiClient handles the BASE URL from env
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { user } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((state) => state);
+  const { user } = state.auth;
   const { isDarkMode, toggleDarkMode, isCompactView, toggleCompactView, isSidebarCollapsed, toggleSidebarCollapsed } = useTheme();
   const { refreshSettings } = useSettings();
   const currency = useCurrency(); // Get current currency
@@ -130,16 +133,8 @@ export default function SettingsPage() {
 
   const fetchSettings = async () => {
     try {
-      const response = await fetch(`${API_URL}/settings`, {
-        credentials: 'include',
-      });
+      const data = await apiClient('/settings', {}, dispatch, state);
 
-      if (!response.ok) {
-        console.error('Failed to fetch settings');
-        return;
-      }
-
-      const data = await response.json();
       if (data.success && data.data.settings) {
         const dbSettings = data.data.settings;
         setSettings(prev => ({
@@ -212,12 +207,8 @@ export default function SettingsPage() {
   const handleSave = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_URL}/settings`, {
+      const data = await apiClient('/settings', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
         body: JSON.stringify({
           // Store Information
           storeName: settings.storeName,
@@ -268,10 +259,7 @@ export default function SettingsPage() {
           apiRateLimit: parseInt(settings.apiRateLimit),
           cacheDuration: parseInt(settings.cacheDuration),
         }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
+      }, dispatch, state);
 
       // Refresh the settings context to update currency across the app
       await refreshSettings();
@@ -287,13 +275,9 @@ export default function SettingsPage() {
   const handleEnable2FA = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_URL}/2fa/enable`, {
+      const data = await apiClient('/2fa/enable', {
         method: 'POST',
-        credentials: 'include',
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
+      }, dispatch, state);
 
       setQrCode(data.data.qrCode);
       setSecret(data.data.secret);
@@ -313,17 +297,10 @@ export default function SettingsPage() {
 
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_URL}/2fa/verify`, {
+      const data = await apiClient('/2fa/verify', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
         body: JSON.stringify({ token: verificationCode }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
+      }, dispatch, state);
 
       setBackupCodes(data.data.backupCodes);
       setShowBackupCodes(true);
@@ -342,17 +319,10 @@ export default function SettingsPage() {
 
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_URL}/2fa/disable`, {
+      const data = await apiClient('/2fa/disable', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
         body: JSON.stringify({ password }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
+      }, dispatch, state);
 
       setSettings(prev => ({ ...prev, twoFactorAuth: false }));
       toast.success('Success', '2FA disabled successfully');
@@ -370,13 +340,9 @@ export default function SettingsPage() {
 
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_URL}/settings/clear-cache`, {
+      const data = await apiClient('/settings/clear-cache', {
         method: 'POST',
-        credentials: 'include',
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
+      }, dispatch, state);
 
       toast.success('Success', 'Cache cleared successfully');
     } catch (error: any) {

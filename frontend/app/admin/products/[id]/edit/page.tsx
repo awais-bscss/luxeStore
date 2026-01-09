@@ -5,11 +5,13 @@ import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save, Loader2, Layers } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '../../../../../hooks/useToast';
+import { useAppDispatch, useAppSelector } from '../../../../../hooks/useRedux';
+import { apiClient } from '../../../../../lib/api/client';
 import ImageUpload from '../../../../../components/admin/ImageUpload';
 import MultiImageUpload from '../../../../../components/admin/MultiImageUpload';
 import CustomDropdown from '../../../../../components/ui/CustomDropdown';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// apiClient handles API_URL from env
 
 const categoryOptions = [
   { value: "Electronics", label: "Electronics" },
@@ -45,6 +47,8 @@ export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
   const toast = useToast();
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((state) => state);
   const productId = params.id as string;
 
   const [isLoading, setIsLoading] = useState(true);
@@ -78,10 +82,7 @@ export default function EditProductPage() {
   const fetchProduct = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_URL}/products/${productId}`, {
-        credentials: 'include',
-      });
-      const data = await response.json();
+      const data = await apiClient(`/products/${productId}`, {}, dispatch as any, state);
 
       if (data.success) {
         const product = data.data.product;
@@ -126,18 +127,12 @@ export default function EditProductPage() {
 
     try {
       setIsSaving(true);
-      const response = await fetch(`${API_URL}/products/${productId}`, {
+      const data = await apiClient(`/products/${productId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
         body: JSON.stringify(formData),
-      });
+      }, dispatch as any, state);
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (data.success) {
         toast.success('Success', 'Product updated successfully');
         router.push('/admin/products');
       } else {

@@ -71,24 +71,21 @@ export default function CustomersPage() {
         setIsLoading(true);
         setError(null);
 
-        const response = await apiClient('/users/customers', {}, dispatch, state);
-
-        if (response.status === 401) {
-          toast.error('Session Expired', 'Your session has expired. Please log in again to continue.');
-          router.push('/login?redirect=/admin/customers&reason=session_expired');
-          return;
-        }
-
-        const data = await response.json();
+        const data = await apiClient('/users/customers', {}, dispatch, state);
 
         if (data.success && isMounted) {
           setCustomers(data.data.customers || []);
-        } else if (!data.success) {
-          throw new Error(data.message || 'Failed to fetch customers');
+        } else {
+          throw new Error('Failed to fetch customers');
         }
       } catch (err: any) {
-        console.error('Error fetching customers:', err);
-        if (isMounted) setError(err.message || 'Failed to load customers');
+        if (err.code === 'SESSION_EXPIRED') {
+          toast.error('Session Expired', err.message);
+          router.push('/login?redirect=/admin/customers&reason=session_expired');
+        } else {
+          console.error('Error fetching customers:', err);
+          if (isMounted) setError(err.message || 'Failed to load customers');
+        }
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -161,12 +158,10 @@ export default function CustomersPage() {
     if (!selectedCustomer) return;
 
     try {
-      const response = await apiClient(`/customers/${selectedCustomer._id}`, {
+      const data = await apiClient(`/customers/${selectedCustomer._id}`, {
         method: 'PUT',
         body: JSON.stringify(editFormData),
       }, dispatch, state);
-
-      const data = await response.json();
 
       if (data.success) {
         // Update local state
@@ -193,12 +188,10 @@ export default function CustomersPage() {
     const newStatus = (selectedCustomer.status || 'active') === 'blocked' ? 'active' : 'blocked';
 
     try {
-      const response = await apiClient(`/customers/${selectedCustomer._id}`, {
+      const data = await apiClient(`/customers/${selectedCustomer._id}`, {
         method: 'PUT',
         body: JSON.stringify({ status: newStatus }),
       }, dispatch, state);
-
-      const data = await response.json();
 
       if (data.success) {
         // Update local state
@@ -222,7 +215,7 @@ export default function CustomersPage() {
   const handleSendEmailSubmit = async () => {
     if (!selectedCustomer) return;
     if (!emailFormData.subject || !emailFormData.message) {
-      alert('Please fill in subject and message');
+      toast.error('Missing Information', 'Please fill in both subject and message');
       return;
     }
 
@@ -238,12 +231,10 @@ export default function CustomersPage() {
         formData.append('attachments', file);
       });
 
-      const response = await apiClient('/email/send', {
+      const data = await apiClient('/email/send', {
         method: 'POST',
         body: formData,
       }, dispatch, state);
-
-      const data = await response.json();
 
       if (data.success) {
         toast.success('Email Sent', 'The email has been successfully sent to the customer.');

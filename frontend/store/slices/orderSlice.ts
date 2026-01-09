@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+import { apiClient } from '../../lib/api/client';
 
 export interface OrderItem {
   product: string;
@@ -83,29 +82,17 @@ const initialState: OrderState = {
 // Create order
 export const createOrder = createAsyncThunk(
   'orders/create',
-  async (orderData: { shippingAddress: ShippingAddress; paymentMethod: string; notes?: string }, { getState, rejectWithValue }) => {
+  async (orderData: { shippingAddress: ShippingAddress; paymentMethod: string; notes?: string }, { getState, dispatch, rejectWithValue }) => {
     try {
       const state = getState() as any;
-      const token = state.auth.token;
-
-      const response = await fetch(`${API_URL}/orders`, {
+      const data = await apiClient('/orders', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
         body: JSON.stringify(orderData),
-      });
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message);
-      }
+      }, dispatch as any, state);
 
       return data.data.order;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Failed to create order');
     }
   }
 );
@@ -113,32 +100,13 @@ export const createOrder = createAsyncThunk(
 // Fetch user's orders
 export const fetchUserOrders = createAsyncThunk(
   'orders/fetchUserOrders',
-  async (_, { getState, rejectWithValue }) => {
+  async (_, { getState, dispatch, rejectWithValue }) => {
     try {
       const state = getState() as any;
-      const token = state.auth.token;
-
-      const response = await fetch(`${API_URL}/orders/my-orders`, {
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
-      });
-
-      // Check for session expiration
-      if (response.status === 401) {
-        return rejectWithValue({ code: 'SESSION_EXPIRED', message: 'Session expired' });
-      }
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message);
-      }
-
+      const data = await apiClient('/orders/my-orders', {}, dispatch as any, state);
       return data.data.orders;
     } catch (error: any) {
-      return rejectWithValue({ code: 'ERROR', message: error.message });
+      return rejectWithValue(error.message || 'Failed to fetch orders');
     }
   }
 );
@@ -146,20 +114,13 @@ export const fetchUserOrders = createAsyncThunk(
 // Fetch order by ID
 export const fetchOrderById = createAsyncThunk(
   'orders/fetchById',
-  async (orderId: string, { rejectWithValue }) => {
+  async (orderId: string, { getState, dispatch, rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_URL}/orders/${orderId}`, {
-        credentials: 'include',
-      });
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message);
-      }
-
+      const state = getState() as any;
+      const data = await apiClient(`/orders/${orderId}`, {}, dispatch as any, state);
       return data.data.order;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Failed to fetch order');
     }
   }
 );
@@ -167,21 +128,16 @@ export const fetchOrderById = createAsyncThunk(
 // Cancel order
 export const cancelOrder = createAsyncThunk(
   'orders/cancel',
-  async (orderId: string, { rejectWithValue }) => {
+  async (orderId: string, { getState, dispatch, rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_URL}/orders/${orderId}/cancel`, {
+      const state = getState() as any;
+      const data = await apiClient(`/orders/${orderId}/cancel`, {
         method: 'PUT',
-        credentials: 'include',
-      });
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message);
-      }
+      }, dispatch as any, state);
 
       return data.data.order;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Failed to cancel order');
     }
   }
 );
@@ -189,38 +145,19 @@ export const cancelOrder = createAsyncThunk(
 // Admin: Fetch all orders
 export const fetchAllOrders = createAsyncThunk(
   'orders/fetchAll',
-  async (filters: { status?: string; paymentStatus?: string; page?: number; limit?: number } = {}, { getState, rejectWithValue }) => {
+  async (filters: { status?: string; paymentStatus?: string; page?: number; limit?: number } = {}, { getState, dispatch, rejectWithValue }) => {
     try {
       const state = getState() as any;
-      const token = state.auth.token;
+      const params: Record<string, string | number> = {};
+      if (filters?.status) params.status = filters.status;
+      if (filters?.paymentStatus) params.paymentStatus = filters.paymentStatus;
+      if (filters?.page) params.page = filters.page;
+      if (filters?.limit) params.limit = filters.limit;
 
-      const params = new URLSearchParams();
-      if (filters?.status) params.append('status', filters.status);
-      if (filters?.paymentStatus) params.append('paymentStatus', filters.paymentStatus);
-      if (filters?.page) params.append('page', filters.page.toString());
-      if (filters?.limit) params.append('limit', filters.limit.toString());
-
-      const response = await fetch(`${API_URL}/orders?${params.toString()}`, {
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
-      });
-
-      // Check for session expiration
-      if (response.status === 401) {
-        return rejectWithValue({ code: 'SESSION_EXPIRED', message: 'Session expired' });
-      }
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message);
-      }
-
-      return data.data; // Returns { orders, pagination }
+      const data = await apiClient('/orders', { params }, dispatch as any, state);
+      return data.data; // Returns { orders, pagination, statistics }
     } catch (error: any) {
-      return rejectWithValue({ code: 'ERROR', message: error.message });
+      return rejectWithValue(error.message || 'Failed to fetch orders');
     }
   }
 );
@@ -228,23 +165,17 @@ export const fetchAllOrders = createAsyncThunk(
 // Admin: Update order status
 export const updateOrderStatus = createAsyncThunk(
   'orders/updateStatus',
-  async ({ orderId, status }: { orderId: string; status: string }, { rejectWithValue }) => {
+  async ({ orderId, status }: { orderId: string; status: string }, { getState, dispatch, rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_URL}/orders/${orderId}/status`, {
+      const state = getState() as any;
+      const data = await apiClient(`/orders/${orderId}/status`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ status }),
-      });
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message);
-      }
+      }, dispatch as any, state);
 
       return data.data.order;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Failed to update order status');
     }
   }
 );
@@ -252,23 +183,17 @@ export const updateOrderStatus = createAsyncThunk(
 // Admin: Update payment status
 export const updatePaymentStatus = createAsyncThunk(
   'orders/updatePayment',
-  async ({ orderId, status }: { orderId: string; status: string }, { rejectWithValue }) => {
+  async ({ orderId, status }: { orderId: string; status: string }, { getState, dispatch, rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_URL}/orders/${orderId}/payment`, {
+      const state = getState() as any;
+      const data = await apiClient(`/orders/${orderId}/payment`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ status }),
-      });
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message);
-      }
+      }, dispatch as any, state);
 
       return data.data.order;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Failed to update payment status');
     }
   }
 );
@@ -276,21 +201,16 @@ export const updatePaymentStatus = createAsyncThunk(
 // Archive order
 export const archiveOrder = createAsyncThunk(
   'orders/archive',
-  async (orderId: string, { rejectWithValue }) => {
+  async (orderId: string, { getState, dispatch, rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_URL}/orders/${orderId}/archive`, {
+      const state = getState() as any;
+      const data = await apiClient(`/orders/${orderId}/archive`, {
         method: 'PUT',
-        credentials: 'include',
-      });
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message);
-      }
+      }, dispatch as any, state);
 
       return data.data.order;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Failed to archive order');
     }
   }
 );
@@ -298,21 +218,16 @@ export const archiveOrder = createAsyncThunk(
 // Unarchive order
 export const unarchiveOrder = createAsyncThunk(
   'orders/unarchive',
-  async (orderId: string, { rejectWithValue }) => {
+  async (orderId: string, { getState, dispatch, rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_URL}/orders/${orderId}/unarchive`, {
+      const state = getState() as any;
+      const data = await apiClient(`/orders/${orderId}/unarchive`, {
         method: 'PUT',
-        credentials: 'include',
-      });
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message);
-      }
+      }, dispatch as any, state);
 
       return data.data.order;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Failed to unarchive order');
     }
   }
 );

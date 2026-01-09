@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { apiClient } from '../../lib/api/client';
 
 export interface User {
   id: string;
@@ -32,127 +33,80 @@ const initialState: AuthState = {
   isPasswordExpired: false,
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// Initial state and types remain the same, apiClient handles API_URL from env
 
 export const signup = createAsyncThunk(
   'auth/signup',
-  async (credentials: { name: string; email: string; password: string; role?: 'user' | 'admin' | 'superadmin' }, { rejectWithValue }) => {
+  async (credentials: { name: string; email: string; password: string; role?: 'user' | 'admin' | 'superadmin' }, { dispatch, getState, rejectWithValue }) => {
     try {
-      console.log('=== REDUX SIGNUP THUNK ===');
-      console.log('Received credentials:', credentials);
-      console.log('Email received:', credentials.email); // Debug
-      console.log('Role in credentials:', credentials.role);
-      console.log('Stringified body:', JSON.stringify(credentials));
-
-      const response = await fetch(`${API_URL}/auth/signup`, {
+      const state = getState() as any;
+      const data = await apiClient('/auth/signup', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(credentials),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return rejectWithValue(data.message || 'Signup failed');
-      }
+      }, dispatch as any, state);
 
       return { token: data.token, user: data.user || data.data.user };
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Network error');
+      return rejectWithValue(error.message || 'Signup failed');
     }
   }
 );
 
 export const login = createAsyncThunk(
   'auth/login',
-  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
+  async (credentials: { email: string; password: string }, { dispatch, getState, rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
+      const state = getState() as any;
+      const data = await apiClient('/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(credentials),
-      });
-
-      const data = await response.json();
-
-      console.log('=== LOGIN API RESPONSE ===');
-      console.log('Full response:', data);
-
-      if (!response.ok) {
-        return rejectWithValue(data.message || 'Login failed');
-      }
-
-      // Check if 2FA is required
-      if (data.requiresTwoFactor) {
-        console.log('2FA required for user:', data.userId);
-        // Return special response indicating 2FA is needed
-        return rejectWithValue({
-          requiresTwoFactor: true,
-          userId: data.userId,
-          message: data.message,
-        });
-      }
+      }, dispatch as any, state);
 
       // Normal login (no 2FA)
-      const result = {
+      return {
         token: data.token,
         user: data.user || data.data.user,
         passwordExpired: data.passwordExpired || false
       };
-      console.log('Returning to Redux:', result);
-
-      return result;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Network error');
+      // Check if 2FA is required from the error response
+      if (error.status === 401 && error.data?.requiresTwoFactor) {
+        return rejectWithValue({
+          requiresTwoFactor: true,
+          userId: error.data.userId,
+          message: error.message,
+        });
+      }
+      return rejectWithValue(error.message || 'Login failed');
     }
   }
 );
 
 export const logout = createAsyncThunk(
   'auth/logout',
-  async (_, { rejectWithValue }) => {
+  async (_, { dispatch, getState, rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_URL}/auth/logout`, {
+      const state = getState() as any;
+      await apiClient('/auth/logout', {
         method: 'POST',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        return rejectWithValue('Logout failed');
-      }
+      }, dispatch as any, state);
 
       return null;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Network error');
+      return rejectWithValue(error.message || 'Logout failed');
     }
   }
 );
 
 export const getProfile = createAsyncThunk(
   'auth/getProfile',
-  async (_, { getState, rejectWithValue }) => {
+  async (_, { dispatch, getState, rejectWithValue }) => {
     try {
-      const state = getState() as { auth: { token: string | null } };
-      const token = state.auth.token;
-
-      const response = await fetch(`${API_URL}/auth/profile`, {
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return rejectWithValue(data.message || 'Failed to fetch profile');
-      }
-
+      const state = getState() as any;
+      const data = await apiClient('/auth/profile', {}, dispatch as any, state);
       return data.data.user;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Network error');
+      return rejectWithValue(error.message || 'Failed to fetch profile');
     }
   }
 );
@@ -187,8 +141,8 @@ const authSlice = createSlice({
       })
       .addCase(signup.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.user = action.payload.user || null;
+        state.token = action.payload.token || null;
         state.isAuthenticated = true;
         state.error = null;
       })
@@ -208,9 +162,9 @@ const authSlice = createSlice({
         console.log('User role from payload:', action.payload.user?.role);
 
         state.isLoading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        state.isPasswordExpired = action.payload.passwordExpired;
+        state.user = action.payload.user || null;
+        state.token = action.payload.token || null;
+        state.isPasswordExpired = !!action.payload.passwordExpired;
         state.isAuthenticated = true;
         state.error = null;
 
