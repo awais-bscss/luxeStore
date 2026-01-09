@@ -186,7 +186,7 @@ export default function ProductDetailPage() {
   const discount = calculateDiscount();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Breadcrumb */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -246,8 +246,8 @@ export default function ProductDetailPage() {
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`relative aspect-square bg-white dark:bg-gray-800 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index
-                      ? 'border-purple-600 ring-2 ring-purple-600 ring-offset-2 dark:ring-offset-gray-900'
+                    className={`relative aspect-square bg-white dark:bg-gray-800 rounded-lg overflow-hidden border transition-all ${selectedImage === index
+                      ? 'border-purple-600 ring-2 ring-purple-600 ring-offset-1 dark:ring-offset-gray-900'
                       : 'border-gray-200 dark:border-gray-700 hover:border-purple-400'
                       }`}
                   >
@@ -357,7 +357,7 @@ export default function ProductDetailPage() {
               </button>
               <button
                 onClick={handleToggleFavorite}
-                className={`p-4 border-2 rounded-xl transition-all ${isFavorite
+                className={`p-4 border rounded-xl transition-all ${isFavorite
                   ? 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-500'
                   : 'border-gray-300 dark:border-gray-600 hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-600 dark:text-gray-400'
                   }`}
@@ -366,7 +366,7 @@ export default function ProductDetailPage() {
               </button>
               <button
                 onClick={handleShare}
-                className="p-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 text-gray-600 dark:text-gray-400 transition-all"
+                className="p-4 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 text-gray-600 dark:text-gray-400 transition-all"
               >
                 <Share2 className="h-6 w-6" />
               </button>
