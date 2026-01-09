@@ -48,6 +48,12 @@ export const fetchFavorites = createAsyncThunk(
         },
         credentials: 'include',
       });
+
+      // Check for 401 Unauthorized - Session Expired
+      if (response.status === 401) {
+        return rejectWithValue({ code: 'SESSION_EXPIRED', message: 'Session expired' });
+      }
+
       const data = await response.json();
 
       if (!data.success) {
@@ -59,7 +65,7 @@ export const fetchFavorites = createAsyncThunk(
         products: data.data.favorites,
       };
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue({ code: 'ERROR', message: error.message });
     }
   }
 );
@@ -226,8 +232,13 @@ const favoritesSlice = createSlice({
       })
       .addCase(fetchFavorites.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
-        console.error('fetchFavorites failed:', action.payload);
+        const error = action.payload as any;
+        state.error = error?.message || 'Failed to fetch favorites';
+
+        // Don't log session expiration as an error - it's handled elsewhere
+        if (error?.code !== 'SESSION_EXPIRED') {
+          console.error('fetchFavorites failed:', error?.message || action.payload);
+        }
       })
       .addCase(addToFavoritesAPI.fulfilled, (state, action) => {
         state.items = action.payload.items;

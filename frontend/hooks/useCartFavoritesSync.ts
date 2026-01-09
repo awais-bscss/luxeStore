@@ -1,12 +1,17 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from './useRedux';
+import { useToast } from './useToast';
+import { logout } from '../store/slices/authSlice';
 import { mergeCartAPI } from '../store/slices/cartSlice';
 import { mergeFavoritesAPI, fetchFavorites } from '../store/slices/favoritesSlice';
 import { fetchCart } from '../store/slices/cartSlice';
 
 export const useCartFavoritesSync = () => {
+  const router = useRouter();
+  const toast = useToast();
   const dispatch = useAppDispatch();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const { items: cartItems, isSynced: cartSynced } = useAppSelector((state) => state.cart);
@@ -46,15 +51,30 @@ export const useCartFavoritesSync = () => {
   }, [isAuthenticated, cartSynced, cartItems, dispatch]);
 
   useEffect(() => {
-    if (isAuthenticated && !favoritesSynced) {
-      // User just logged in, merge localStorage favorites with database
-      if (favoriteItems.length > 0) {
-        console.log('Merging favorite items:', favoriteItems);
-        dispatch(mergeFavoritesAPI(favoriteItems));
-      } else {
-        console.log('Fetching favorites from database');
-        dispatch(fetchFavorites());
+    const syncFavorites = async () => {
+      if (isAuthenticated && !favoritesSynced) {
+        try {
+          // User just logged in, merge localStorage favorites with database
+          if (favoriteItems.length > 0) {
+            console.log('Merging favorite items:', favoriteItems);
+            await dispatch(mergeFavoritesAPI(favoriteItems)).unwrap();
+          } else {
+            console.log('Fetching favorites from database');
+            await dispatch(fetchFavorites()).unwrap();
+          }
+        } catch (error: any) {
+          // Check if this is a session expiration error
+          if (error?.code === 'SESSION_EXPIRED') {
+            toast.error('Session Expired', 'Your session has expired. Please log in again to access your favorites.');
+            dispatch(logout());
+            setTimeout(() => {
+              router.push('/login?redirect=/favorites&reason=session_expired');
+            }, 1500);
+          }
+        }
       }
-    }
-  }, [isAuthenticated, favoritesSynced, favoriteItems, dispatch]);
+    };
+
+    syncFavorites();
+  }, [isAuthenticated, favoritesSynced, favoriteItems, dispatch, router, toast]);
 };
