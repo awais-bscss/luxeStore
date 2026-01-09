@@ -13,19 +13,33 @@ export const useCartFavoritesSync = () => {
   const { items: favoriteItems, isSynced: favoritesSynced } = useAppSelector((state) => state.favorites);
 
   useEffect(() => {
-    console.log('=== CART SYNC CHECK ===');
-    console.log('isAuthenticated:', isAuthenticated);
-    console.log('cartSynced:', cartSynced);
-    console.log('cartItems:', cartItems);
-    console.log('cartItems.length:', cartItems.length);
-
     if (isAuthenticated && !cartSynced) {
-      // User just logged in, merge localStorage cart with database
-      if (cartItems.length > 0) {
-        console.log('⚠️ WARNING: Merging cart items (this should be empty after logout!):', cartItems);
-        dispatch(mergeCartAPI(cartItems));
+      // 1. Check for backed up cart from an expired session
+      const savedCart = localStorage.getItem('expired_session_cart');
+      let itemsToMerge = [...cartItems];
+
+      if (savedCart) {
+        try {
+          const parsedCart = JSON.parse(savedCart);
+          if (Array.isArray(parsedCart) && parsedCart.length > 0) {
+            console.log('🔄 Restoring items from expired session:', parsedCart);
+            // Append saved items that aren't already in the current local cartItems (though cartItems should be empty)
+            itemsToMerge = [...parsedCart];
+          }
+          // Clear it so we don't restore it again
+          localStorage.removeItem('expired_session_cart');
+        } catch (e) {
+          console.error('Failed to parse saved cart:', e);
+          localStorage.removeItem('expired_session_cart');
+        }
+      }
+
+      // 2. Perform merge or fetch
+      if (itemsToMerge.length > 0) {
+        console.log('⚠️ Merging cart items:', itemsToMerge);
+        dispatch(mergeCartAPI(itemsToMerge));
       } else {
-        console.log('✅ Fetching cart from database (correct behavior)');
+        console.log('✅ Fetching cart from database');
         dispatch(fetchCart());
       }
     }

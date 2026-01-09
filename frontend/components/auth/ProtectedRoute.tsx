@@ -18,8 +18,8 @@ export default function ProtectedRoute({ children, requireAdmin = false, allowPa
     // Check role-based access only after loading completes
     if (!isLoading) {
       if (!isAuthenticated) {
-        // Not authenticated - redirect to home (which usually opens AuthModal)
-        router.push("/");
+        // Not authenticated - redirect to login page
+        router.push("/login?redirect=" + encodeURIComponent(window.location.pathname));
         return;
       }
 

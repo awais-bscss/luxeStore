@@ -338,12 +338,17 @@ const cartSlice = createSlice({
       // Handle logout - reset cart completely
       .addCase(logout.fulfilled, (state) => {
         console.log('🔴 LOGOUT: Clearing cart state');
-        console.log('Cart items before clear:', state.items);
+
+        // If there were items, optionally back them up to localStorage 
+        // specifically for session re-login restoration
+        if (state.items.length > 0 && typeof window !== 'undefined') {
+          localStorage.setItem('expired_session_cart', JSON.stringify(state.items));
+        }
+
         state.items = [];           // Clear all cart items
         state.total = 0;             // Reset total
         state.isSynced = false;      // Reset sync flag
         state.error = null;          // Clear errors
-        console.log('Cart items after clear:', state.items);
       });
   },
 });
