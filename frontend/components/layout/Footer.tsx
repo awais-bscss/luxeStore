@@ -124,8 +124,12 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-8">
           <div className="col-span-2 lg:col-span-1">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <ShoppingCart className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center overflow-hidden shadow-lg">
+                <img
+                  src="/logo.png"
+                  alt="LuxeStore Logo"
+                  className="w-full h-full object-contain"
+                />
               </div>
               <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                 LuxeStore
