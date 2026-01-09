@@ -18,37 +18,49 @@ export const useCartFavoritesSync = () => {
   const { items: favoriteItems, isSynced: favoritesSynced } = useAppSelector((state) => state.favorites);
 
   useEffect(() => {
-    if (isAuthenticated && !cartSynced) {
-      // 1. Check for backed up cart from an expired session
-      const savedCart = localStorage.getItem('expired_session_cart');
-      let itemsToMerge = [...cartItems];
-
-      if (savedCart) {
+    const syncCart = async () => {
+      if (isAuthenticated && !cartSynced) {
         try {
-          const parsedCart = JSON.parse(savedCart);
-          if (Array.isArray(parsedCart) && parsedCart.length > 0) {
-            console.log('🔄 Restoring items from expired session:', parsedCart);
-            // Append saved items that aren't already in the current local cartItems (though cartItems should be empty)
-            itemsToMerge = [...parsedCart];
+          // 1. Check for backed up cart from an expired session
+          const savedCart = localStorage.getItem('expired_session_cart');
+          let itemsToMerge = [...cartItems];
+
+          if (savedCart) {
+            try {
+              const parsedCart = JSON.parse(savedCart);
+              if (Array.isArray(parsedCart) && parsedCart.length > 0) {
+                console.log('🔄 Restoring items from expired session:', parsedCart);
+                itemsToMerge = [...parsedCart];
+              }
+              localStorage.removeItem('expired_session_cart');
+            } catch (e) {
+              console.error('Failed to parse saved cart:', e);
+              localStorage.removeItem('expired_session_cart');
+            }
           }
-          // Clear it so we don't restore it again
-          localStorage.removeItem('expired_session_cart');
-        } catch (e) {
-          console.error('Failed to parse saved cart:', e);
-          localStorage.removeItem('expired_session_cart');
+
+          // 2. Perform merge or fetch
+          if (itemsToMerge.length > 0) {
+            console.log('⚠️ Merging cart items:', itemsToMerge);
+            await dispatch(mergeCartAPI(itemsToMerge)).unwrap();
+          } else {
+            console.log('✅ Fetching cart from database');
+            await dispatch(fetchCart()).unwrap();
+          }
+        } catch (error: any) {
+          if (error?.code === 'SESSION_EXPIRED') {
+            toast.error('Session Expired', 'Your session has expired. Please log in again to access your cart.');
+            dispatch(logout());
+            setTimeout(() => {
+              router.push('/login?redirect=/cart&reason=session_expired');
+            }, 1500);
+          }
         }
       }
+    };
 
-      // 2. Perform merge or fetch
-      if (itemsToMerge.length > 0) {
-        console.log('⚠️ Merging cart items:', itemsToMerge);
-        dispatch(mergeCartAPI(itemsToMerge));
-      } else {
-        console.log('✅ Fetching cart from database');
-        dispatch(fetchCart());
-      }
-    }
-  }, [isAuthenticated, cartSynced, cartItems, dispatch]);
+    syncCart();
+  }, [isAuthenticated, cartSynced, dispatch, router, toast]);
 
   useEffect(() => {
     const syncFavorites = async () => {
@@ -76,5 +88,5 @@ export const useCartFavoritesSync = () => {
     };
 
     syncFavorites();
-  }, [isAuthenticated, favoritesSynced, favoriteItems, dispatch, router, toast]);
+  }, [isAuthenticated, favoritesSynced, dispatch, router, toast]);
 };

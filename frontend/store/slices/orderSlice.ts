@@ -124,6 +124,12 @@ export const fetchUserOrders = createAsyncThunk(
         },
         credentials: 'include',
       });
+
+      // Check for session expiration
+      if (response.status === 401) {
+        return rejectWithValue({ code: 'SESSION_EXPIRED', message: 'Session expired' });
+      }
+
       const data = await response.json();
 
       if (!data.success) {
@@ -132,7 +138,7 @@ export const fetchUserOrders = createAsyncThunk(
 
       return data.data.orders;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue({ code: 'ERROR', message: error.message });
     }
   }
 );
@@ -200,6 +206,12 @@ export const fetchAllOrders = createAsyncThunk(
         },
         credentials: 'include',
       });
+
+      // Check for session expiration
+      if (response.status === 401) {
+        return rejectWithValue({ code: 'SESSION_EXPIRED', message: 'Session expired' });
+      }
+
       const data = await response.json();
 
       if (!data.success) {
@@ -208,7 +220,7 @@ export const fetchAllOrders = createAsyncThunk(
 
       return data.data; // Returns { orders, pagination }
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue({ code: 'ERROR', message: error.message });
     }
   }
 );
@@ -344,7 +356,12 @@ const orderSlice = createSlice({
       })
       .addCase(fetchUserOrders.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        const error = action.payload as any;
+        state.error = error?.message || 'Failed to fetch your orders';
+
+        if (error?.code !== 'SESSION_EXPIRED') {
+          console.error('fetchUserOrders failed:', error?.message || action.payload);
+        }
       })
       // Fetch order by ID
       .addCase(fetchOrderById.pending, (state) => {
@@ -382,7 +399,12 @@ const orderSlice = createSlice({
       })
       .addCase(fetchAllOrders.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        const error = action.payload as any;
+        state.error = error?.message || 'Failed to fetch orders';
+
+        if (error?.code !== 'SESSION_EXPIRED') {
+          console.error('fetchAllOrders failed:', error?.message || action.payload);
+        }
       })
       // Update order status (admin)
       .addCase(updateOrderStatus.fulfilled, (state, action) => {

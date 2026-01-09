@@ -20,8 +20,17 @@ export const ProductList: React.FC = () => {
   );
 
   useEffect(() => {
-    dispatch(fetchProducts());
-  }, [dispatch]);
+    let isMounted = true;
+
+    // Only fetch if products list is empty to avoid redundant calls
+    if (filteredProducts.length === 0 && !isLoading) {
+      dispatch(fetchProducts());
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [dispatch, filteredProducts.length, isLoading]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [jumpDropdownOpen, setJumpDropdownOpen] = useState(false);

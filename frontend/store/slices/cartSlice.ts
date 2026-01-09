@@ -42,6 +42,12 @@ export const fetchCart = createAsyncThunk(
         },
         credentials: 'include',
       });
+
+      // Special check for 401 Unauthorized - Session Expired
+      if (response.status === 401) {
+        return rejectWithValue({ code: 'SESSION_EXPIRED', message: 'Session expired' });
+      }
+
       const data = await response.json();
 
       if (!data.success) {
@@ -57,7 +63,7 @@ export const fetchCart = createAsyncThunk(
         stock: item.product.stock || 0,
       }));
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue({ code: 'ERROR', message: error.message });
     }
   }
 );
@@ -289,7 +295,12 @@ const cartSlice = createSlice({
       })
       .addCase(fetchCart.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        const error = action.payload as any;
+        state.error = error?.message || 'Failed to fetch cart';
+
+        if (error?.code !== 'SESSION_EXPIRED') {
+          console.error('fetchCart failed:', error?.message || action.payload);
+        }
       })
       .addCase(addToCartAPI.fulfilled, (state, action) => {
         state.items = action.payload;

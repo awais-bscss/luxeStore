@@ -101,295 +101,144 @@ export default function AdminDashboard() {
     }, 1500);
   };
 
-  // Fetch products and calculate growth
+  // Master data fetching effect
   useEffect(() => {
-    const fetchProductsWithGrowth = async () => {
-      if (!token) return;
+    let isMounted = true;
+    if (!token) return;
+
+    const fetchAllDashboardData = async () => {
       try {
         setProductsLoading(true);
+        setOrdersLoading(true);
+        setRecentOrdersLoading(true);
 
-        // Calculate date ranges based on selected time period
         const now = new Date();
         const ranges: Record<string, number> = { '24h': 1, '7d': 7, '30d': 30, '90d': 90 };
         const days = ranges[timeRange] || 7;
         const currentStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
         const previousStart = new Date(currentStart.getTime() - days * 24 * 60 * 60 * 1000);
 
-        // Fetch all products for display
-        const totalResponse = await fetch(
-          `${API_URL}/products?limit=5&sort=-createdAt&populate=createdBy`,
-          {
-            headers: {
-              ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-            },
-            credentials: 'include'
-          }
-        );
+        const headers = { 'Authorization': `Bearer ${token}` };
 
-        // Check for 401 on total products fetch
-        if (totalResponse.status === 401) {
-          handleSessionExpired();
+        // Define all API calls as promises for parallel execution
+        const apiCalls = [
+          // 0: Recent Products
+          fetch(`${API_URL}/products?limit=5&sort=-createdAt&populate=createdBy`, { headers, credentials: 'include' }),
+          // 1: Current Products Count
+          fetch(`${API_URL}/products?createdAt[gte]=${currentStart.toISOString()}`, { headers, credentials: 'include' }),
+          // 2: Previous Products Count
+          fetch(`${API_URL}/products?createdAt[gte]=${previousStart.toISOString()}&createdAt[lt]=${currentStart.toISOString()}`, { headers, credentials: 'include' }),
+          // 3: Total Customers
+          fetch(`${API_URL}/users/customers`, { headers, credentials: 'include' }),
+          // 4: Current Customers Count
+          fetch(`${API_URL}/users/customers?createdAt[gte]=${currentStart.toISOString()}`, { headers, credentials: 'include' }),
+          // 5: Previous Customers Count
+          fetch(`${API_URL}/users/customers?createdAt[gte]=${previousStart.toISOString()}&createdAt[lt]=${currentStart.toISOString()}`, { headers, credentials: 'include' }),
+          // 6: Order Overview Stats
+          fetch(`${API_URL}/orders/stats/overview`, { headers, credentials: 'include' }),
+          // 7: Recent Orders
+          fetch(`${API_URL}/orders?limit=5&sort=-createdAt`, { headers, credentials: 'include' }),
+          // 8: Total Products (for growth calc fallback)
+          fetch(`${API_URL}/products`, { headers, credentials: 'include' }),
+        ];
+
+        const responses = await Promise.all(apiCalls);
+
+        // Check if any response is 401
+        const unauthorized = responses.find(r => r.status === 401);
+        if (unauthorized) {
+          if (isMounted) handleSessionExpired();
           return;
         }
 
-        // Fetch current period products (for growth calculation)
-        const currentResponse = await fetch(
-          `${API_URL}/products?createdAt[gte]=${currentStart.toISOString()}`,
-          {
-            headers: {
-              ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-            },
-            credentials: 'include'
-          }
-        );
+        // Process all data
+        const [
+          prodRes, curProdRes, prevProdRes,
+          custRes, curCustRes, prevCustRes,
+          orderStatsRes, recentOrderRes, totalProdRes
+        ] = await Promise.all(responses.map(r => r.json()));
 
-        // Fetch previous period products (for comparison)
-        const previousResponse = await fetch(
-          `${API_URL}/products?createdAt[gte]=${previousStart.toISOString()}&createdAt[lt]=${currentStart.toISOString()}`,
-          {
-            headers: {
-              ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-            },
-            credentials: 'include'
-          }
-        );
+        if (!isMounted) return;
 
-        if (totalResponse.ok && currentResponse.ok && previousResponse.ok) {
-          const totalData = await totalResponse.json();
-          const currentData = await currentResponse.json();
-          const previousData = await previousResponse.json();
+        // 1. Process Products
+        if (prodRes.success) {
+          const totalCount = totalProdRes.data?.pagination?.total || 0;
+          const currentCount = curProdRes.data?.pagination?.total || 0;
+          const previousCount = prevProdRes.data?.pagination?.total || 0;
 
-          const totalCount = totalData.data?.pagination?.total || 0;
-          const currentCount = currentData.data?.pagination?.total || 0;
-          const previousCount = previousData.data?.pagination?.total || 0;
+          let percentageChange = previousCount > 0
+            ? ((currentCount - previousCount) / previousCount) * 100
+            : (currentCount > 0 ? 100 : 0);
 
-          console.log('=== PRODUCT GROWTH CALCULATION ===');
-          console.log('Total products:', totalCount);
-          console.log('Current period products:', currentCount);
-          console.log('Previous period products:', previousCount);
-
-          // Calculate percentage change
-          let percentageChange = 0;
-          let trend: 'up' | 'down' = 'up';
-
-          if (previousCount > 0) {
-            // Normal case: compare current period to previous period
-            percentageChange = ((currentCount - previousCount) / previousCount) * 100;
-            trend = percentageChange >= 0 ? 'up' : 'down';
-          } else if (currentCount > 0 && totalCount > 0) {
-            // If no previous period data, calculate based on current vs total
-            // This shows what % of total products were added in current period
-            percentageChange = (currentCount / totalCount) * 100;
-            trend = 'up';
-          } else if (currentCount > 0) {
-            // All products are new in this period
-            percentageChange = 100;
-            trend = 'up';
-          }
-
-          const changeText = `${percentageChange >= 0 ? '+' : ''}${percentageChange.toFixed(1)}%`;
-
-          console.log('Percentage change:', percentageChange);
-          console.log('Change text:', changeText);
-          console.log('Trend:', trend);
-
-          // Update state
-          setProducts(totalData.data?.products || []);
+          setProducts(prodRes.data?.products || []);
           setProductCount(totalCount);
-          setProductGrowth({ change: changeText, trend });
+          setProductGrowth({
+            change: `${percentageChange >= 0 ? '+' : ''}${percentageChange.toFixed(1)}%`,
+            trend: percentageChange >= 0 ? 'up' : 'down'
+          });
         }
-      } catch (error: any) {
-        console.error('Error fetching products:', error);
-        // If rate limited or other error, set default values
-        setProductCount(0);
-        setProductGrowth({ change: '0%', trend: 'up' });
-      } finally {
-        setProductsLoading(false);
-      }
-    };
 
-    fetchProductsWithGrowth();
-  }, [token, timeRange]);
+        // 2. Process Customers
+        if (custRes.success) {
+          const totalCount = custRes.data?.pagination?.total || 0;
+          const currentCount = curCustRes.data?.pagination?.total || 0;
+          const previousCount = prevCustRes.data?.pagination?.total || 0;
 
-  // Fetch customers and calculate growth
-  useEffect(() => {
-    const fetchCustomersWithGrowth = async () => {
-      if (!token) return;
-      try {
-        // Calculate date ranges based on selected time period
-        const now = new Date();
-        const ranges: Record<string, number> = { '24h': 1, '7d': 7, '30d': 30, '90d': 90 };
-        const days = ranges[timeRange] || 7;
-        const currentStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-        const previousStart = new Date(currentStart.getTime() - days * 24 * 60 * 60 * 1000);
+          let percentageChange = previousCount > 0
+            ? ((currentCount - previousCount) / previousCount) * 100
+            : (currentCount > 0 ? 100 : 0);
 
-        // Fetch total customers count
-        const totalResponse = await fetch(
-          `${API_URL}/users/customers`,
-          {
-            headers: {
-              ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-            },
-            credentials: 'include'
-          }
-        );
-
-        // Fetch current period customers (for growth calculation)
-        const currentResponse = await fetch(
-          `${API_URL}/users/customers?createdAt[gte]=${currentStart.toISOString()}`,
-          {
-            headers: {
-              ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-            },
-            credentials: 'include'
-          }
-        );
-
-        // Fetch previous period customers (for comparison)
-        const previousResponse = await fetch(
-          `${API_URL}/users/customers?createdAt[gte]=${previousStart.toISOString()}&createdAt[lt]=${currentStart.toISOString()}`,
-          {
-            headers: {
-              ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-            },
-            credentials: 'include'
-          }
-        );
-
-        if (totalResponse.ok && currentResponse.ok && previousResponse.ok) {
-          const totalData = await totalResponse.json();
-          const currentData = await currentResponse.json();
-          const previousData = await previousResponse.json();
-
-          const totalCount = totalData.data?.pagination?.total || 0;
-          const currentCount = currentData.data?.pagination?.total || 0;
-          const previousCount = previousData.data?.pagination?.total || 0;
-
-          console.log('=== CUSTOMER GROWTH CALCULATION ===');
-          console.log('Total customers:', totalCount);
-          console.log('Current period customers:', currentCount);
-          console.log('Previous period customers:', previousCount);
-
-          // Calculate percentage change
-          let percentageChange = 0;
-          let trend: 'up' | 'down' = 'up';
-
-          if (previousCount > 0) {
-            // Normal case: compare current period to previous period
-            percentageChange = ((currentCount - previousCount) / previousCount) * 100;
-            trend = percentageChange >= 0 ? 'up' : 'down';
-          } else if (currentCount > 0 && totalCount > 0) {
-            // If no previous period data, calculate based on current vs total
-            // This shows what % of total customers were added in current period
-            percentageChange = (currentCount / totalCount) * 100;
-            trend = 'up';
-          } else if (currentCount > 0) {
-            // All customers are new in this period
-            percentageChange = 100;
-            trend = 'up';
-          }
-
-          const changeText = `${percentageChange >= 0 ? '+' : ''}${percentageChange.toFixed(1)}%`;
-
-          console.log('Percentage change:', percentageChange);
-          console.log('Change text:', changeText);
-          console.log('Trend:', trend);
-
-          // Update state
           setCustomerCount(totalCount);
-          setCustomerGrowth({ change: changeText, trend });
+          setCustomerGrowth({
+            change: `${percentageChange >= 0 ? '+' : ''}${percentageChange.toFixed(1)}%`,
+            trend: percentageChange >= 0 ? 'up' : 'down'
+          });
         }
-      } catch (error: any) {
-        console.error('Error fetching customers:', error);
-        // If rate limited or other error, set default values
-        setCustomerCount(0);
-        setCustomerGrowth({ change: '0%', trend: 'up' });
+
+        // 3. Process Order Stats
+        if (orderStatsRes.success && orderStatsRes.data) {
+          const stats = orderStatsRes.data;
+          setOrderCount(stats.totalOrders || 0);
+          setTotalRevenue(stats.totalRevenue || 0);
+
+          const cancelledOrders = stats.cancelledOrders || 0;
+          const totalOrders = stats.totalOrders || 0;
+          const activeOrders = totalOrders - cancelledOrders;
+          const successRate = totalOrders > 0 ? (activeOrders / totalOrders) * 100 : 0;
+
+          setOrderGrowth({
+            change: `+${successRate.toFixed(1)}%`,
+            trend: successRate >= 80 ? 'up' : 'down'
+          });
+
+          setRevenueGrowth({
+            change: stats.totalRevenue > 0 ? '+100.0%' : '+0.0%',
+            trend: 'up'
+          });
+        }
+
+        // 4. Process Recent Orders
+        if (recentOrderRes.success && recentOrderRes.data.orders) {
+          setRecentOrders(recentOrderRes.data.orders);
+        }
+
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        if (isMounted) {
+          setProductsLoading(false);
+          setOrdersLoading(false);
+          setRecentOrdersLoading(false);
+        }
       }
     };
 
-    fetchCustomersWithGrowth();
+    fetchAllDashboardData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [token, timeRange]);
-
-  // Fetch order statistics
-  useEffect(() => {
-    const fetchOrderStats = async () => {
-      if (!token) return;
-      try {
-        setOrdersLoading(true);
-        const response = await fetch(`${API_URL}/orders/stats/overview`, {
-          headers: {
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-          },
-          credentials: 'include',
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Order stats response:', data); // Debug log
-          if (data.success && data.data) {
-            const stats = data.data;
-            console.log('Full stats:', stats); // Debug
-            setOrderCount(stats.totalOrders || 0);
-            setTotalRevenue(stats.totalRevenue || 0);
-
-            // Calculate order success rate (active orders vs cancelled)
-            const cancelledOrders = stats.cancelledOrders || 0;
-            const totalOrders = stats.totalOrders || 0;
-
-            // Success rate: percentage of orders that are NOT cancelled
-            const activeOrders = totalOrders - cancelledOrders;
-            const successRate = totalOrders > 0 ? (activeOrders / totalOrders) * 100 : 0;
-            setOrderGrowth({
-              change: `+${successRate.toFixed(1)}%`,
-              trend: successRate >= 80 ? 'up' : 'down'
-            });
-
-            // Always calculate and show revenue growth
-            const revenuePercent = stats.totalRevenue > 0 ? 100 : 0;
-            setRevenueGrowth({
-              change: `+${revenuePercent.toFixed(1)}%`,
-              trend: 'up'
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching order stats:', error);
-        setOrderCount(0);
-        setTotalRevenue(0);
-      } finally {
-        setOrdersLoading(false);
-      }
-    };
-
-    fetchOrderStats();
-
-    // Also fetch recent orders
-    const fetchRecentOrders = async () => {
-      if (!token) return;
-      try {
-        setRecentOrdersLoading(true);
-        const response = await fetch(`${API_URL}/orders?limit=5&sort=-createdAt`, {
-          headers: {
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-          },
-          credentials: 'include',
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.data.orders) {
-            setRecentOrders(data.data.orders);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching recent orders:', error);
-      } finally {
-        setRecentOrdersLoading(false);
-      }
-    };
-
-    fetchRecentOrders();
-  }, [token]);
 
   const getStatusColor = (status: string) => {
     switch (status) {

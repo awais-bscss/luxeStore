@@ -116,8 +116,15 @@ export default function ProductsPage() {
     fetchProducts();
   }, [token, pagination.page, selectedCategory, selectedStatus, debouncedSearch]);
 
+  // Handle 401 Unauthorized - Session Expired
+  const handleSessionExpired = () => {
+    toast.error('Session Expired', 'Your session has expired. Please log in again to continue.');
+    router.push('/login?redirect=/admin/products&reason=session_expired');
+  };
+
   const fetchProducts = async () => {
     if (!token) return;
+    let isMounted = true;
     try {
       setIsLoading(true);
       const params = new URLSearchParams({
@@ -135,17 +142,25 @@ export default function ProductsPage() {
         },
         credentials: 'include',
       });
+
+      // Special check for 401 Unauthorized
+      if (response.status === 401) {
+        handleSessionExpired();
+        return;
+      }
+
       const data = await response.json();
 
-      if (data.success) {
+      if (data.success && isMounted) {
         setProducts(data.data.products);
         setPagination(data.data.pagination);
       }
     } catch (error) {
       console.error('Failed to fetch products:', error);
     } finally {
-      setIsLoading(false);
+      if (isMounted) setIsLoading(false);
     }
+    return () => { isMounted = false; };
   };
 
   const getStatusBadge = (product: Product) => {
