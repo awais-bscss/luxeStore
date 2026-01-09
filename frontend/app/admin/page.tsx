@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import CustomDropdown from '../../components/ui/CustomDropdown';
-import { useAppSelector } from '../../hooks/useRedux';
+import { useAppSelector, useAppDispatch } from '../../hooks/useRedux';
+import { logout } from '../../store/slices/authSlice';
+import { useToast } from '../../hooks/useToast';
 import { formatPrice } from '../../lib/currency';
 import { useSettings } from '../../contexts/SettingsContext';
 import {
@@ -27,6 +29,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const toast = useToast();
   const { token } = useAppSelector((state) => state.auth);
   const { settings } = useSettings();
   const [timeRange, setTimeRange] = useState('7d');
@@ -88,6 +92,15 @@ export default function AdminDashboard() {
     },
   ];
 
+  // Handle 401 Unauthorized - Session Expired
+  const handleSessionExpired = () => {
+    toast.error('Session Expired', 'Your session has expired. Please log in again to continue.');
+    dispatch(logout());
+    setTimeout(() => {
+      router.push('/login?redirect=/admin&reason=session_expired');
+    }, 1500);
+  };
+
   // Fetch products and calculate growth
   useEffect(() => {
     const fetchProductsWithGrowth = async () => {
@@ -112,6 +125,12 @@ export default function AdminDashboard() {
             credentials: 'include'
           }
         );
+
+        // Check for 401 on total products fetch
+        if (totalResponse.status === 401) {
+          handleSessionExpired();
+          return;
+        }
 
         // Fetch current period products (for growth calculation)
         const currentResponse = await fetch(

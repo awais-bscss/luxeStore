@@ -92,6 +92,19 @@ function AdminLayoutContent({
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
+  // Handle 401 Unauthorized - Session Expired
+  const handleSessionExpired = () => {
+    toast.error('Session Expired', 'Your session has expired. Please log in again to continue.');
+
+    // Clear auth state
+    dispatch(logout());
+
+    // Redirect to login after a short delay
+    setTimeout(() => {
+      router.push('/login?redirect=/admin&reason=session_expired');
+    }, 1500);
+  };
+
   // Fetch notifications
   const fetchNotifications = async (showLoading = false) => {
     try {
@@ -102,6 +115,12 @@ function AdminLayoutContent({
         },
         credentials: 'include',
       });
+
+      // Check for 401 Unauthorized
+      if (response.status === 401) {
+        handleSessionExpired();
+        return;
+      }
 
       if (response.ok) {
         const data = await response.json();
