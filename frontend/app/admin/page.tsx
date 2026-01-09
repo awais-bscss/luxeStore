@@ -46,6 +46,7 @@ export default function AdminDashboard() {
 
   // Recent orders state
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [recentOrdersLoading, setRecentOrdersLoading] = useState(true);
 
   // Dynamic stats array that updates with state changes
   const stats = [
@@ -347,6 +348,7 @@ export default function AdminDashboard() {
     const fetchRecentOrders = async () => {
       if (!token) return;
       try {
+        setRecentOrdersLoading(true);
         const response = await fetch(`${API_URL}/orders?limit=5&sort=-createdAt`, {
           headers: {
             ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
@@ -362,6 +364,8 @@ export default function AdminDashboard() {
         }
       } catch (error) {
         console.error('Error fetching recent orders:', error);
+      } finally {
+        setRecentOrdersLoading(false);
       }
     };
 
@@ -465,20 +469,24 @@ export default function AdminDashboard() {
             </button>
           </div>
           <div className="space-y-4">
-            {ordersLoading ? (
-              // Skeleton loading
+            {recentOrdersLoading ? (
+              // Enhanced Skeleton loading
               [...Array(5)].map((_, index) => (
-                <div key={index} className="flex items-center justify-between p-4 rounded-lg animate-pulse">
+                <div key={index} className="flex items-center justify-between p-4 rounded-2xl bg-gray-50/50 dark:bg-gray-900/20 border border-transparent animate-pulse">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-3">
-                      <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                      <div className="h-5 w-16 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                      <div className="h-5 w-20 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                      <div className="h-6 w-16 bg-gray-100 dark:bg-gray-800 rounded-full"></div>
                     </div>
-                    <div className="h-3 w-40 bg-gray-200 dark:bg-gray-700 rounded mt-2"></div>
+                    <div className="flex items-center space-x-2 mt-2.5">
+                      <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded-md"></div>
+                      <div className="h-2 w-2 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+                      <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded-md"></div>
+                    </div>
                   </div>
                   <div className="text-right ml-4">
-                    <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
-                    <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                    <div className="h-5 w-20 bg-gray-200 dark:bg-gray-700 rounded-lg mb-2 ml-auto"></div>
+                    <div className="h-4 w-24 bg-gray-100 dark:bg-gray-800 rounded-md ml-auto"></div>
                   </div>
                 </div>
               ))
@@ -541,15 +549,15 @@ export default function AdminDashboard() {
           {productsLoading ? (
             <div className="space-y-4">
               {[...Array(5)].map((_, index) => (
-                <div key={index} className="flex items-center justify-between p-4 rounded-lg animate-pulse">
+                <div key={index} className="flex items-center justify-between p-4 rounded-2xl bg-gray-50/50 dark:bg-gray-900/20 animate-pulse">
                   <div className="flex items-center space-x-4">
-                    <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="w-10 h-10 rounded-xl bg-gray-200 dark:bg-gray-700"></div>
                     <div>
-                      <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
-                      <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                      <div className="h-5 w-40 bg-gray-200 dark:bg-gray-700 rounded-lg mb-2"></div>
+                      <div className="h-4 w-28 bg-gray-100 dark:bg-gray-800 rounded-md"></div>
                     </div>
                   </div>
-                  <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  <div className="h-5 w-20 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
                 </div>
               ))}
             </div>
