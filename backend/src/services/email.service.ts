@@ -204,6 +204,111 @@ Received at: ${new Date().toLocaleString()}
       html,
     });
   }
+
+  async sendPaymentSuccessEmail(to: string, name: string, orderNumber: string, amount: number, currency: string): Promise<void> {
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 40px 20px; text-align: center; }
+            .content { background: #ffffff; padding: 40px; }
+            .order-badge { display: inline-block; background: #ecfdf5; color: #059669; padding: 8px 16px; border-radius: 20px; font-weight: bold; margin-bottom: 20px; }
+            .amount { font-size: 24px; font-weight: bold; color: #111827; }
+            .footer { background: #f9fafb; padding: 20px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #e5e7eb; }
+            .button { display: inline-block; background: #10b981; color: white; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 25px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div style="font-size: 40px; margin-bottom: 10px;">✅</div>
+              <h1 style="margin: 0; font-size: 24px;">Payment Successful!</h1>
+            </div>
+            <div class="content">
+              <p>Hi ${name},</p>
+              <p>Great news! Your payment for order <strong>#${orderNumber}</strong> has been processed successfully.</p>
+              
+              <div style="background: #f8fafc; border-radius: 12px; padding: 20px; text-align: center; margin: 25px 0; border: 1px solid #e2e8f0;">
+                <span class="order-badge">Confirmed Payment</span>
+                <div class="amount">${currency} ${amount.toFixed(2)}</div>
+              </div>
+
+              <p>We are now preparing your order for shipment. You will receive another update as soon as your package is on its way!</p>
+              
+              <div style="text-align: center;">
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/account/orders" class="button">View Order Details</a>
+              </div>
+            </div>
+            <div class="footer">
+              <p>Thank you for shopping with LuxeStore!</p>
+              <p>&copy; ${new Date().getFullYear()} LuxeStore. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    await this.sendEmail({
+      to,
+      subject: `Payment Success - Order #${orderNumber}`,
+      html,
+    });
+  }
+
+  async sendPaymentFailureEmail(to: string, name: string, orderNumber: string, amount: number, currency: string): Promise<void> {
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 40px 20px; text-align: center; }
+            .content { background: #ffffff; padding: 40px; }
+            .amount { font-size: 24px; font-weight: bold; color: #111827; }
+            .footer { background: #f9fafb; padding: 20px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #e5e7eb; }
+            .button { display: inline-block; background: #ef4444; color: white; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 25px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div style="font-size: 40px; margin-bottom: 10px;">❌</div>
+              <h1 style="margin: 0; font-size: 24px;">Payment Failed</h1>
+            </div>
+            <div class="content">
+              <p>Hi ${name},</p>
+              <p>We were unable to process your payment for order <strong>#${orderNumber}</strong>.</p>
+              
+              <div style="background: #fff5f5; border-radius: 12px; padding: 20px; text-align: center; margin: 25px 0; border: 1px solid #feb2b2;">
+                <p style="color: #c53030; margin: 0 0 10px 0; font-weight: 600;">Transaction Unsuccessful</p>
+                <div class="amount">${currency} ${amount.toFixed(2)}</div>
+              </div>
+
+              <p>Don't worry, your items are still reserved in your cart for a limited time. Please try using a different payment method or contact your bank for more information.</p>
+              
+              <div style="text-align: center;">
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/checkout" class="button">Try Again</a>
+              </div>
+            </div>
+            <div class="footer">
+              <p>Need help? Reply to this email or contact support.</p>
+              <p>&copy; ${new Date().getFullYear()} LuxeStore. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    await this.sendEmail({
+      to,
+      subject: `Action Required: Payment Failed for Order #${orderNumber}`,
+      html,
+    });
+  }
 }
 
 export default new EmailService();

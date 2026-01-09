@@ -158,17 +158,69 @@ class StripeService {
   /**
    * Handle successful payment
    */
-  private async handlePaymentSuccess(_paymentIntent: Stripe.PaymentIntent) {
-    // TODO: Update order status to 'paid' in database
-    // This is handled by the order service after payment confirmation
+  private async handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
+    const orderId = paymentIntent.metadata.orderId;
+    const userEmail = paymentIntent.metadata.customerEmail;
+    const userName = paymentIntent.metadata.customerName;
+
+    if (orderId && orderId !== 'pending') {
+      const Order = (await import('../models/Order.model')).default;
+      const order = await Order.findById(orderId);
+
+      if (order && order.paymentStatus !== 'paid') {
+        order.paymentStatus = 'paid';
+        await order.save();
+
+        // Send success email
+        const SystemSettings = (await import('../models/SystemSettings.model')).default;
+        const settings = await SystemSettings.findOne();
+
+        if (settings?.emailNotifications && userEmail) {
+          const emailService = (await import('./email.service')).default;
+          await emailService.sendPaymentSuccessEmail(
+            userEmail,
+            userName || 'Valued Customer',
+            order.orderNumber || orderId.slice(-6),
+            paymentIntent.amount / 100,
+            paymentIntent.currency.toUpperCase()
+          );
+        }
+      }
+    }
   }
 
   /**
    * Handle failed payment
    */
-  private async handlePaymentFailure(_paymentIntent: Stripe.PaymentIntent) {
-    // TODO: Update order status to 'payment_failed' in database
-    // Optionally restore stock if it was already deducted
+  private async handlePaymentFailure(paymentIntent: Stripe.PaymentIntent) {
+    const orderId = paymentIntent.metadata.orderId;
+    const userEmail = paymentIntent.metadata.customerEmail;
+    const userName = paymentIntent.metadata.customerName;
+
+    if (orderId && orderId !== 'pending') {
+      const Order = (await import('../models/Order.model')).default;
+      const order = await Order.findById(orderId);
+
+      if (order) {
+        order.paymentStatus = 'failed';
+        await order.save();
+
+        // Send failure email
+        const SystemSettings = (await import('../models/SystemSettings.model')).default;
+        const settings = await SystemSettings.findOne();
+
+        if (settings?.emailNotifications && userEmail) {
+          const emailService = (await import('./email.service')).default;
+          await emailService.sendPaymentFailureEmail(
+            userEmail,
+            userName || 'Valued Customer',
+            order.orderNumber || orderId.slice(-6),
+            paymentIntent.amount / 100,
+            paymentIntent.currency.toUpperCase()
+          );
+        }
+      }
+    }
   }
 
   /**

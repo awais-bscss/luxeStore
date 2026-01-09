@@ -186,13 +186,28 @@ class OrderService {
       const settings = await SystemSettings.findOne();
       const user = await User.findById(userId);
 
-      if (settings?.orderNotifications && user) {
-        await notificationService.notifyNewOrder(
-          order._id.toString(),
-          order.orderNumber || order._id.toString().slice(-6),
-          user.name,
-          totalAmount
-        );
+      if (user) {
+        // Send email to admin
+        if (settings?.orderNotifications) {
+          await notificationService.notifyNewOrder(
+            order._id.toString(),
+            order.orderNumber || order._id.toString().slice(-6),
+            user.name,
+            totalAmount
+          );
+        }
+
+        // Send payment success email to customer if it's a card payment
+        if (orderData.paymentMethod === 'card' && settings?.emailNotifications) {
+          const emailService = (await import('./email.service')).default;
+          await emailService.sendPaymentSuccessEmail(
+            user.email,
+            user.name,
+            order.orderNumber || order._id.toString().slice(-6),
+            totalAmount,
+            settings?.currency || 'PKR'
+          );
+        }
       }
     } catch (error) {
       console.error('Failed to send order notification:', error);
