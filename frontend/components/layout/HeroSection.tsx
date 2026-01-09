@@ -70,12 +70,12 @@ export const HeroSection: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full h-[300px] sm:h-[400px] lg:h-[500px] overflow-hidden bg-gray-900">
+    <div className="relative w-full h-[280px] sm:h-[360px] lg:h-[460px] overflow-hidden bg-gray-900">
       {/* Slides */}
       {slides.map((slide, index) => (
         <div
           key={slide.id}
-          className={`absolute inset-0 transition-all duration-700 ease-in-out ${index === currentSlide
+          className={`absolute inset-0 transition-all duration-1000 ease-in-out ${index === currentSlide
             ? "opacity-100 translate-x-0"
             : index < currentSlide
               ? "opacity-0 -translate-x-full"
@@ -89,29 +89,28 @@ export const HeroSection: React.FC = () => {
               alt={slide.title}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/30"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
           </div>
 
           {/* Content */}
           <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 flex items-center">
-            <div className="max-w-2xl text-white">
-              <div className={`inline-block bg-gradient-to-r ${slide.gradient} px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold mb-3 sm:mb-4 animate-pulse`}>
-                Limited Time Offer
+            <div className="max-w-2xl px-6 py-8 rounded-3xl backdrop-blur-[2px] bg-black/10">
+              <div className={`inline-block bg-gradient-to-r ${slide.gradient} px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-3 sm:mb-4 shadow-lg`}>
+                Special Offer
               </div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-2 sm:mb-4 animate-in fade-in slide-in-from-left duration-700">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold mb-2 sm:mb-4 tracking-tight drop-shadow-md text-white animate-in fade-in slide-in-from-left duration-700">
                 {slide.title}
               </h1>
-              <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold mb-2 sm:mb-4 text-blue-200 animate-in fade-in slide-in-from-left duration-700 delay-100">
+              <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold mb-2 sm:mb-4 text-blue-300 drop-shadow-sm animate-in fade-in slide-in-from-left duration-700 delay-100">
                 {slide.subtitle}
               </p>
-              <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-4 sm:mb-6 lg:mb-8 text-gray-300 animate-in fade-in slide-in-from-left duration-700 delay-200">
+              <p className="text-xs sm:text-sm md:text-base lg:text-lg mb-6 sm:mb-8 text-gray-200 line-clamp-2 max-w-xl animate-in fade-in slide-in-from-left duration-700 delay-200">
                 {slide.description}
               </p>
 
-              {/* ← Changed from <a> to <Link> */}
               <Link
                 href="/products"
-                className={`inline-flex items-center gap-2 bg-gradient-to-r ${slide.gradient} hover:opacity-90 text-white px-5 sm:px-6 lg:px-8 py-2.5 sm:py-3 lg:py-4 rounded-xl font-bold text-sm sm:text-base lg:text-lg transition-all duration-300 transform hover:scale-105 shadow-2xl animate-in fade-in slide-in-from-left duration-700 delay-300`}
+                className={`inline-flex items-center gap-2 bg-gradient-to-r ${slide.gradient} hover:brightness-110 text-white px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-xl font-bold text-sm sm:text-base transition-all duration-300 transform hover:scale-105 shadow-xl animate-in fade-in slide-in-from-left duration-700 delay-300`}
               >
                 <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
                 {slide.cta}
@@ -124,28 +123,28 @@ export const HeroSection: React.FC = () => {
       {/* Navigation Arrows */}
       <button
         onClick={prevSlide}
-        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-2 sm:p-3 rounded-full transition-all duration-300 hover:scale-110"
+        className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 border border-white/10 text-white p-2.5 sm:p-3.5 rounded-full backdrop-blur-md transition-all duration-300 hover:scale-110 active:scale-95 group z-10"
         aria-label="Previous slide"
       >
-        <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+        <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 transition-transform group-hover:-translate-x-0.5" />
       </button>
       <button
         onClick={nextSlide}
-        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-2 sm:p-3 rounded-full transition-all duration-300 hover:scale-110"
+        className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 border border-white/10 text-white p-2.5 sm:p-3.5 rounded-full backdrop-blur-md transition-all duration-300 hover:scale-110 active:scale-95 group z-10"
         aria-label="Next slide"
       >
-        <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+        <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 transition-transform group-hover:translate-x-0.5" />
       </button>
 
       {/* Dots Indicator */}
-      <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2">
+      <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex gap-2 sm:gap-3">
         {slides.map((_, index) => (
           <button
             key={index}
             onClick={() => goToSlide(index)}
-            className={`transition-all duration-300 rounded-full ${index === currentSlide
-              ? "bg-white w-5 sm:w-8 h-1.5 sm:h-2"
-              : "bg-white/50 hover:bg-white/75 w-1.5 sm:w-2 h-1.5 sm:h-2"
+            className={`transition-all duration-300 rounded-full h-1.5 sm:h-2 ${index === currentSlide
+              ? "bg-white w-6 sm:w-10"
+              : "bg-white/30 hover:bg-white/50 w-1.5 sm:w-2"
               }`}
             aria-label={`Go to slide ${index + 1}`}
           />
