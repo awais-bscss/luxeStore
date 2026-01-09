@@ -635,12 +635,7 @@ export default function SettingsPage() {
                         value={settings.timezone}
                         onChange={(value) => setSettings({ ...settings, timezone: value })}
                         options={[
-                          { value: 'America/New_York', label: 'Eastern Time (ET)' },
-                          { value: 'America/Chicago', label: 'Central Time (CT)' },
-                          { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
-                          { value: 'Europe/London', label: 'London (GMT)' },
                           { value: 'Asia/Karachi', label: 'Pakistan (PKT)' },
-                          { value: 'Asia/Dubai', label: 'Dubai (GST)' },
                         ]}
                         className="w-full"
                       />
@@ -654,9 +649,6 @@ export default function SettingsPage() {
                         onChange={(value) => setSettings({ ...settings, language: value })}
                         options={[
                           { value: 'en', label: 'English' },
-                          { value: 'es', label: 'Spanish' },
-                          { value: 'fr', label: 'French' },
-                          { value: 'ur', label: 'Urdu' },
                         ]}
                         className="w-full"
                       />

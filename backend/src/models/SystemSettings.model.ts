@@ -134,11 +134,12 @@ const systemSettingsSchema = new Schema<ISystemSettings>(
     timezone: {
       type: String,
       default: 'Asia/Karachi',
+      enum: ['Asia/Karachi'], // Only Pakistan timezone allowed
     },
     language: {
       type: String,
       default: 'en',
-      enum: ['en', 'es', 'fr', 'ur'],
+      enum: ['en'], // Only English language allowed
     },
 
     // Payment Settings
