@@ -66,17 +66,13 @@ export default function HomePage() {
           }`}>
           {/* Search Bar - Full width on mobile, 50% on tablet, 40% on desktop */}
           <div className="w-full md:w-1/2 lg:w-2/5 relative group">
-            <Search className={`absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 transition-colors ${isDarkMode ? 'text-gray-400 group-focus-within:text-blue-400' : 'text-gray-400 group-focus-within:text-blue-600'
-              }`} />
+            <Search className={`absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 transition-colors ${isDarkMode ? 'text-gray-400 group-focus-within:text-blue-400' : 'text-gray-400 group-focus-within:text-blue-600'}`} />
             <input
               type="text"
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => dispatch(setSearchQuery(e.target.value))}
-              className={`w-full pl-10 sm:pl-12 pr-10 py-2.5 sm:py-3 border rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all text-sm sm:text-base shadow-sm ${isDarkMode
-                ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500'
-                : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'
-                }`}
+              className={`w-full pl-10 sm:pl-12 pr-10 py-2.5 sm:py-3 border rounded-xl focus:ring-2 focus:outline-none transition-all text-sm sm:text-base shadow-sm ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-blue-900' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-blue-100'}`}
             />
             {searchQuery && (
               <button
@@ -99,10 +95,7 @@ export default function HomePage() {
               onMouseEnter={handleDropdownEnter}
               onMouseLeave={handleDropdownLeave}
             >
-              <button className={`flex items-center gap-2 min-w-[180px] sm:min-w-[200px] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 border rounded-xl focus:ring-2 focus:outline-none transition-all text-sm sm:text-base font-semibold shadow-sm cursor-pointer hover:shadow-md ${isDarkMode
-                ? 'bg-gray-800 border-gray-700 text-gray-200 hover:border-gray-600 focus:border-gray-600 focus:ring-gray-700'
-                : 'bg-white border-gray-200 text-gray-900 hover:border-gray-300 focus:border-gray-300 focus:ring-gray-100'
-                }`}>
+              <button className={`flex items-center gap-2 min-w-[180px] sm:min-w-[200px] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 border rounded-xl focus:ring-2 focus:outline-none transition-all text-sm sm:text-base font-semibold shadow-sm cursor-pointer hover:shadow-md ${isDarkMode ? 'bg-gray-800 border-gray-700 text-gray-200 hover:border-gray-600 focus:border-gray-600 focus:ring-gray-700' : 'bg-white border-gray-200 text-gray-900 hover:border-gray-300 focus:border-gray-300 focus:ring-gray-100'}`}>
                 <Filter className={`absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
                 <span className="flex-1 text-left">
                   {selectedCategory === "All" ? "All Categories" : selectedCategory}
@@ -113,10 +106,7 @@ export default function HomePage() {
               {/* Dropdown Menu */}
               {categoryDropdownOpen && (
                 <div className="absolute top-full left-0 pt-1 w-full min-w-[200px] z-1000">
-                  <div className={`rounded-xl shadow-xl border py-2 animate-in fade-in slide-in-from-top-2 duration-200 ${isDarkMode
-                    ? 'bg-gray-800 border-gray-700'
-                    : 'bg-white border-gray-100'
-                    }`}>
+                  <div className={`rounded-xl shadow-xl border py-2 animate-in fade-in slide-in-from-top-2 duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
                     {categories.map((category) => (
                       <button
                         key={category}
@@ -139,10 +129,7 @@ export default function HomePage() {
             </div>
 
             {/* Results Count */}
-            <div className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border whitespace-nowrap transition-all shadow-sm ${isDarkMode
-              ? 'bg-gray-800 border-gray-700'
-              : 'bg-white border-gray-200'
-              }`}>
+            <div className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border whitespace-nowrap transition-all shadow-sm ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
               <span className={`font-bold text-base sm:text-lg ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>{filteredProducts.length}</span>
               <span className={`text-xs sm:text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Results</span>
             </div>
