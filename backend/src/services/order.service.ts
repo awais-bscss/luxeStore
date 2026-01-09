@@ -49,23 +49,28 @@ class OrderService {
     // This ensures orders always use the latest prices, even if admin changed them
     const settings = await SystemSettings.findOne();
 
+    // Calculate totals in Base Currency (PKR)
     const subtotal = cart.items.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
     );
 
-    // Calculate shipping cost based on current settings
-    const freeShippingThreshold = settings?.freeShippingThreshold || 50;
-    const standardShippingCost = settings?.standardShippingCost || 5.99;
-    const expressShippingCost = settings?.expressShippingCost || 12.99;
+    // Business Logic: Handle Currency Conversion for Settings
+    // If display currency is USD, settings values like 'freeShippingThreshold' are in USD and must be converted to PKR
+    const rate = settings?.usdToPkrRate || 280;
+    const isUSD = settings?.currency === 'USD';
+
+    const thresholdPKR = isUSD ? (settings?.freeShippingThreshold || 50) * rate : (settings?.freeShippingThreshold || 50);
+    const standardShippingPKR = isUSD ? (settings?.standardShippingCost || 5.99) * rate : (settings?.standardShippingCost || 5.99);
+    const expressShippingPKR = isUSD ? (settings?.expressShippingCost || 12.99) * rate : (settings?.expressShippingCost || 12.99);
 
     let shippingCost = 0;
-    if (subtotal >= freeShippingThreshold) {
+    if (subtotal >= thresholdPKR) {
       shippingCost = 0; // Free shipping
     } else if (orderData.shippingMethod === 'express') {
-      shippingCost = expressShippingCost;
+      shippingCost = expressShippingPKR;
     } else {
-      shippingCost = standardShippingCost; // Default to standard
+      shippingCost = standardShippingPKR; // Default to standard
     }
 
     // Calculate tax based on current settings

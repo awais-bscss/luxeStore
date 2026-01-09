@@ -26,24 +26,28 @@ export const createPaymentIntent = asyncHandler(
     const SystemSettings = (await import('../models/SystemSettings.model')).default;
     const settings = await SystemSettings.findOne();
 
-    // Calculate total amount (backend calculation - cannot be tampered)
+    // Calculate total amount in base currency (PKR)
     const subtotal = cart.items.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
     );
 
-    // Calculate shipping cost based on settings and shipping method
-    const freeShippingThreshold = settings?.freeShippingThreshold || 50;
-    const standardShippingCost = settings?.standardShippingCost || 5.99;
-    const expressShippingCost = settings?.expressShippingCost || 12.99;
+    // Business Logic: Handle Currency Conversion for Settings
+    // If display currency is USD, settings values like 'freeShippingThreshold' are in USD and must be converted to PKR
+    const rate = settings?.usdToPkrRate || 280;
+    const isUSD = settings?.currency === 'USD';
+
+    const thresholdPKR = isUSD ? (settings?.freeShippingThreshold || 50) * rate : (settings?.freeShippingThreshold || 50);
+    const standardShippingPKR = isUSD ? (settings?.standardShippingCost || 5.99) * rate : (settings?.standardShippingCost || 5.99);
+    const expressShippingPKR = isUSD ? (settings?.expressShippingCost || 12.99) * rate : (settings?.expressShippingCost || 12.99);
 
     let shippingCost = 0;
-    if (subtotal >= freeShippingThreshold) {
+    if (subtotal >= thresholdPKR) {
       shippingCost = 0; // Free shipping
     } else if (shippingMethod === 'express') {
-      shippingCost = expressShippingCost;
+      shippingCost = expressShippingPKR;
     } else {
-      shippingCost = standardShippingCost; // Default to standard
+      shippingCost = standardShippingPKR; // Default to standard
     }
 
     // Calculate tax based on settings
@@ -51,7 +55,7 @@ export const createPaymentIntent = asyncHandler(
     const includeTaxInPrices = settings?.includeTaxInPrices || false;
     const tax = includeTaxInPrices ? 0 : subtotal * (taxRate / 100);
 
-    // Total amount in PKR
+    // Total amount in PKR (Base Currency)
     const totalAmount = subtotal + shippingCost + tax;
 
     // Stripe requires amount in smallest currency unit (paisa for PKR)
