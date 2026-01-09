@@ -45,6 +45,14 @@ export default function ContactMessagesPage() {
     pages: 0,
   });
 
+  const [showReplyModal, setShowReplyModal] = useState(false);
+  const [isSendingReply, setIsSendingReply] = useState(false);
+  const [replyFormData, setReplyFormData] = useState({
+    subject: '',
+    message: '',
+    attachments: [] as File[],
+  });
+
   // Check if user is admin
   useEffect(() => {
     if (!isAuthenticated) {
@@ -155,6 +163,54 @@ export default function ContactMessagesPage() {
   const cancelDelete = () => {
     setShowDeleteModal(false);
     setMessageToDelete(null);
+  };
+
+  const handleReplySubmit = async () => {
+    if (!selectedMessage) return;
+    if (!replyFormData.subject || !replyFormData.message) {
+      alert('Please fill in subject and message');
+      return;
+    }
+
+    setIsSendingReply(true);
+    try {
+      const formData = new FormData();
+      formData.append('to', selectedMessage.email);
+      formData.append('subject', replyFormData.subject);
+      formData.append('message', replyFormData.message);
+
+      // Append all attachments
+      replyFormData.attachments.forEach((file) => {
+        formData.append('attachments', file);
+      });
+
+      const response = await fetch(`${API_URL}/email/send`, {
+        method: 'POST',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update message status to replied
+        await updateStatus(selectedMessage._id, 'replied');
+
+        alert('Reply sent successfully!');
+        setShowReplyModal(false);
+        setReplyFormData({ subject: '', message: '', attachments: [] });
+      } else {
+        alert(data.message || 'Failed to send reply');
+      }
+    } catch (err: any) {
+      console.error('Error sending reply:', err);
+      alert('Failed to send reply');
+    } finally {
+      setIsSendingReply(false);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -292,11 +348,23 @@ export default function ContactMessagesPage() {
 
                     {message.status !== 'resolved' && (
                       <button
-                        onClick={() => updateStatus(message._id, message.status === 'pending' ? 'replied' : 'resolved')}
+                        onClick={() => {
+                          if (message.status === 'pending') {
+                            setSelectedMessage(message);
+                            setReplyFormData({
+                              subject: `Re: ${message.subject}`,
+                              message: '',
+                              attachments: [],
+                            });
+                            setShowReplyModal(true);
+                          } else {
+                            updateStatus(message._id, 'resolved');
+                          }
+                        }}
                         className="flex-1 sm:flex-none p-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors flex items-center justify-center gap-2"
-                        title={message.status === 'pending' ? 'Mark as Replied' : 'Mark as Resolved'}
+                        title={message.status === 'pending' ? 'Reply to Message' : 'Mark as Resolved'}
                       >
-                        <CheckCircle className="w-4 h-4" />
+                        {message.status === 'pending' ? <Mail className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
                         <span className="md:hidden lg:inline text-xs font-medium">
                           {message.status === 'pending' ? 'Reply' : 'Resolve'}
                         </span>
@@ -470,12 +538,20 @@ export default function ContactMessagesPage() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-100 dark:border-gray-700">
-                  <a
-                    href={`mailto:${selectedMessage.email}?subject=Re: ${selectedMessage.subject}`}
+                  <button
+                    onClick={() => {
+                      setReplyFormData({
+                        subject: `Re: ${selectedMessage.subject}`,
+                        message: '',
+                        attachments: [],
+                      });
+                      setShowReplyModal(true);
+                      setShowDetailModal(false);
+                    }}
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-semibold transition-all text-center text-sm shadow-lg shadow-blue-500/20"
                   >
                     Reply via Email
-                  </a>
+                  </button>
                   {selectedMessage.status !== 'resolved' && (
                     <button
                       onClick={() => {
@@ -532,6 +608,125 @@ export default function ContactMessagesPage() {
                 >
                   Delete
                 </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Reply Modal */}
+      {showReplyModal && selectedMessage && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            onClick={() => setShowReplyModal(false)}
+          />
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl mx-4 z-[60]">
+            <div className={`rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Reply to Message
+                  </h2>
+                  <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    To: {selectedMessage.name} ({selectedMessage.email})
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowReplyModal(false)}
+                  className={`text-2xl ${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className={`block text-sm font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Subject *
+                  </label>
+                  <input
+                    type="text"
+                    value={replyFormData.subject}
+                    onChange={(e) => setReplyFormData({ ...replyFormData, subject: e.target.value })}
+                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode
+                      ? 'bg-gray-900 border-gray-700 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'}`}
+                    placeholder="Enter email subject"
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Message *
+                  </label>
+                  <textarea
+                    value={replyFormData.message}
+                    onChange={(e) => setReplyFormData({ ...replyFormData, message: e.target.value })}
+                    rows={8}
+                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode
+                      ? 'bg-gray-900 border-gray-700 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'}`}
+                    placeholder="Enter your message here..."
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Attachments (PDF, Images, Excel, ZIP)
+                  </label>
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.jpg,.jpeg,.png,.gif,.xlsx,.xls,.csv,.zip"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      setReplyFormData({ ...replyFormData, attachments: files });
+                    }}
+                    className={`w-full px-4 py-2 border rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold ${isDarkMode
+                      ? 'bg-gray-900 border-gray-700 text-white file:bg-blue-900/20 file:text-blue-400'
+                      : 'bg-white border-gray-300 text-gray-900 file:bg-blue-50 file:text-blue-700'}`}
+                  />
+                  {replyFormData.attachments.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {replyFormData.attachments.map((file, index) => (
+                        <div key={index} className={`flex items-center justify-between text-sm px-3 py-2 rounded ${isDarkMode ? 'bg-gray-900 text-gray-400' : 'bg-gray-50 text-gray-600'}`}>
+                          <span className="truncate">{file.name}</span>
+                          <span className="text-xs ml-2">({(file.size / 1024).toFixed(1)} KB)</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => setShowReplyModal(false)}
+                    disabled={isSendingReply}
+                    className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-colors disabled:opacity-50 ${isDarkMode
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleReplySubmit}
+                    disabled={isSendingReply}
+                    className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {isSendingReply ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="w-5 h-5" />
+                        Send Reply
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

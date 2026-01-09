@@ -1,8 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { protect } from '../middleware/auth';
-import { requirePermission } from '../middleware/permissions';
-import { RESOURCES, ACTIONS } from '../constants';
+import { isAdmin } from '../middleware/permissions';
 import { sendEmail } from '../controllers/email.controller';
 
 const router = Router();
@@ -40,7 +39,7 @@ const upload = multer({
 router.post(
   '/send',
   protect,
-  requirePermission(RESOURCES.CUSTOMERS, ACTIONS.UPDATE),
+  isAdmin,
   upload.array('attachments', 5), // Max 5 files
   sendEmail
 );
