@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Mail, Lock, Loader2, ArrowLeft, ShieldAlert } from "lucide-react";
+import { Mail, Lock, Loader2, ArrowLeft, ShieldAlert, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAppDispatch, useAppSelector } from "../../hooks/useRedux";
@@ -28,6 +28,8 @@ function LoginContent() {
     email: "",
     password: "",
   });
+
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -150,13 +152,20 @@ function LoginContent() {
                 <div className="relative">
                   <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`} />
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
                     placeholder="••••••••"
-                    className={`w-full pl-11 pr-4 py-3 border-2 rounded-xl focus:outline-none transition-all duration-200 ${isDarkMode ? "bg-gray-700 border-gray-600 text-white placeholder-gray-500 focus:border-blue-500" : "bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-blue-600"} ${validationErrors.password ? "border-red-500" : ""}`}
+                    className={`w-full pl-11 pr-12 py-3 border-2 rounded-xl focus:outline-none transition-all duration-200 ${isDarkMode ? "bg-gray-700 border-gray-600 text-white placeholder-gray-500 focus:border-blue-500" : "bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-blue-600"} ${validationErrors.password ? "border-red-500" : ""}`}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg transition-colors ${isDarkMode ? "text-gray-500 hover:text-gray-300 hover:bg-gray-600" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"}`}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                 </div>
                 {validationErrors.password && <p className="text-red-500 text-xs mt-1">{validationErrors.password}</p>}
               </div>
