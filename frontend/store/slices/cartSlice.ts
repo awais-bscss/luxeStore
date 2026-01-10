@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { logout } from './authSlice';
-import { apiClient, ApiResponse } from '../../lib/api/client';
+import { logout } from '@/store/slices/authSlice';
+import { apiClient, ApiResponse } from '@/lib/api/client';
 
 export interface CartItem {
   productId: string;

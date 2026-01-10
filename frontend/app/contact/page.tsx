@@ -14,7 +14,7 @@ import { apiClient } from "@/lib/api/client";
 
 // Dynamic import for map component (client-side only)
 const LocationMap = dynamic(
-  () => import("../../components/map/LocationMap").then((mod) => mod.LocationMap),
+  () => import("@/components/map/LocationMap").then((mod) => mod.LocationMap),
   { ssr: false, loading: () => <div className="w-full h-96 bg-gray-200 rounded-3xl flex items-center justify-center"><p className="text-gray-500">Loading map...</p></div> }
 );
 

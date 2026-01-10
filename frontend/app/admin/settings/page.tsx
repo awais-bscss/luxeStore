@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppSelector, useAppDispatch } from '../../../hooks/useRedux';
-import { useTheme } from '../../../contexts/ThemeContext';
-import { useSettings, useCurrency } from '../../../contexts/SettingsContext';
-import { useToast } from '../../../hooks/useToast';
-import CustomDropdown from '../../../components/ui/CustomDropdown';
-import { apiClient } from '../../../lib/api/client';
+import { useAppSelector, useAppDispatch } from '@/hooks/useRedux';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useSettings, useCurrency } from '@/contexts/SettingsContext';
+import { useToast } from '@/hooks/useToast';
+import CustomDropdown from '@/components/ui/CustomDropdown';
+import { apiClient } from '@/lib/api/client';
 import {
   Globe,
   Shield,

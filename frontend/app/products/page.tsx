@@ -8,10 +8,10 @@ import { Search, X, Filter, ChevronDown } from "lucide-react";
 import { RootState } from "@/store/store";
 import { setSearchQuery, setCategory } from "@/store/slices/productsSlice";
 import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "../../components/layout/Footer";
-import { ProductList } from "../../components/product/ProductList";
-import { CartSidebar } from "../../components/cart/CartSidebar";
-import { useTheme } from "../../contexts/ThemeContext";
+import { Footer } from "@/components/layout/Footer";
+import { ProductList } from "@/components/product/ProductList";
+import { CartSidebar } from "@/components/cart/CartSidebar";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // COMPONENT
 export default function ProductsPage() {

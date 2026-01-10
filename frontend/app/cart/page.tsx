@@ -15,13 +15,13 @@ import {
   Truck,
   Shield
 } from "lucide-react";
-import { RootState } from "../../store/store";
-import { useCart } from "../../hooks/useCart";
-import { ConfirmModal } from "../../components/ui/ConfirmModal";
-import { useToast } from "../../hooks/useToast";
-import { useTheme } from "../../contexts/ThemeContext";
-import { formatPrice } from "../../lib/currency";
-import { useSettings } from "../../contexts/SettingsContext";
+import { RootState } from "@/store/store";
+import { useCart } from "@/hooks/useCart";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { useToast } from "@/hooks/useToast";
+import { useTheme } from "@/contexts/ThemeContext";
+import { formatPrice } from "@/lib/currency";
+import { useSettings } from "@/contexts/SettingsContext";
 
 export default function CartPage() {
   const { isDarkMode } = useTheme();

@@ -2,11 +2,11 @@
 
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../../store/store";
-import { Navbar } from "../../components/layout/Navbar";
-import { CartSidebar } from "../../components/cart/CartSidebar";
+import { RootState } from "@/store/store";
+import { Navbar } from "@/components/layout/Navbar";
+import { CartSidebar } from "@/components/cart/CartSidebar";
 import { FileText, ShoppingCart, CreditCard, AlertCircle, UserX, Scale } from "lucide-react";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function TermsOfServicePage() {
   const { isDarkMode } = useTheme();

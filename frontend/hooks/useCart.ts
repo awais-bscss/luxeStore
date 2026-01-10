@@ -1,4 +1,4 @@
-import { useAppDispatch, useAppSelector } from './useRedux';
+import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 import {
   addToCartLocal,
   removeFromCartLocal,
@@ -9,7 +9,7 @@ import {
   removeFromCartAPI,
   clearCartAPI,
   CartItem,
-} from '../store/slices/cartSlice';
+} from '@/store/slices/cartSlice';
 
 export const useCart = () => {
   const dispatch = useAppDispatch();

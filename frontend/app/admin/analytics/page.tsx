@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppSelector } from '../../../hooks/useRedux';
-import CustomDropdown from '../../../components/ui/CustomDropdown';
+import { useAppSelector } from '@/hooks/useRedux';
+import CustomDropdown from '@/components/ui/CustomDropdown';
 import {
   TrendingUp,
   TrendingDown,
@@ -16,9 +16,9 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from 'lucide-react';
-import { exportToCSV } from '../../../utils/exportData';
-import { formatPrice } from '../../../lib/currency';
-import { useSettings } from '../../../contexts/SettingsContext';
+import { exportToCSV } from '@/utils/exportData';
+import { formatPrice } from '@/lib/currency';
+import { useSettings } from '@/contexts/SettingsContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 

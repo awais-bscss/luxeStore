@@ -1,12 +1,12 @@
 import React from "react";
-import { ReduxProvider } from "../components/providers/ReduxProvider";
-import { CartFavoritesSyncProvider } from "../components/providers/CartFavoritesSyncProvider";
-import { ThemeProvider } from "../contexts/ThemeContext";
-import { SettingsProvider } from "../contexts/SettingsContext";
-import { MaintenanceModeChecker } from "../components/MaintenanceModeChecker";
-import SessionManager from "../components/SessionManager";
-import ToastContainer from "../components/ui/ToastContainer";
-import "../styles/globals.css";
+import { ReduxProvider } from "@/components/providers/ReduxProvider";
+import { CartFavoritesSyncProvider } from "@/components/providers/CartFavoritesSyncProvider";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import { SettingsProvider } from "@/contexts/SettingsContext";
+import { MaintenanceModeChecker } from "@/components/MaintenanceModeChecker";
+import SessionManager from "@/components/SessionManager";
+import ToastContainer from "@/components/ui/ToastContainer";
+import "@/styles/globals.css";
 import type { Metadata } from "next";
 
 // METADATA

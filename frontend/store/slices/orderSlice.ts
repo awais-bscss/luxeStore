@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { apiClient } from '../../lib/api/client';
+import { apiClient } from '@/lib/api/client';
 
 export interface OrderItem {
   product: string;

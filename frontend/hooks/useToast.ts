@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
-import { addToast, ToastType } from '../store/slices/toastSlice';
-import { AppDispatch } from '../store/store';
+import { addToast, ToastType } from '@/store/slices/toastSlice';
+import { AppDispatch } from '@/store/store';
 
 export const useToast = () => {
   const dispatch = useDispatch<AppDispatch>();

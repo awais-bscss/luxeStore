@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../../../store/store";
+import { RootState } from "@/store/store";
 import { useRouter } from "next/navigation";
-import { useAppDispatch, useAppSelector } from "../../../hooks/useRedux";
-import { apiClient } from "../../../lib/api/client";
+import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
+import { apiClient } from "@/lib/api/client";
 import { Mail, Clock, CheckCircle, Trash2, Eye, Filter } from "lucide-react";
-import { useTheme } from "../../../contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // apiClient handles API_URL from env
 

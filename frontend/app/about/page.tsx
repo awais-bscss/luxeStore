@@ -3,12 +3,12 @@
 // IMPORTS
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../../store/store";
-import { Navbar } from "../../components/layout/Navbar";
-import { Footer } from "../../components/layout/Footer";
-import { CartSidebar } from "../../components/cart/CartSidebar";
+import { RootState } from "@/store/store";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import { CartSidebar } from "@/components/cart/CartSidebar";
 import { Award, Users, Target, Heart, Shield, Zap } from "lucide-react";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // COMPONENT
 export default function AboutPage() {

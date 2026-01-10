@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, ReactNode } from 'react';
-import { useAppDispatch, useAppSelector } from '../hooks/useRedux';
-import { toggleDarkMode, toggleCompactView, toggleSidebarCollapsed } from '../store/slices/themeSlice';
+import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
+import { toggleDarkMode, toggleCompactView, toggleSidebarCollapsed } from '@/store/slices/themeSlice';
 
 interface ThemeContextType {
   isDarkMode: boolean;

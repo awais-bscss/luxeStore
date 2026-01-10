@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useTheme } from '../../contexts/ThemeContext';
-import { useCurrency } from '../../contexts/SettingsContext';
-import { useAppSelector, useAppDispatch } from '../../hooks/useRedux';
-import { useToast } from '../../hooks/useToast';
-import { logout } from '../../store/slices/authSlice';
-import { apiClient } from '../../lib/api/client';
-import { RootState } from '../../store/store';
-import ProtectedRoute from '../../components/auth/ProtectedRoute';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useCurrency } from '@/contexts/SettingsContext';
+import { useAppSelector, useAppDispatch } from '@/hooks/useRedux';
+import { useToast } from '@/hooks/useToast';
+import { logout } from '@/store/slices/authSlice';
+import { apiClient } from '@/lib/api/client';
+import { RootState } from '@/store/store';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import {
   LayoutDashboard,
   Package,

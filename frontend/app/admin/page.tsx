@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import CustomDropdown from '../../components/ui/CustomDropdown';
-import { useAppSelector, useAppDispatch } from '../../hooks/useRedux';
-import { logout } from '../../store/slices/authSlice';
-import { useToast } from '../../hooks/useToast';
-import { formatPrice } from '../../lib/currency';
-import { useSettings } from '../../contexts/SettingsContext';
+import CustomDropdown from '@/components/ui/CustomDropdown';
+import { useAppSelector, useAppDispatch } from '@/hooks/useRedux';
+import { logout } from '@/store/slices/authSlice';
+import { useToast } from '@/hooks/useToast';
+import { formatPrice } from '@/lib/currency';
+import { useSettings } from '@/contexts/SettingsContext';
 import {
   TrendingUp,
   TrendingDown,
@@ -21,8 +21,8 @@ import {
   ChevronDown,
 } from 'lucide-react';
 
-import { calculateProductGrowth, getDateRangeForStats } from '../../utils/dashboardStats';
-import { apiClient } from '../../lib/api/client';
+import { calculateProductGrowth, getDateRangeForStats } from '@/utils/dashboardStats';
+import { apiClient } from '@/lib/api/client';
 
 export default function AdminDashboard() {
   const router = useRouter();

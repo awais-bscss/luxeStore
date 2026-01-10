@@ -2,18 +2,18 @@
 
 // IMPORTS
 import React, { useState, useRef } from "react";
-import { useAppDispatch, useAppSelector } from "../hooks/useRedux";
+import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import { Search, X, Filter, ChevronDown } from "lucide-react";
-import { RootState } from "../store/store";
-import { setSearchQuery, setCategory } from "../store/slices/productsSlice";
-import { Navbar } from "../components/layout/Navbar";
-import { HeroSection } from "../components/layout/HeroSection";
-import { ProductList } from "../components/product/ProductList";
-import { CartSidebar } from "../components/cart/CartSidebar";
-import { Footer } from "../components/layout/Footer";
-import { WhatsAppButton } from "../components/ui/WhatsAppButton";
-import { CustomCursor } from "../components/ui/CustomCursor";
-import { useTheme } from "../contexts/ThemeContext";
+import { RootState } from "@/store/store";
+import { setSearchQuery, setCategory } from "@/store/slices/productsSlice";
+import { Navbar } from "@/components/layout/Navbar";
+import { HeroSection } from "@/components/layout/HeroSection";
+import { ProductList } from "@/components/product/ProductList";
+import { CartSidebar } from "@/components/cart/CartSidebar";
+import { Footer } from "@/components/layout/Footer";
+import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
+import { CustomCursor } from "@/components/ui/CustomCursor";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // MAIN COMPONENT WITH THEME
 export default function HomePage() {

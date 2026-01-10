@@ -2,11 +2,11 @@
 
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../../store/store";
-import { Navbar } from "../../components/layout/Navbar";
-import { CartSidebar } from "../../components/cart/CartSidebar";
+import { RootState } from "@/store/store";
+import { Navbar } from "@/components/layout/Navbar";
+import { CartSidebar } from "@/components/cart/CartSidebar";
 import { Ruler, Shirt, User, Footprints, Info } from "lucide-react";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function SizeGuidePage() {
   const { isDarkMode } = useTheme();
@@ -74,8 +74,8 @@ export default function SizeGuidePage() {
           <button
             onClick={() => setSelectedCategory("clothing")}
             className={`px-8 py-3 rounded-xl font-semibold transition-all duration-300 ${selectedCategory === "clothing"
-                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                : isDarkMode ? "bg-gray-800 text-gray-300 hover:bg-gray-700" : "bg-white text-gray-700 hover:bg-gray-50"
+              ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+              : isDarkMode ? "bg-gray-800 text-gray-300 hover:bg-gray-700" : "bg-white text-gray-700 hover:bg-gray-50"
               }`}
           >
             <Shirt className="w-5 h-5 inline mr-2" />
@@ -84,8 +84,8 @@ export default function SizeGuidePage() {
           <button
             onClick={() => setSelectedCategory("shoes")}
             className={`px-8 py-3 rounded-xl font-semibold transition-all duration-300 ${selectedCategory === "shoes"
-                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                : isDarkMode ? "bg-gray-800 text-gray-300 hover:bg-gray-700" : "bg-white text-gray-700 hover:bg-gray-50"
+              ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+              : isDarkMode ? "bg-gray-800 text-gray-300 hover:bg-gray-700" : "bg-white text-gray-700 hover:bg-gray-50"
               }`}
           >
             <Footprints className="w-5 h-5 inline mr-2" />

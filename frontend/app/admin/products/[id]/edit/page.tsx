@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save, Loader2, Layers } from 'lucide-react';
 import Link from 'next/link';
-import { useToast } from '../../../../../hooks/useToast';
-import { useAppDispatch, useAppSelector } from '../../../../../hooks/useRedux';
-import { apiClient } from '../../../../../lib/api/client';
-import ImageUpload from '../../../../../components/admin/ImageUpload';
-import MultiImageUpload from '../../../../../components/admin/MultiImageUpload';
-import CustomDropdown from '../../../../../components/ui/CustomDropdown';
+import { useToast } from '@/hooks/useToast';
+import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
+import { apiClient } from '@/lib/api/client';
+import ImageUpload from '@/components/admin/ImageUpload';
+import MultiImageUpload from '@/components/admin/MultiImageUpload';
+import CustomDropdown from '@/components/ui/CustomDropdown';
 
 // apiClient handles API_URL from env
 

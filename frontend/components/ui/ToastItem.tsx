@@ -2,8 +2,8 @@
 
 import React, { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { removeToast, Toast as ToastType } from '../../store/slices/toastSlice';
-import { AppDispatch } from '../../store/store';
+import { removeToast, Toast as ToastType } from '@/store/slices/toastSlice';
+import { AppDispatch } from '@/store/store';
 
 interface ToastItemProps {
   toast: ToastType;

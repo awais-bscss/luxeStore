@@ -2,12 +2,12 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAppDispatch, useAppSelector } from "../../../../hooks/useRedux";
-import { addToast } from "../../../../store/slices/toastSlice";
-import { apiClient } from "../../../../lib/api/client";
-import ImageUpload from "../../../../components/admin/ImageUpload";
-import MultiImageUpload from "../../../../components/admin/MultiImageUpload";
-import CustomDropdown from "../../../../components/ui/CustomDropdown";
+import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
+import { addToast } from "@/store/slices/toastSlice";
+import { apiClient } from "@/lib/api/client";
+import ImageUpload from "@/components/admin/ImageUpload";
+import MultiImageUpload from "@/components/admin/MultiImageUpload";
+import CustomDropdown from "@/components/ui/CustomDropdown";
 import {
   Package,
   DollarSign,

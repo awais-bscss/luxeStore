@@ -25,8 +25,8 @@ import {
   LogOut,
   Settings as SettingsIcon
 } from "lucide-react";
-import { AuthModal } from "../auth/AuthModal";
-import { useTheme } from "../../contexts/ThemeContext";
+import { AuthModal } from "@/components/auth/AuthModal";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // TYPES
 interface NavbarProps {

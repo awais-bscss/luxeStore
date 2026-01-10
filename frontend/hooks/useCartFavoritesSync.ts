@@ -2,12 +2,12 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppDispatch, useAppSelector } from './useRedux';
-import { useToast } from './useToast';
-import { logout } from '../store/slices/authSlice';
-import { mergeCartAPI } from '../store/slices/cartSlice';
-import { mergeFavoritesAPI, fetchFavorites } from '../store/slices/favoritesSlice';
-import { fetchCart } from '../store/slices/cartSlice';
+import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
+import { useToast } from '@/hooks/useToast';
+import { logout } from '@/store/slices/authSlice';
+import { mergeCartAPI } from '@/store/slices/cartSlice';
+import { mergeFavoritesAPI, fetchFavorites } from '@/store/slices/favoritesSlice';
+import { fetchCart } from '@/store/slices/cartSlice';
 
 export const useCartFavoritesSync = () => {
   const router = useRouter();

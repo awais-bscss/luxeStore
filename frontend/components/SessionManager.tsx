@@ -2,10 +2,10 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppSelector, useAppDispatch } from '../hooks/useRedux';
-import { RootState } from '../store/store';
-import { logout } from '../store/slices/authSlice';
-import { addToast } from '../store/slices/toastSlice';
+import { useAppSelector, useAppDispatch } from '@/hooks/useRedux';
+import { RootState } from '@/store/store';
+import { logout } from '@/store/slices/authSlice';
+import { addToast } from '@/store/slices/toastSlice';
 
 // Session configuration
 const SESSION_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds

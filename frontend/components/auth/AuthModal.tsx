@@ -3,10 +3,10 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { X, User, Mail, Lock, ShoppingBag, UserCircle, Loader2, Eye, EyeOff } from "lucide-react";
-import { useTheme } from "../../contexts/ThemeContext";
-import { useAppDispatch, useAppSelector } from "../../hooks/useRedux";
-import { signup, login, clearError, setCredentials } from "../../store/slices/authSlice";
-import { addToast } from "../../store/slices/toastSlice";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
+import { signup, login, clearError, setCredentials } from "@/store/slices/authSlice";
+import { addToast } from "@/store/slices/toastSlice";
 import { useRouter } from "next/navigation";
 
 interface AuthModalProps {

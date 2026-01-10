@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User, Camera, Save, X } from "lucide-react";
-import { useTheme } from "../../../contexts/ThemeContext";
-import { uploadImage } from "../../../utils/uploadUtils";
-import { useAppSelector, useAppDispatch } from "../../../hooks/useRedux";
-import { RootState } from "../../../store/store";
-import { TwoFactorModal } from "../../../components/profile/TwoFactorSection";
+import { useTheme } from "@/contexts/ThemeContext";
+import { uploadImage } from "@/utils/uploadUtils";
+import { useAppSelector, useAppDispatch } from "@/hooks/useRedux";
+import { RootState } from "@/store/store";
+import { TwoFactorModal } from "@/components/profile/TwoFactorSection";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 

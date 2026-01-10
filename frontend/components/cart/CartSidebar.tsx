@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../../store/store";
-import { useCart } from "../../hooks/useCart";
+import { RootState } from "@/store/store";
+import { useCart } from "@/hooks/useCart";
 import { X, ShoppingCart, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCurrency, useExchangeRate } from "../../contexts/SettingsContext";
-import { formatPrice } from "../../lib/currency";
-import { useToast } from "../../hooks/useToast";
+import { useCurrency, useExchangeRate } from "@/contexts/SettingsContext";
+import { formatPrice } from "@/lib/currency";
+import { useToast } from "@/hooks/useToast";
 
 interface CartSidebarProps {
   isOpen: boolean;

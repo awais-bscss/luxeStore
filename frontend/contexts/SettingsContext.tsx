@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { CurrencyCode } from '../lib/currency';
+import { CurrencyCode } from '@/lib/currency';
 
 interface SystemSettings {
   currency: CurrencyCode;

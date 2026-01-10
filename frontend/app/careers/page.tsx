@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../../store/store";
-import { Navbar } from "../../components/layout/Navbar";
-import { CartSidebar } from "../../components/cart/CartSidebar";
+import { RootState } from "@/store/store";
+import { Navbar } from "@/components/layout/Navbar";
+import { CartSidebar } from "@/components/cart/CartSidebar";
 import {
   Briefcase,
   Users,
@@ -26,7 +26,7 @@ import {
   User,
   FileText
 } from "lucide-react";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 

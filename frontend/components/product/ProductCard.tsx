@@ -4,13 +4,13 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Star, Heart } from "lucide-react";
-import { Product } from "../../data/products";
-import { useCart } from "../../hooks/useCart";
-import { useFavorites } from "../../hooks/useFavorites";
-import { useToast } from "../../hooks/useToast";
-import { useTheme } from "../../contexts/ThemeContext";
-import { useCurrency, useExchangeRate } from "../../contexts/SettingsContext";
-import { formatPrice } from "../../lib/currency";
+import { Product } from "@/data/products";
+import { useCart } from "@/hooks/useCart";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useToast } from "@/hooks/useToast";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useCurrency, useExchangeRate } from "@/contexts/SettingsContext";
+import { formatPrice } from "@/lib/currency";
 
 // COMPONENT
 interface ProductCardProps {

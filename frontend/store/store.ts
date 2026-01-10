@@ -1,13 +1,13 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // defaults to localStorage for web
-import cartReducer from './slices/cartSlice';
-import productsReducer from './slices/productsSlice';
-import favoritesReducer from './slices/favoritesSlice';
-import toastReducer from './slices/toastSlice';
-import authReducer from './slices/authSlice';
-import themeReducer from './slices/themeSlice';
-import orderReducer from './slices/orderSlice';
+import cartReducer from '@/store/slices/cartSlice';
+import productsReducer from '@/store/slices/productsSlice';
+import favoritesReducer from '@/store/slices/favoritesSlice';
+import toastReducer from '@/store/slices/toastSlice';
+import authReducer from '@/store/slices/authSlice';
+import themeReducer from '@/store/slices/themeSlice';
+import orderReducer from '@/store/slices/orderSlice';
 
 // PERSIST CONFIGURATION
 const persistConfig = {

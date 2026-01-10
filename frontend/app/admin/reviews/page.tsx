@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../../store/store';
+import { RootState } from '@/store/store';
 import { useRouter } from 'next/navigation';
 import {
   MessageSquare,
@@ -19,8 +19,8 @@ import {
   Filter,
   ThumbsUp
 } from 'lucide-react';
-import { useToast } from '../../../hooks/useToast';
-import CustomDropdown from '../../../components/ui/CustomDropdown';
+import { useToast } from '@/hooks/useToast';
+import CustomDropdown from '@/components/ui/CustomDropdown';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 

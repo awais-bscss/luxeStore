@@ -18,7 +18,7 @@ import {
   Check,
   ChevronRight,
 } from 'lucide-react';
-import { useToast } from '../../../hooks/useToast';
+import { useToast } from '@/hooks/useToast';
 import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 import { addToCartLocal } from '@/store/slices/cartSlice';
 import { toggleFavoriteLocal } from '@/store/slices/favoritesSlice';

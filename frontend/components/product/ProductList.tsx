@@ -4,12 +4,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
-import { RootState, AppDispatch } from "../../store/store";
-import { fetchProducts } from "../../store/slices/productsSlice";
+import { RootState, AppDispatch } from "@/store/store";
+import { fetchProducts } from "@/store/slices/productsSlice";
 import { ProductCard } from "./ProductCard";
-import { Product } from "../../data/products";
-import { useTheme } from "../../contexts/ThemeContext";
-import { ProductGridSkeleton } from "../ui/Skeleton";
+import { Product } from "@/data/products";
+import { useTheme } from "@/contexts/ThemeContext";
+import { ProductGridSkeleton } from "@/components/ui/Skeleton";
 
 // COMPONENT
 export const ProductList: React.FC = () => {

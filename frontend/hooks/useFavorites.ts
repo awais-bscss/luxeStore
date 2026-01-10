@@ -1,4 +1,4 @@
-import { useAppDispatch, useAppSelector } from './useRedux';
+import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 import {
   toggleFavoriteLocal,
   removeFavoriteLocal,
@@ -6,7 +6,7 @@ import {
   addToFavoritesAPI,
   removeFromFavoritesAPI,
   clearFavoritesAPI,
-} from '../store/slices/favoritesSlice';
+} from '@/store/slices/favoritesSlice';
 
 export const useFavorites = () => {
   const dispatch = useAppDispatch();

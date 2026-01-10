@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { Product } from '../../data/products';
-import { ProductsState } from '../../data/types';
+import { Product } from '@/data/products';
+import { ProductsState } from '@/data/types';
 
-import { apiClient } from '../../lib/api/client';
+import { apiClient } from '@/lib/api/client';
 
 // THUNKS
 export const fetchProducts = createAsyncThunk(

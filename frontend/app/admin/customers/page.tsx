@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import CustomDropdown from '../../../components/ui/CustomDropdown';
+import CustomDropdown from '@/components/ui/CustomDropdown';
 import {
   Search,
   Filter,
@@ -18,14 +18,14 @@ import {
   Ban,
   UserCheck,
 } from 'lucide-react';
-import { Customer } from '../../../types/customer';
-import { exportToExcel, formatDateForExport } from '../../../utils/exportData';
-import { useAppSelector, useAppDispatch } from '../../../hooks/useRedux';
-import { formatPrice } from '../../../lib/currency';
-import { useSettings } from '../../../contexts/SettingsContext';
-import { apiClient } from '../../../lib/api/client';
+import { Customer } from '@/types/customer';
+import { exportToExcel, formatDateForExport } from '@/utils/exportData';
+import { useAppSelector, useAppDispatch } from '@/hooks/useRedux';
+import { formatPrice } from '@/lib/currency';
+import { useSettings } from '@/contexts/SettingsContext';
+import { apiClient } from '@/lib/api/client';
 import { useRouter } from 'next/navigation';
-import { useToast } from '../../../hooks/useToast';
+import { useToast } from '@/hooks/useToast';
 
 export default function CustomersPage() {
   const state = useAppSelector((state) => state);

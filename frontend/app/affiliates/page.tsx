@@ -2,9 +2,9 @@
 
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../../store/store";
-import { Navbar } from "../../components/layout/Navbar";
-import { CartSidebar } from "../../components/cart/CartSidebar";
+import { RootState } from "@/store/store";
+import { Navbar } from "@/components/layout/Navbar";
+import { CartSidebar } from "@/components/cart/CartSidebar";
 import {
   DollarSign,
   Users,
@@ -19,9 +19,9 @@ import {
   Link as LinkIcon,
   Percent
 } from "lucide-react";
-import { useTheme } from "../../contexts/ThemeContext";
-import { getCurrencySymbol } from "../../lib/currency";
-import { useSettings } from "../../contexts/SettingsContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import { getCurrencySymbol } from "@/lib/currency";
+import { useSettings } from "@/contexts/SettingsContext";
 
 export default function AffiliatesPage() {
   const { isDarkMode } = useTheme();

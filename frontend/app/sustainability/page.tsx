@@ -2,9 +2,9 @@
 
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../../store/store";
-import { Navbar } from "../../components/layout/Navbar";
-import { CartSidebar } from "../../components/cart/CartSidebar";
+import { RootState } from "@/store/store";
+import { Navbar } from "@/components/layout/Navbar";
+import { CartSidebar } from "@/components/cart/CartSidebar";
 import {
   Leaf,
   Recycle,
@@ -18,7 +18,7 @@ import {
   Globe,
   CheckCircle
 } from "lucide-react";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function SustainabilityPage() {
   const { isDarkMode } = useTheme();
@@ -209,8 +209,8 @@ export default function SustainabilityPage() {
                       {goal.goal}
                     </h3>
                     <span className={`px-3 py-1 rounded-full text-sm font-semibold ${goal.status === "In Progress" ? isDarkMode ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-100 text-blue-800' :
-                        goal.status === "On Track" ? isDarkMode ? 'bg-green-900/30 text-green-300' : 'bg-green-100 text-green-800' :
-                          isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
+                      goal.status === "On Track" ? isDarkMode ? 'bg-green-900/30 text-green-300' : 'bg-green-100 text-green-800' :
+                        isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
                       }`}>
                       {goal.status}
                     </span>

@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Navbar } from "../../components/layout/Navbar";
-import { CartSidebar } from "../../components/cart/CartSidebar";
-import { ProductCard } from "../../components/product/ProductCard";
+import { Navbar } from "@/components/layout/Navbar";
+import { CartSidebar } from "@/components/cart/CartSidebar";
+import { ProductCard } from "@/components/product/ProductCard";
 import { Heart, ShoppingCart, Trash2 } from "lucide-react";
-import { useFavorites } from "../../hooks/useFavorites";
-import { useCart } from "../../hooks/useCart";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useCart } from "@/hooks/useCart";
 import { useAppSelector, useAppDispatch } from "@/hooks/useRedux";
 import { fetchProducts } from "@/store/slices/productsSlice";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";

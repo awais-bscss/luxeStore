@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import CustomDropdown from '../../../components/ui/CustomDropdown';
+import CustomDropdown from '@/components/ui/CustomDropdown';
 import {
   Plus,
   Search,
@@ -17,12 +17,12 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import Image from 'next/image';
-import { useToast } from '../../../hooks/useToast';
-import { formatPrice } from '../../../lib/currency';
-import { useSettings } from '../../../contexts/SettingsContext';
-import { useAppSelector, useAppDispatch } from '../../../hooks/useRedux';
-import { apiClient } from '../../../lib/api/client';
-import { Product, Pagination } from '../../../types/product';
+import { useToast } from '@/hooks/useToast';
+import { formatPrice } from '@/lib/currency';
+import { useSettings } from '@/contexts/SettingsContext';
+import { useAppSelector, useAppDispatch } from '@/hooks/useRedux';
+import { apiClient } from '@/lib/api/client';
+import { Product, Pagination } from '@/types/product';
 
 export default function ProductsPage() {
   const router = useRouter();
