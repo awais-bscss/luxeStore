@@ -1,7 +1,8 @@
 "use client";
 
 // IMPORTS
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import { Search, X, Filter, ChevronDown } from "lucide-react";
 import { RootState } from "@/store/store";
@@ -14,9 +15,12 @@ import { Footer } from "@/components/layout/Footer";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 import { CustomCursor } from "@/components/ui/CustomCursor";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useToast } from "@/hooks/useToast";
 
 // MAIN COMPONENT WITH THEME
 export default function HomePage() {
+  const searchParams = useSearchParams();
+  const toast = useToast();
   const [cartOpen, setCartOpen] = useState(false);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -25,6 +29,16 @@ export default function HomePage() {
     (state: RootState) => state.products
   );
   const { isDarkMode } = useTheme();
+
+  // Check for access denied error
+  useEffect(() => {
+    const error = searchParams.get('error');
+    if (error === 'access_denied') {
+      toast.error('Access Denied', 'You do not have permission to access the admin area.');
+      // Clear the error from URL
+      window.history.replaceState({}, '', '/');
+    }
+  }, [searchParams, toast]);
 
   const categories = ["All", "Electronics", "Fashion", "Wearables", "Home"];
 
