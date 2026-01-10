@@ -2,28 +2,29 @@
 
 // IMPORTS
 import React, { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useAppSelector, useAppDispatch } from "@/hooks/useRedux";
 import { useSearchParams, useRouter } from "next/navigation";
-import { RootState } from "../../store/store";
-import { useToast } from "../../hooks/useToast";
-import { Navbar } from "../../components/layout/Navbar";
-import { CartSidebar } from "../../components/cart/CartSidebar";
+import { RootState } from "@/store/store";
+import { useToast } from "@/hooks/useToast";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import { CartSidebar } from "@/components/cart/CartSidebar";
 import { User, Mail, Phone, MapPin, Package, Heart, Settings, LogOut, Edit2, Shield, Bell, Key, AlertTriangle, Loader2 } from "lucide-react";
-import { formatPrice } from "../../lib/currency";
-import { useSettings } from "../../contexts/SettingsContext";
-import { logout } from "../../store/slices/authSlice";
+import { formatPrice } from "@/lib/currency";
+import { useSettings } from "@/contexts/SettingsContext";
+import { logout } from "@/store/slices/authSlice";
+import { apiClient } from "@/lib/api/client";
 
 // COMPONENT
 export default function AccountPage() {
   const router = useRouter();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const searchParams = useSearchParams();
   const [cartOpen, setCartOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
   const { settings } = useSettings();
-  const { items } = useSelector((state: RootState) => state.cart);
-  const { user, isPasswordExpired } = useSelector((state: any) => state.auth);
-  const cartItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const state = useAppSelector((state: RootState) => state);
+  const { user, isPasswordExpired } = state.auth;
   const toast = useToast();
 
   const [passwordData, setPasswordData] = useState({
@@ -69,17 +70,13 @@ export default function AccountPage() {
     setIsChangingPassword(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/change-password`, {
+      const data = await apiClient('/users/change-password', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword
         }),
-      });
-
-      const data = await response.json();
+      }, dispatch, state);
 
       if (data.success) {
         toast.success("Success", "Password changed successfully!");
@@ -94,11 +91,9 @@ export default function AccountPage() {
           toast.info("Session Updated", "Security policy updated. Please log in again with your new password.");
           handleLogout();
         }
-      } else {
-        toast.error("Error", data.message || "Failed to change password");
       }
-    } catch (err) {
-      toast.error("Error", "An error occurred while changing password");
+    } catch (err: any) {
+      toast.error("Error", err.message || "An error occurred while changing password");
     } finally {
       setIsChangingPassword(false);
     }
@@ -119,7 +114,7 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
-      <Navbar cartItemCount={cartItemCount} onCartOpen={() => setCartOpen(true)} />
+      <Navbar onCartOpen={() => setCartOpen(true)} />
 
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
         <div className="max-w-7xl mx-auto px-6">
@@ -360,6 +355,7 @@ export default function AccountPage() {
         </div>
       </div>
 
+      <Footer />
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
     </div>
   );

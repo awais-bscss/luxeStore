@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 import { useRouter, useParams } from "next/navigation";
 import { RootState } from "@/store/store";
-import { useAppDispatch } from "@/hooks/useRedux";
+import { useAppSelector, useAppDispatch } from "@/hooks/useRedux";
 import { fetchOrderById, cancelOrder } from "@/store/slices/orderSlice";
 import { Navbar } from "@/components/layout/Navbar";
 import { CartSidebar } from "@/components/cart/CartSidebar";
@@ -36,11 +35,9 @@ export default function OrderDetailsPage() {
 
   const orderId = params.id as string;
 
-  const { items: cartItems } = useSelector((state: RootState) => state.cart);
-  const { currentOrder, isLoading } = useSelector((state: RootState) => state.orders);
-  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
-
-  const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const { items: cartItems } = useAppSelector((state: RootState) => state.cart);
+  const { currentOrder, isLoading } = useAppSelector((state: RootState) => state.orders);
+  const { isAuthenticated, user } = useAppSelector((state: RootState) => state.auth);
 
   // Determine back URL based on user role
   const backUrl = user?.role === 'admin' || user?.role === 'superadmin' ? '/admin/orders' : '/orders';
@@ -98,7 +95,7 @@ export default function OrderDetailsPage() {
   if (isLoading || !currentOrder) {
     return (
       <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900' : 'bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50'}`}>
-        <Navbar cartItemCount={cartItemCount} onCartOpen={() => setCartOpen(true)} />
+        <Navbar onCartOpen={() => setCartOpen(true)} />
         <div className="flex justify-center items-center py-20">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
         </div>
@@ -108,7 +105,7 @@ export default function OrderDetailsPage() {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900' : 'bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50'}`}>
-      <Navbar cartItemCount={cartItemCount} onCartOpen={() => setCartOpen(true)} />
+      <Navbar onCartOpen={() => setCartOpen(true)} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Back Button */}

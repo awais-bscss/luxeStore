@@ -2,9 +2,9 @@
 
 // IMPORTS
 import React, { useState, useRef } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useAppDispatch, useAppSelector } from "../hooks/useRedux";
 import { Search, X, Filter, ChevronDown } from "lucide-react";
-import { RootState, AppDispatch } from "../store/store";
+import { RootState } from "../store/store";
 import { setSearchQuery, setCategory } from "../store/slices/productsSlice";
 import { Navbar } from "../components/layout/Navbar";
 import { HeroSection } from "../components/layout/HeroSection";
@@ -20,15 +20,13 @@ export default function HomePage() {
   const [cartOpen, setCartOpen] = useState(false);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const dispatch = useDispatch<AppDispatch>();
-  const { items } = useSelector((state: RootState) => state.cart);
-  const { searchQuery, selectedCategory, filteredProducts } = useSelector(
+  const dispatch = useAppDispatch();
+  const { searchQuery, selectedCategory, filteredProducts } = useAppSelector(
     (state: RootState) => state.products
   );
   const { isDarkMode } = useTheme();
 
   const categories = ["All", "Electronics", "Fashion", "Wearables", "Home"];
-  const cartItemCount = (items || []).reduce((sum, item) => sum + (item.quantity || 0), 0);
 
   const handleDropdownEnter = () => {
     if (dropdownTimeoutRef.current) {
@@ -54,7 +52,7 @@ export default function HomePage() {
       : 'bg-white'
       }`}>
       {/* Navbar */}
-      <Navbar cartItemCount={cartItemCount} onCartOpen={() => setCartOpen(true)} />
+      <Navbar onCartOpen={() => setCartOpen(true)} />
 
       {/* Hero Section */}
       <HeroSection />

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Order from '../models/Order.model';
 import Cart from '../models/Cart.model';
 import User from '../models/User.model';
@@ -23,207 +24,183 @@ interface CreateOrderData {
 
 class OrderService {
   async createOrder(userId: string, orderData: CreateOrderData) {
-    // Get user's cart
-    const cart = await Cart.findOne({ user: userId }).populate('items.product');
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    if (!cart || cart.items.length === 0) {
-      throw new ValidationError('Cart is empty');
-    }
+    try {
+      // Get user's cart
+      const cart = await Cart.findOne({ user: userId }).populate('items.product').session(session);
 
-    // Validate stock availability for all items BEFORE creating order
-    for (const item of cart.items) {
-      const productId = (item.product as any)._id || item.product;
-      const product = await Product.findById(productId);
-      if (!product) {
-        throw new NotFoundError(`Product not found`);
+      if (!cart || cart.items.length === 0) {
+        throw new ValidationError('Cart is empty');
       }
 
-      if (product.stock < item.quantity) {
-        throw new ValidationError(
-          `Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`
+      // 1. Calculate totals and validate stock (Atomic Check)
+      // This ensures orders always use the latest prices, even if admin changed them
+      const settings = await SystemSettings.findOne().session(session);
+
+      // Business Logic: Handle Currency Conversion for Settings
+      const rate = settings?.usdToPkrRate || 280;
+      const isUSD = settings?.currency === 'USD';
+      const thresholdPKR = isUSD ? (settings?.freeShippingThreshold || 50) * rate : (settings?.freeShippingThreshold || 50);
+      const standardShippingPKR = isUSD ? (settings?.standardShippingCost || 5.99) * rate : (settings?.standardShippingCost || 5.99);
+      const expressShippingPKR = isUSD ? (settings?.expressShippingCost || 12.99) * rate : (settings?.expressShippingCost || 12.99);
+
+      const subtotal = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+      let shippingCost = 0;
+      if (subtotal >= thresholdPKR) {
+        shippingCost = 0;
+      } else if (orderData.shippingMethod === 'express') {
+        shippingCost = expressShippingPKR;
+      } else {
+        shippingCost = standardShippingPKR;
+      }
+
+      const taxRate = settings?.taxRate || 10;
+      const includeTaxInPrices = settings?.includeTaxInPrices || false;
+      const tax = includeTaxInPrices ? 0 : subtotal * (taxRate / 100);
+      const totalAmount = subtotal + shippingCost + tax;
+
+      // 2. Reduce stock for each product ATOMICALLY
+      // We do this BEFORE creating the order to ensure we actually have the items
+      for (const item of cart.items) {
+        const productId = (item.product as any)._id || item.product;
+        const updatedProduct = await Product.findOneAndUpdate(
+          { _id: productId, stock: { $gte: item.quantity } },
+          { $inc: { stock: -item.quantity } },
+          { session, new: true }
         );
-      }
-    }
 
-    // Calculate totals using CURRENT settings from database
-    // This ensures orders always use the latest prices, even if admin changed them
-    const settings = await SystemSettings.findOne();
+        if (!updatedProduct) {
+          const product = await Product.findById(productId).session(session);
+          throw new ValidationError(
+            `Insufficient stock for ${product?.name || 'product'}. Requested: ${item.quantity}, Available: ${product?.stock || 0}`
+          );
+        }
 
-    // Calculate totals in Base Currency (PKR)
-    const subtotal = cart.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-
-    // Business Logic: Handle Currency Conversion for Settings
-    // If display currency is USD, settings values like 'freeShippingThreshold' are in USD and must be converted to PKR
-    const rate = settings?.usdToPkrRate || 280;
-    const isUSD = settings?.currency === 'USD';
-
-    const thresholdPKR = isUSD ? (settings?.freeShippingThreshold || 50) * rate : (settings?.freeShippingThreshold || 50);
-    const standardShippingPKR = isUSD ? (settings?.standardShippingCost || 5.99) * rate : (settings?.standardShippingCost || 5.99);
-    const expressShippingPKR = isUSD ? (settings?.expressShippingCost || 12.99) * rate : (settings?.expressShippingCost || 12.99);
-
-    let shippingCost = 0;
-    if (subtotal >= thresholdPKR) {
-      shippingCost = 0; // Free shipping
-    } else if (orderData.shippingMethod === 'express') {
-      shippingCost = expressShippingPKR;
-    } else {
-      shippingCost = standardShippingPKR; // Default to standard
-    }
-
-    // Calculate tax based on current settings
-    const taxRate = settings?.taxRate || 10;
-    const includeTaxInPrices = settings?.includeTaxInPrices || false;
-    const tax = includeTaxInPrices ? 0 : subtotal * (taxRate / 100);
-
-    const totalAmount = subtotal + shippingCost + tax;
-
-    // ✅ SECURITY: Verify payment for card payments
-    if (orderData.paymentMethod === 'card') {
-      // Card payment requires paymentIntentId
-      if (!orderData.paymentIntentId) {
-        throw new ValidationError(
-          'Payment intent ID is required for card payments. Please complete payment first.'
-        );
-      }
-
-      // Verify payment with Stripe
-      const stripeService = (await import('./stripe.service')).default;
-      const paymentDetails = await stripeService.verifyPaymentIntent(
-        orderData.paymentIntentId
-      );
-
-      // Check if payment was successful
-      if (paymentDetails.status !== 'succeeded') {
-        throw new ValidationError(
-          `Payment ${paymentDetails.status}. Please complete payment before placing order.`
-        );
-      }
-
-      // Verify payment amount matches order total (prevent tampering)
-      // Stripe stores amount in smallest currency unit (paisa for PKR, cents for USD)
-      const paidAmountInPaisa = paymentDetails.amount; // Amount in paisa
-      const paidAmount = paidAmountInPaisa / 100; // Convert paisa to PKR
-      const expectedAmount = Math.round(totalAmount * 100) / 100; // Round to 2 decimals
-
-      // Allow small rounding differences (within 1 PKR)
-      if (Math.abs(paidAmount - expectedAmount) > 1) {
-        throw new ValidationError(
-          `Payment amount mismatch. Expected: Rs ${expectedAmount.toFixed(2)}, Paid: Rs ${paidAmount.toFixed(2)}`
-        );
-      }
-
-      console.log('✅ Payment verified:', {
-        paymentIntentId: orderData.paymentIntentId,
-        amountPaid: `Rs ${paidAmount.toFixed(2)}`,
-        amountExpected: `Rs ${expectedAmount.toFixed(2)}`,
-        status: paymentDetails.status,
-      });
-    }
-
-    // Prepare order items
-    const orderItems = cart.items.map((item: any) => ({
-      product: item.product._id,
-      name: item.product.name,
-      quantity: item.quantity,
-      price: item.price,
-      thumbnail: item.product.thumbnail,
-    }));
-
-    // Create order
-    const order = await Order.create({
-      user: userId,
-      items: orderItems,
-      shippingAddress: orderData.shippingAddress,
-      paymentMethod: orderData.paymentMethod,
-      paymentIntentId: orderData.paymentIntentId, // Store payment intent ID
-      paymentStatus: orderData.paymentMethod === 'card' ? 'paid' : 'pending', // Card payments are already paid
-      subtotal,
-      shippingCost,
-      tax,
-      totalAmount,
-      notes: orderData.notes,
-    });
-
-    // Reduce stock for each product
-    for (const item of cart.items) {
-      const product = await Product.findById(item.product._id);
-      if (product) {
-        product.stock -= item.quantity;
-        await product.save();
-
-        const settings = await SystemSettings.findOne();
-
-        // Send out-of-stock notification (highest priority)
-        if (product.stock === 0) {
-          await notificationService.notifyAdmins({
+        // Notification triggers (Don't need to be in session but we handle them after loop)
+        if (updatedProduct.stock === 0) {
+          // Trigger OOS notification (async/non-blocking)
+          notificationService.notifyAdmins({
             type: 'product',
             title: '🚨 Product Out of Stock',
-            message: `${product.name} is now completely out of stock!`,
+            message: `${updatedProduct.name} is now completely out of stock!`,
             link: '/admin/products',
             priority: 'high',
-            metadata: { productId: product._id.toString(), stock: 0 },
-          });
-          console.log(`🚨 OUT OF STOCK notification sent for ${product.name}`);
-        }
-        // Send low stock notification
-        else if (settings?.lowStockAlerts && product.stock < 10 && product.stock > 0) {
-          await notificationService.notifyLowStock(
-            product._id.toString(),
-            product.name,
-            product.stock
-          );
-          console.log(`⚠️ LOW STOCK notification sent for ${product.name} (${product.stock} left)`);
+            metadata: { productId: updatedProduct._id.toString(), stock: 0 },
+          }).catch(err => console.error('OOS Notification Failed:', err));
+        } else if (settings?.lowStockAlerts && updatedProduct.stock < 10) {
+          notificationService.notifyLowStock(
+            updatedProduct._id.toString(),
+            updatedProduct.name,
+            updatedProduct.stock
+          ).catch(err => console.error('Low Stock Notification Failed:', err));
         }
       }
-    }
 
-    // Update user statistics
-    await User.findByIdAndUpdate(userId, {
-      $inc: { totalOrders: 1, totalSpent: totalAmount },
-      lastOrder: new Date(),
-    });
-
-    // Send order notification to admins if enabled
-    try {
-      const settings = await SystemSettings.findOne();
-      const user = await User.findById(userId);
-
-      if (user) {
-        // Send email to admin
-        if (settings?.orderNotifications) {
-          await notificationService.notifyNewOrder(
-            order._id.toString(),
-            order.orderNumber || order._id.toString().slice(-6),
-            user.name,
-            totalAmount
-          );
+      // 3. SECURE PAYMENT VERIFICATION
+      if (orderData.paymentMethod === 'card') {
+        if (!orderData.paymentIntentId) {
+          throw new ValidationError('Payment intent ID is required for card payments.');
         }
 
-        // Send payment success email to customer if it's a card payment
-        if (orderData.paymentMethod === 'card' && settings?.emailNotifications) {
-          const emailService = (await import('./email.service')).default;
-          await emailService.sendPaymentSuccessEmail(
-            user.email,
-            user.name,
-            order.orderNumber || order._id.toString().slice(-6),
-            totalAmount,
-            settings?.currency || 'PKR'
-          );
+        const stripeService = (await import('./stripe.service')).default;
+        const paymentDetails = await stripeService.verifyPaymentIntent(orderData.paymentIntentId);
+
+        if (paymentDetails.status !== 'succeeded') {
+          throw new ValidationError(`Payment ${paymentDetails.status}. Please complete payment before placing order.`);
+        }
+
+        const paidAmount = paymentDetails.amount / 100;
+        const expectedAmount = Math.round(totalAmount * 100) / 100;
+
+        if (Math.abs(paidAmount - expectedAmount) > 1) {
+          throw new ValidationError(`Payment amount mismatch. Expected: Rs ${expectedAmount.toFixed(2)}, Paid: Rs ${paidAmount.toFixed(2)}`);
         }
       }
+
+      // 4. Create Order Record
+      const orderItems = cart.items.map((item: any) => ({
+        product: item.product._id,
+        name: item.product.name,
+        quantity: item.quantity,
+        price: item.price,
+        thumbnail: item.product.thumbnail,
+      }));
+
+      const [order] = await Order.create([{
+        user: userId,
+        items: orderItems,
+        shippingAddress: orderData.shippingAddress,
+        paymentMethod: orderData.paymentMethod,
+        paymentIntentId: orderData.paymentIntentId,
+        paymentStatus: orderData.paymentMethod === 'card' ? 'paid' : 'pending',
+        subtotal,
+        shippingCost,
+        tax,
+        totalAmount,
+        notes: orderData.notes,
+      }], { session });
+
+      // 5. Update User Statistics
+      await User.findByIdAndUpdate(userId, {
+        $inc: { totalOrders: 1, totalSpent: totalAmount },
+        lastOrder: new Date(),
+      }, { session });
+
+      // 6. Clear Cart
+      cart.items = [];
+      await cart.save({ session });
+
+      // Commit the transaction
+      await session.commitTransaction();
+
+      // Post-order processing (Non-critical notifications)
+      this.sendPostOrderNotifications(order, userId, totalAmount, settings).catch(err =>
+        console.error('Post-order notifications failed:', err)
+      );
+
+      return await order.populate('user', 'name email');
     } catch (error) {
-      console.error('Failed to send order notification:', error);
-      // Don't throw - order creation should succeed even if notification fails
+      // Abort transaction on any failure
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
     }
+  }
 
-    // Clear cart after order is created
-    cart.items = [];
-    await cart.save();
+  /**
+   * Helper for non-critical post-order tasks
+   */
+  private async sendPostOrderNotifications(order: any, userId: string, totalAmount: number, settings: any) {
+    try {
+      const user = await User.findById(userId);
+      if (!user) return;
 
-    return await order.populate('user', 'name email');
+      if (settings?.orderNotifications) {
+        await notificationService.notifyNewOrder(
+          order._id.toString(),
+          order.orderNumber || order._id.toString().slice(-6),
+          user.name,
+          totalAmount
+        );
+      }
+
+      if (order.paymentMethod === 'card' && settings?.emailNotifications) {
+        const emailService = (await import('./email.service')).default;
+        await emailService.sendPaymentSuccessEmail(
+          user.email,
+          user.name,
+          order.orderNumber || order._id.toString().slice(-6),
+          totalAmount,
+          settings?.currency || 'PKR'
+        );
+      }
+    } catch (err) {
+      console.error('Notification error:', err);
+    }
   }
 
   async getAllOrders(

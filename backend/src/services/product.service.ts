@@ -65,57 +65,18 @@ class ProductService {
     let sortOption: any = sort;
 
     if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { sku: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { tags: { $regex: search, $options: 'i' } },
-      ];
+      query.$text = { $search: search };
     }
 
     const skip = (Number(page) - 1) * Number(limit);
 
-    if (search) {
-      const searchLower = search.toLowerCase();
-      const allProducts = await Product.find(query).populate('createdBy', 'name email');
-
-      const scoredProducts = allProducts.map((product: any) => {
-        let score = 0;
-        const nameLower = product.name.toLowerCase();
-        const skuLower = product.sku.toLowerCase();
-
-        if (nameLower === searchLower) score += 100;
-        else if (nameLower.startsWith(searchLower)) score += 50;
-        else if (nameLower.includes(searchLower)) score += 25;
-
-        if (skuLower === searchLower) score += 100;
-        else if (skuLower.startsWith(searchLower)) score += 50;
-        else if (skuLower.includes(searchLower)) score += 25;
-
-        return { product, score };
-      });
-
-      scoredProducts.sort((a, b) => b.score - a.score);
-
-      const products = scoredProducts
-        .slice(skip, skip + Number(limit))
-        .map(item => item.product);
-
-      const total = scoredProducts.length;
-
-      return {
-        products,
-        pagination: {
-          page: Number(page),
-          limit: Number(limit),
-          total,
-          pages: Math.ceil(total / Number(limit)),
-        },
-      };
+    // If searching and no explicit sort provided, use text score relevance
+    if (search && sort === '-createdAt') {
+      sortOption = { score: { $meta: 'textScore' } };
     }
 
     const [products, total] = await Promise.all([
-      Product.find(query)
+      Product.find(query, search ? { score: { $meta: 'textScore' } } : {})
         .populate('createdBy', 'name email')
         .sort(sortOption)
         .skip(skip)
@@ -171,17 +132,19 @@ class ProductService {
   }
 
   async updateStock(id: string, quantity: number) {
-    const product = await Product.findById(id);
-    if (!product) {
-      throw new NotFoundError('Product not found');
-    }
+    const product = await Product.findOneAndUpdate(
+      { _id: id, stock: { $gte: -quantity } }, // Ensure we don't go below 0 if reducing
+      { $inc: { stock: quantity } },
+      { new: true, runValidators: true }
+    );
 
-    product.stock += quantity;
-    if (product.stock < 0) {
+    if (!product) {
+      // Check if product exists at all
+      const exists = await Product.findById(id);
+      if (!exists) throw new NotFoundError('Product not found');
       throw new ValidationError('Insufficient stock');
     }
 
-    await product.save();
     return product;
   }
 }

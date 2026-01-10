@@ -2,14 +2,15 @@
 
 // IMPORTS
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useAppSelector, useAppDispatch } from "@/hooks/useRedux";
 import dynamic from "next/dynamic";
-import { RootState } from "../../store/store";
-import { Navbar } from "../../components/layout/Navbar";
-import { Footer } from "../../components/layout/Footer";
-import { CartSidebar } from "../../components/cart/CartSidebar";
+import { RootState } from "@/store/store";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import { CartSidebar } from "@/components/cart/CartSidebar";
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle, AlertCircle } from "lucide-react";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import { apiClient } from "@/lib/api/client";
 
 // Dynamic import for map component (client-side only)
 const LocationMap = dynamic(
@@ -17,15 +18,15 @@ const LocationMap = dynamic(
   { ssr: false, loading: () => <div className="w-full h-96 bg-gray-200 rounded-3xl flex items-center justify-center"><p className="text-gray-500">Loading map...</p></div> }
 );
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
 
 // COMPONENT
 export default function ContactPage() {
   const { isDarkMode } = useTheme();
   const [cartOpen, setCartOpen] = useState(false);
-  const { items } = useSelector((state: RootState) => state.cart);
-  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
-  const cartItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((state: RootState) => state);
+  const { isAuthenticated, user } = state.auth;
 
   const [formData, setFormData] = useState({
     name: "",
@@ -67,18 +68,12 @@ export default function ContactPage() {
     setErrorMessage('');
 
     try {
-      const response = await fetch(`${API_URL}/contact`, {
+      const data = await apiClient('/contact', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include cookies for auth
         body: JSON.stringify(formData),
-      });
+      }, dispatch, state);
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (data.success) {
         setSubmitStatus('success');
         // Reset form but keep name/email if logged in
         setFormData({
@@ -90,14 +85,11 @@ export default function ContactPage() {
 
         // Hide success message after 5 seconds
         setTimeout(() => setSubmitStatus('idle'), 5000);
-      } else {
-        setSubmitStatus('error');
-        setErrorMessage(data.message || 'Failed to send message. Please try again.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Contact form error:', error);
       setSubmitStatus('error');
-      setErrorMessage('An error occurred. Please try again later.');
+      setErrorMessage(error.message || 'An error occurred. Please try again later.');
     } finally {
       setIsSubmitting(false);
     }
@@ -133,7 +125,7 @@ export default function ContactPage() {
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800' : 'bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50'}`}>
       {/* Navbar */}
-      <Navbar cartItemCount={cartItemCount} onCartOpen={() => setCartOpen(true)} />
+      <Navbar onCartOpen={() => setCartOpen(true)} />
 
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">

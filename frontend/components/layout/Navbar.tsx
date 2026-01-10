@@ -4,11 +4,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState, AppDispatch } from "../../store/store";
-import { logout } from "../../store/slices/authSlice";
-import { fetchProducts } from "../../store/slices/productsSlice";
-import { addToast } from "../../store/slices/toastSlice";
+import { useAppSelector, useAppDispatch } from "@/hooks/useRedux";
+import { RootState } from "@/store/store";
+import { logout } from "@/store/slices/authSlice";
+import { fetchProducts } from "@/store/slices/productsSlice";
+import { addToast } from "@/store/slices/toastSlice";
 import {
   ShoppingCart,
   Menu,
@@ -30,12 +30,12 @@ import { useTheme } from "../../contexts/ThemeContext";
 
 // TYPES
 interface NavbarProps {
-  cartItemCount: number;
+  cartItemCount?: number;
   onCartOpen: () => void;
 }
 
 // COMPONENT
-export const Navbar: React.FC<NavbarProps> = ({ cartItemCount, onCartOpen }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onCartOpen }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [shopDropdownOpen, setShopDropdownOpen] = useState(false);
   const [authDropdownOpen, setAuthDropdownOpen] = useState(false);
@@ -44,9 +44,12 @@ export const Navbar: React.FC<NavbarProps> = ({ cartItemCount, onCartOpen }) => 
   const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pathname = usePathname();
   const router = useRouter();
-  const dispatch = useDispatch<AppDispatch>();
-  const favoritesCount = useSelector((state: RootState) => state.favorites.items.length);
-  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const dispatch = useAppDispatch();
+
+  const cartItems = useAppSelector((state: RootState) => state.cart.items);
+  const cartItemCount = (cartItems || []).reduce((sum, item) => sum + (item.quantity || 0), 0);
+  const favoritesCount = useAppSelector((state: RootState) => state.favorites.items.length);
+  const { user, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
 
   const navLinks = [
     { name: "Home", href: "/", icon: Home },

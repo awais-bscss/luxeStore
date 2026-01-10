@@ -8,6 +8,8 @@ import { useCurrency } from '../../contexts/SettingsContext';
 import { useAppSelector, useAppDispatch } from '../../hooks/useRedux';
 import { useToast } from '../../hooks/useToast';
 import { logout } from '../../store/slices/authSlice';
+import { apiClient } from '../../lib/api/client';
+import { RootState } from '../../store/store';
 import ProtectedRoute from '../../components/auth/ProtectedRoute';
 import {
   LayoutDashboard,
@@ -52,8 +54,6 @@ const navigation = [
 
 const mockNotifications: any[] = [];
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
 // Helper function to replace $ with current currency symbol
 const replaceCurrencySymbol = (message: string, currency: string): string => {
   const currencySymbols: Record<string, string> = {
@@ -78,7 +78,8 @@ function AdminLayoutContent({
   const router = useRouter();
   const dispatch = useAppDispatch();
   const toast = useToast();
-  const { user, token } = useAppSelector((state) => state.auth);
+  const state = useAppSelector((state: RootState) => state);
+  const { user, token } = state.auth;
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isSidebarCollapsed } = useTheme();
   const currency = useCurrency(); // Get current currency from settings
@@ -92,44 +93,18 @@ function AdminLayoutContent({
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  // Handle 401 Unauthorized - Session Expired
-  const handleSessionExpired = () => {
-    toast.error('Session Expired', 'Your session has expired. Please log in again to continue.');
-
-    // Clear auth state
-    dispatch(logout());
-
-    // Redirect to login after a short delay
-    setTimeout(() => {
-      router.push('/login?redirect=/admin&reason=session_expired');
-    }, 1500);
-  };
-
   // Fetch notifications
   const fetchNotifications = async (showLoading = false) => {
     try {
       if (showLoading) setIsLoadingNotifications(true);
-      const response = await fetch(`${API_URL}/notifications?limit=50`, {
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
-      });
-
-      // Check for 401 Unauthorized
-      if (response.status === 401) {
-        handleSessionExpired();
-        return;
+      const data = await apiClient('/notifications', { params: { limit: 50 } }, dispatch, state);
+      if (data.success && data.data?.notifications) {
+        setNotifications(data.data.notifications);
       }
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.data?.notifications) {
-          setNotifications(data.data.notifications);
-        }
+    } catch (error: any) {
+      if (error.code !== 'SESSION_EXPIRED') {
+        console.error('Error fetching notifications:', error);
       }
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
     } finally {
       if (showLoading) setIsLoadingNotifications(false);
     }
@@ -161,96 +136,63 @@ function AdminLayoutContent({
     setShowSearchResults(true);
 
     try {
-      // Search across products, orders, customers, and reviews
-      const [productsRes, ordersRes, customersRes, reviewsRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/products?search=${query}`, {
-          headers: {
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-          },
-          credentials: 'include',
-        }).catch(() => null),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/orders?search=${query}`, {
-          headers: {
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-          },
-          credentials: 'include',
-        }).catch(() => null),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/customers?search=${query}`, {
-          headers: {
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-          },
-          credentials: 'include',
-        }).catch(() => null),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/reviews?search=${query}`, {
-          headers: {
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-          },
-          credentials: 'include',
-        }).catch(() => null),
+      // Search across products, orders, customers, and reviews using apiClient
+      const [productsRes, ordersRes, customersRes, reviewsRes] = await Promise.allSettled([
+        apiClient('/products', { params: { search: query } }, dispatch, state),
+        apiClient('/orders', { params: { search: query } }, dispatch, state),
+        apiClient('/users/customers', { params: { search: query } }, dispatch, state),
+        apiClient('/reviews', { params: { search: query } }, dispatch, state),
       ]);
 
       const results: any[] = [];
+      const currencySymbol = currency === 'PKR' ? 'Rs' : '$';
 
-      if (productsRes?.ok) {
-        const data = await productsRes.json();
-        if (data.success && data.data?.products) {
-          const currencySymbol = currency === 'PKR' ? 'Rs' : '$';
-          data.data.products.slice(0, 3).forEach((product: any) => {
-            results.push({
-              type: 'product',
-              id: product._id,
-              title: product.name,
-              subtitle: `${currencySymbol}${product.price} - ${product.category}`,
-              link: `/admin/products`,
-            });
+      if (productsRes.status === 'fulfilled' && productsRes.value.success) {
+        productsRes.value.data?.products?.slice(0, 3).forEach((product: any) => {
+          results.push({
+            type: 'product',
+            id: product._id,
+            title: product.name,
+            subtitle: `${currencySymbol}${product.price} - ${product.category}`,
+            link: `/admin/products/${product._id}/edit`,
           });
-        }
+        });
       }
 
-      if (ordersRes?.ok) {
-        const data = await ordersRes.json();
-        if (data.success && data.data?.orders) {
-          const currencySymbol = currency === 'PKR' ? 'Rs' : '$';
-          data.data.orders.slice(0, 3).forEach((order: any) => {
-            results.push({
-              type: 'order',
-              id: order._id,
-              title: `Order #${order.orderNumber || order._id.slice(-6)}`,
-              subtitle: `${order.user?.name || 'Unknown'} - ${currencySymbol}${order.totalAmount}`,
-              link: `/admin/orders`,
-            });
+      if (ordersRes.status === 'fulfilled' && ordersRes.value.success) {
+        ordersRes.value.data?.orders?.slice(0, 3).forEach((order: any) => {
+          results.push({
+            type: 'order',
+            id: order._id,
+            title: `Order #${order.orderNumber || order._id.slice(-6)}`,
+            subtitle: `${order.user?.name || 'Unknown'} - ${currencySymbol}${order.totalAmount}`,
+            link: `/orders/${order._id}`, // Shared order detail page
           });
-        }
+        });
       }
 
-      if (customersRes?.ok) {
-        const data = await customersRes.json();
-        if (data.success && data.data?.customers) {
-          data.data.customers.slice(0, 3).forEach((customer: any) => {
-            results.push({
-              type: 'customer',
-              id: customer._id,
-              title: customer.name,
-              subtitle: customer.email,
-              link: `/admin/customers`,
-            });
+      if (customersRes.status === 'fulfilled' && customersRes.value.success) {
+        customersRes.value.data?.customers?.slice(0, 3).forEach((customer: any) => {
+          results.push({
+            type: 'customer',
+            id: customer._id,
+            title: customer.name,
+            subtitle: customer.email,
+            link: `/admin/customers`, // Navigates to customers list
           });
-        }
+        });
       }
 
-      if (reviewsRes?.ok) {
-        const data = await reviewsRes.json();
-        if (data.success && data.data?.reviews) {
-          data.data.reviews.slice(0, 3).forEach((review: any) => {
-            results.push({
-              type: 'review',
-              id: review._id,
-              title: review.product?.name || 'Product Review',
-              subtitle: `${review.user?.name || 'Anonymous'} - ${review.rating}⭐`,
-              link: `/admin/reviews`,
-            });
+      if (reviewsRes.status === 'fulfilled' && reviewsRes.value.success) {
+        reviewsRes.value.data?.reviews?.slice(0, 3).forEach((review: any) => {
+          results.push({
+            type: 'review',
+            id: review._id,
+            title: review.product?.name || 'Product Review',
+            subtitle: `${review.user?.name || 'Anonymous'} - ${review.rating}⭐`,
+            link: `/admin/reviews`, // Navigates to reviews list
           });
-        }
+        });
       }
 
       setSearchResults(results);
@@ -263,15 +205,8 @@ function AdminLayoutContent({
 
   const markAsRead = async (id: string) => {
     try {
-      const response = await fetch(`${API_URL}/notifications/${id}/read`, {
-        method: 'PUT',
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
-      });
-
-      if (response.ok) {
+      const data = await apiClient(`/notifications/${id}/read`, { method: 'PUT' }, dispatch, state);
+      if (data.success) {
         setNotifications(
           notifications.map((n) => (n._id === id ? { ...n, read: true } : n))
         );
@@ -283,15 +218,8 @@ function AdminLayoutContent({
 
   const markAllAsRead = async () => {
     try {
-      const response = await fetch(`${API_URL}/notifications/mark-all-read`, {
-        method: 'PUT',
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
-      });
-
-      if (response.ok) {
+      const data = await apiClient('/notifications/mark-all-read', { method: 'PUT' }, dispatch, state);
+      if (data.success) {
         setNotifications(notifications.map((n) => ({ ...n, read: true })));
         toast.success('Success', 'All notifications marked as read');
       }
@@ -310,16 +238,8 @@ function AdminLayoutContent({
         return;
       }
 
-      const response = await fetch(`${API_URL}/notifications/clear-all`, {
-        method: 'DELETE',
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        // Remove all read notifications from state
+      const data = await apiClient('/notifications/clear-all', { method: 'DELETE' }, dispatch, state);
+      if (data.success) {
         setNotifications(notifications.filter((n) => !n.read));
         toast.success('Success', `Cleared ${readCount} read notification${readCount > 1 ? 's' : ''}`);
       }

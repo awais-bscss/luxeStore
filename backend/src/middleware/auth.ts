@@ -70,8 +70,10 @@ export const protect = asyncHandler(
         throw new UnauthorizedError('Session expired due to inactivity. Please login again.');
       }
 
-      // 3. Update Last Activity (only if it was more than 1 minute ago to reduce DB writes)
-      if (diffInMinutes > 1) {
+      // 3. Update Last Activity (only if it was more than 5 minutes ago to reduce DB writes)
+      // This significantly improves performance under high traffic
+      const THRESHOLD_MINUTES = 5;
+      if (diffInMinutes > THRESHOLD_MINUTES) {
         user.lastActivity = new Date();
         await user.save({ validateBeforeSave: false });
       }

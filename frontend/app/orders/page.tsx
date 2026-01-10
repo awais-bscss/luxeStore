@@ -4,8 +4,8 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { RootState } from "@/store/store";
-import { useAppDispatch } from "@/hooks/useRedux";
-import { fetchUserOrders, archiveOrder, unarchiveOrder } from "@/store/slices/orderSlice";
+import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
+import { fetchUserOrders, archiveOrder, unarchiveOrder, Order, OrderItem } from "@/store/slices/orderSlice";
 import { Navbar } from "@/components/layout/Navbar";
 import { CartSidebar } from "@/components/cart/CartSidebar";
 import {
@@ -34,11 +34,8 @@ export default function OrdersPage() {
   const dispatch = useAppDispatch();
   const toast = useToast();
 
-  const { items: cartItems } = useSelector((state: RootState) => state.cart);
-  const { orders, isLoading } = useSelector((state: RootState) => state.orders);
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
-
-  const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const { orders, isLoading } = useAppSelector((state: RootState) => state.orders);
+  const { isAuthenticated } = useAppSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -116,7 +113,7 @@ export default function OrdersPage() {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900' : 'bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50'}`}>
-      <Navbar cartItemCount={cartItemCount} onCartOpen={() => setCartOpen(true)} />
+      <Navbar onCartOpen={() => setCartOpen(true)} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Header */}
@@ -197,7 +194,7 @@ export default function OrdersPage() {
         {/* Orders List */}
         {!isLoading && filteredOrders.length > 0 && (
           <div className="space-y-6">
-            {filteredOrders.map((order) => (
+            {filteredOrders.map((order: Order) => (
               <div
                 key={order._id}
                 className={`rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}
@@ -258,9 +255,8 @@ export default function OrdersPage() {
                   </div>
                 </div>
 
-                {/* Order Items */}
                 <div className="space-y-3 mb-6">
-                  {order.items.slice(0, 3).map((item, index) => (
+                  {order.items.slice(0, 3).map((item: OrderItem, index: number) => (
                     <div key={index} className="flex gap-4">
                       <img
                         src={item.thumbnail || '/placeholder.png'}

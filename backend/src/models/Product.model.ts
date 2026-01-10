@@ -135,7 +135,7 @@ const productSchema = new Schema<IProduct>(
 );
 
 // Index for search and filtering
-productSchema.index({ name: 'text', description: 'text', tags: 'text' });
+productSchema.index({ name: 'text', description: 'text', tags: 'text', sku: 'text' });
 productSchema.index({ category: 1, subcategory: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ isActive: 1, isFeatured: 1 });

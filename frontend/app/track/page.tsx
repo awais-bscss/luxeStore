@@ -1,14 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store/store";
-import { Navbar } from "../../components/layout/Navbar";
-import { Footer } from "../../components/layout/Footer";
-import { CartSidebar } from "../../components/cart/CartSidebar";
+import { useAppSelector, useAppDispatch } from "@/hooks/useRedux";
+import { RootState } from "@/store/store";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import { CartSidebar } from "@/components/cart/CartSidebar";
+import { apiClient } from "@/lib/api/client";
+import { formatPrice } from "@/lib/currency";
+import { useSettings } from "@/contexts/SettingsContext";
 import { Package, Search, MapPin, Truck, CheckCircle, Clock, AlertCircle, Loader2 } from "lucide-react";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 interface TrackingStep {
   status: string;
@@ -41,8 +42,9 @@ export default function TrackOrderPage() {
   const [isTracking, setIsTracking] = useState(false);
   const [trackingData, setTrackingData] = useState<TrackingData | null>(null);
   const [error, setError] = useState("");
-  const { items } = useSelector((state: RootState) => state.cart);
-  const cartItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((state: RootState) => state);
+  const { settings } = useSettings();
 
   const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,19 +53,16 @@ export default function TrackOrderPage() {
     setTrackingData(null);
 
     try {
-      const response = await fetch(
-        `${API_URL}/track/${orderNumber}?email=${encodeURIComponent(email)}`
-      );
-      const data = await response.json();
+      const data = await apiClient(`/track/${orderNumber}`, {
+        params: { email }
+      }, dispatch, state);
 
       if (data.success) {
         setTrackingData(data.data);
-      } else {
-        setError(data.message || 'Failed to track order');
       }
     } catch (err: any) {
       console.error('Tracking error:', err);
-      setError('Failed to track order. Please check your order number and email.');
+      setError(err.message || 'Failed to track order. Please check your order number and email.');
     } finally {
       setIsTracking(false);
     }
@@ -103,7 +102,7 @@ export default function TrackOrderPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navbar cartItemCount={cartItemCount} onCartOpen={() => setCartOpen(true)} />
+      <Navbar onCartOpen={() => setCartOpen(true)} />
 
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
@@ -195,8 +194,8 @@ export default function TrackOrderPage() {
                 </p>
                 {/* Shipping Method Badge */}
                 <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${trackingData.shippingMethod === 'express'
-                    ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400'
-                    : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+                  ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400'
+                  : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
                   }`}>
                   {trackingData.shippingMethod === 'express' ? '⚡ Express Delivery (3 days)' : '📦 Standard Delivery (7 days)'}
                 </span>
@@ -265,25 +264,25 @@ export default function TrackOrderPage() {
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
                   <span className="font-semibold text-gray-900 dark:text-white">
-                    Rs {(trackingData.subtotal || 0).toFixed(2)}
+                    {formatPrice(trackingData.subtotal || 0, settings.currency, settings.usdToPkrRate)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Shipping:</span>
                   <span className="font-semibold text-gray-900 dark:text-white">
-                    Rs {(trackingData.shippingCost || 0).toFixed(2)}
+                    {formatPrice(trackingData.shippingCost || 0, settings.currency, settings.usdToPkrRate)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Tax:</span>
                   <span className="font-semibold text-gray-900 dark:text-white">
-                    Rs {(trackingData.tax || 0).toFixed(2)}
+                    {formatPrice(trackingData.tax || 0, settings.currency, settings.usdToPkrRate)}
                   </span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
                   <span className="font-semibold text-gray-900 dark:text-white">Total:</span>
                   <span className="font-bold text-lg text-blue-600 dark:text-blue-400">
-                    Rs {(trackingData.total || 0).toFixed(2)}
+                    {formatPrice(trackingData.total || 0, settings.currency, settings.usdToPkrRate)}
                   </span>
                 </div>
               </div>

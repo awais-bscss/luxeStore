@@ -7,12 +7,12 @@ import { ProductCard } from "../../components/product/ProductCard";
 import { Heart, ShoppingCart, Trash2 } from "lucide-react";
 import { useFavorites } from "../../hooks/useFavorites";
 import { useCart } from "../../hooks/useCart";
-import { useAppSelector, useAppDispatch } from "../../hooks/useRedux";
-import { fetchProducts } from "../../store/slices/productsSlice";
-import { ConfirmModal } from "../../components/ui/ConfirmModal";
-import { useToast } from "../../hooks/useToast";
+import { useAppSelector, useAppDispatch } from "@/hooks/useRedux";
+import { fetchProducts } from "@/store/slices/productsSlice";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { useToast } from "@/hooks/useToast";
 import Link from "next/link";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function FavoritesPage() {
   const { isDarkMode } = useTheme();
@@ -24,7 +24,6 @@ export default function FavoritesPage() {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const { products: storeProducts } = useAppSelector((state) => state.products);
   const dispatch = useAppDispatch();
-  const cartItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   useEffect(() => {
     // Ensure products are fetched so we can display them for guests
@@ -44,7 +43,7 @@ export default function FavoritesPage() {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800' : 'bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50'}`}>
-      <Navbar cartItemCount={cartItemCount} onCartOpen={() => setCartOpen(true)} />
+      <Navbar onCartOpen={() => setCartOpen(true)} />
 
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
         <div className="max-w-7xl mx-auto px-6">

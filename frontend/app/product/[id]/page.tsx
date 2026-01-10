@@ -19,17 +19,19 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useToast } from '../../../hooks/useToast';
-import { useDispatch, useSelector } from 'react-redux';
-import { addToCartLocal } from '../../../store/slices/cartSlice';
-import { toggleFavoriteLocal } from '../../../store/slices/favoritesSlice';
-import { RootState } from '../../../store/store';
-import { ReviewList } from '../../../components/reviews/ReviewList';
-import { ReviewStats } from '../../../components/reviews/ReviewStats';
-import { formatPrice } from '../../../lib/currency';
-import { useSettings } from '../../../contexts/SettingsContext';
-import { ProductDetailSkeleton } from '../../../components/ui/Skeleton';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
+import { addToCartLocal } from '@/store/slices/cartSlice';
+import { toggleFavoriteLocal } from '@/store/slices/favoritesSlice';
+import { RootState } from '@/store/store';
+import { ReviewList } from '@/components/reviews/ReviewList';
+import { ReviewStats } from '@/components/reviews/ReviewStats';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
+import { CartSidebar } from '@/components/cart/CartSidebar';
+import { formatPrice } from '@/lib/currency';
+import { useSettings } from '@/contexts/SettingsContext';
+import { ProductDetailSkeleton } from '@/components/ui/Skeleton';
+import { apiClient } from '@/lib/api/client';
 
 interface Product {
   _id: string;
@@ -57,7 +59,9 @@ export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
   const toast = useToast();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((state: RootState) => state);
+  const [cartOpen, setCartOpen] = useState(false);
   const productId = params.id as string;
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -68,7 +72,7 @@ export default function ProductDetailPage() {
   const [activeTab, setActiveTab] = useState<'description' | 'specifications' | 'reviews'>('description');
   const [reviewStats, setReviewStats] = useState<any>(null);
 
-  const favoriteIds = useSelector((state: RootState) => state.favorites.items);
+  const favoriteIds = useAppSelector((state: RootState) => state.favorites.items);
   const isFavorite = favoriteIds.includes(productId);
 
   useEffect(() => {
@@ -86,18 +90,14 @@ export default function ProductDetailPage() {
   const fetchProduct = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_URL}/products/${productId}`);
-      const data = await response.json();
+      const data = await apiClient(`/products/${productId}`, {}, dispatch, state);
 
       if (data.success) {
         setProduct(data.data.product);
-      } else {
-        toast.error('Error', 'Product not found');
-        router.push('/');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Fetch error:', error);
-      toast.error('Error', 'Failed to load product');
+      toast.error('Error', error.message || 'Failed to load product');
       router.push('/');
     } finally {
       setIsLoading(false);
@@ -106,8 +106,7 @@ export default function ProductDetailPage() {
 
   const fetchReviewStats = async () => {
     try {
-      const response = await fetch(`${API_URL}/reviews/product/${productId}/stats`);
-      const data = await response.json();
+      const data = await apiClient(`/reviews/product/${productId}/stats`, {}, dispatch, state);
       if (data.success) {
         setReviewStats(data.data.stats);
       }
@@ -187,6 +186,8 @@ export default function ProductDetailPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
+      <Navbar onCartOpen={() => setCartOpen(true)} />
+      <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
       {/* Breadcrumb */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -497,6 +498,7 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

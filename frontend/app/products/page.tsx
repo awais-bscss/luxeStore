@@ -2,12 +2,12 @@
 
 // IMPORTS
 import React, { useState, useEffect, useRef } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import { useSearchParams } from "next/navigation";
 import { Search, X, Filter, ChevronDown } from "lucide-react";
-import { RootState, AppDispatch } from "../../store/store";
-import { setSearchQuery, setCategory } from "../../store/slices/productsSlice";
-import { Navbar } from "../../components/layout/Navbar";
+import { RootState } from "@/store/store";
+import { setSearchQuery, setCategory } from "@/store/slices/productsSlice";
+import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "../../components/layout/Footer";
 import { ProductList } from "../../components/product/ProductList";
 import { CartSidebar } from "../../components/cart/CartSidebar";
@@ -19,15 +19,13 @@ export default function ProductsPage() {
   const [cartOpen, setCartOpen] = useState(false);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const searchParams = useSearchParams();
-  const { items } = useSelector((state: RootState) => state.cart);
-  const { searchQuery, selectedCategory, filteredProducts } = useSelector(
+  const { searchQuery, selectedCategory, filteredProducts } = useAppSelector(
     (state: RootState) => state.products
   );
 
   const categories = ["All", "Electronics", "Fashion", "Wearables", "Home"];
-  const cartItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   // Read category from URL query parameter
   useEffect(() => {
@@ -58,7 +56,7 @@ export default function ProductsPage() {
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
       {/* Navbar */}
-      <Navbar cartItemCount={cartItemCount} onCartOpen={() => setCartOpen(true)} />
+      <Navbar onCartOpen={() => setCartOpen(true)} />
 
       {/* Page Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">

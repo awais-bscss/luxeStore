@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
-import { RootState, AppDispatch } from "@/store/store";
-import { useAppDispatch } from "@/hooks/useRedux";
+import { RootState } from "@/store/store";
+import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import { createOrder, clearCurrentOrder } from "@/store/slices/orderSlice";
 import { clearCartLocal } from "@/store/slices/cartSlice";
 import { Navbar } from "@/components/layout/Navbar";
@@ -17,8 +16,7 @@ import { formatPrice } from "@/lib/currency";
 import { Elements } from '@stripe/react-stripe-js';
 import { getStripe } from '@/lib/stripe';
 import StripePaymentForm from '@/components/checkout/StripePaymentForm';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+import { apiClient } from "@/lib/api/client";
 
 export default function CheckoutPage() {
   const [cartOpen, setCartOpen] = useState(false);
@@ -52,10 +50,10 @@ export default function CheckoutPage() {
   const currency = useCurrency();
   const exchangeRate = useExchangeRate();
 
-  const { items, total } = useSelector((state: RootState) => state.cart);
-  const { currentOrder, isLoading } = useSelector((state: RootState) => state.orders);
-  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
-  const cartItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const { items, total } = useAppSelector((state: RootState) => state.cart);
+  const { currentOrder, isLoading } = useAppSelector((state: RootState) => state.orders);
+  const { user, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
+  const state = useAppSelector((state: RootState) => state);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -69,8 +67,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch(`${API_URL}/settings`);
-        const data = await response.json();
+        const data = await apiClient('/settings', {}, dispatch, state);
         if (data.success && data.data.settings) {
           const settings = data.data.settings;
           setTaxRate(settings.taxRate || 10);
@@ -178,21 +175,16 @@ export default function CheckoutPage() {
     setIsResending(true);
 
     try {
-      const response = await fetch(`${API_URL}/auth/send-verification`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-
-      const data = await response.json();
+      const data = await apiClient('/auth/send-verification', {
+        method: 'POST'
+      }, dispatch, state);
 
       if (data.success) {
         toast.success('Email Sent', 'Check your inbox for the verification link');
         setResendCooldown(60); // 60 second cooldown
-      } else {
-        toast.error('Failed', data.message || 'Could not send email');
       }
-    } catch (error) {
-      toast.error('Error', 'Failed to send verification email');
+    } catch (error: any) {
+      toast.error('Failed', error.message || 'Could not send email');
     } finally {
       setIsResending(false);
     }
@@ -208,28 +200,22 @@ export default function CheckoutPage() {
   const createPaymentIntent = async () => {
     setIsCreatingPaymentIntent(true);
     try {
-      const response = await fetch(`${API_URL}/stripe/create-payment-intent`, {
+      const data = await apiClient('/stripe/create-payment-intent', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({
           orderId: 'pending',
           shippingMethod: formData.shippingMethod // Send shipping method to backend
         }),
-      });
-
-      const data = await response.json();
+      }, dispatch, state);
 
       if (data.success) {
         setClientSecret(data.data.clientSecret);
         setShowStripeForm(true);
         toast.success('Payment Ready', 'Please enter your card details');
-      } else {
-        toast.error('Error', data.message || 'Failed to initialize payment');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Payment intent creation error:', error);
-      toast.error('Error', 'Failed to initialize payment');
+      toast.error('Error', error.message || 'Failed to initialize payment');
     } finally {
       setIsCreatingPaymentIntent(false);
     }
@@ -314,7 +300,7 @@ export default function CheckoutPage() {
   if (items.length === 0 && !isPlacingOrder && !orderPlaced) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-slate-900 dark:to-gray-900">
-        <Navbar cartItemCount={cartItemCount} onCartOpen={() => setCartOpen(true)} />
+        <Navbar onCartOpen={() => setCartOpen(true)} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
           <div className="text-center">
             <ShoppingCart className="w-24 h-24 mx-auto mb-4 text-gray-300" />
@@ -350,7 +336,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-slate-900 dark:to-gray-900">
-      <Navbar cartItemCount={cartItemCount} onCartOpen={() => setCartOpen(true)} />
+      <Navbar onCartOpen={() => setCartOpen(true)} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-8">Checkout</h1>

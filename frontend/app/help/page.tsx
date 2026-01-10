@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store/store";
-import { Navbar } from "../../components/layout/Navbar";
-import { Footer } from "../../components/layout/Footer";
-import { CartSidebar } from "../../components/cart/CartSidebar";
+import { useAppSelector } from "@/hooks/useRedux";
+import { RootState } from "@/store/store";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import { CartSidebar } from "@/components/cart/CartSidebar";
 import {
   HelpCircle,
   Search,
@@ -22,15 +22,14 @@ import {
   Clock
 } from "lucide-react";
 import Link from "next/link";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function HelpCenterPage() {
   const { isDarkMode } = useTheme();
   const [cartOpen, setCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
-  const { items } = useSelector((state: RootState) => state.cart);
-  const cartItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const { items } = useAppSelector((state: RootState) => state.cart);
 
   const categories = [
     {
@@ -235,7 +234,7 @@ export default function HelpCenterPage() {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800' : 'bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50'}`}>
-      <Navbar cartItemCount={cartItemCount} onCartOpen={() => setCartOpen(true)} />
+      <Navbar onCartOpen={() => setCartOpen(true)} />
 
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
