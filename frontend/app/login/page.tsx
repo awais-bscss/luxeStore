@@ -33,11 +33,14 @@ function LoginContent() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      if (redirect && redirect !== '/') {
-        router.push(redirect);
-      } else if (user?.role === "admin" || user?.role === "superadmin") {
+      // Always redirect admins to admin dashboard
+      if (user?.role === "admin" || user?.role === "superadmin") {
         router.push("/admin");
+      } else if (redirect && redirect !== '/') {
+        // For regular users, honor the redirect parameter
+        router.push(redirect);
       } else {
+        // Default redirect for regular users
         router.push("/");
       }
     }
