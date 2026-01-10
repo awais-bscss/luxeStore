@@ -44,22 +44,22 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
     }
   }, [isOpen]);
 
-  const handleUpdateQuantity = async (productId: string, newQuantity: number, maxStock: number) => {
+  const handleUpdateQuantity = (productId: string, newQuantity: number, maxStock: number) => {
     if (newQuantity > maxStock) {
       // Don't allow quantity to exceed stock
       return;
     }
 
     if (newQuantity > 0) {
-      await updateQuantity(productId, newQuantity);
+      updateQuantity(productId, newQuantity); // No await - optimistic update
     } else {
       // If quantity is 0, remove the item
-      await removeFromCart(productId);
+      removeFromCart(productId); // No await
     }
   };
 
-  const handleRemoveItem = async (productId: string) => {
-    await removeFromCart(productId);
+  const handleRemoveItem = (productId: string) => {
+    removeFromCart(productId); // No await
   };
 
   const handleClearCart = () => {

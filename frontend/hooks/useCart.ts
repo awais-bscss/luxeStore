@@ -17,28 +17,33 @@ export const useCart = () => {
   const cart = useAppSelector((state) => state.cart);
 
   const addToCart = async (product: CartItem) => {
+    // Optimistic update: Add to UI immediately
+    dispatch(addToCartLocal(product));
+
+    // Then sync with backend if authenticated
     if (isAuthenticated) {
       try {
         await dispatch(addToCartAPI({ productId: product.productId, quantity: product.quantity })).unwrap();
       } catch (error) {
-        console.error('Failed to add to cart:', error);
-        dispatch(addToCartLocal(product));
+        console.error('Failed to add to cart on backend:', error);
+        // Local update is already done, user sees instant feedback
       }
-    } else {
-      dispatch(addToCartLocal(product));
     }
   };
 
   const updateQuantity = async (productId: string, quantity: number) => {
+    // Optimistic update: Update UI immediately
+    dispatch(updateQuantityLocal({ productId, quantity }));
+
+    // Then sync with backend if authenticated
     if (isAuthenticated) {
       try {
         await dispatch(updateCartItemAPI({ productId, quantity })).unwrap();
       } catch (error) {
-        console.error('Failed to update cart:', error);
-        dispatch(updateQuantityLocal({ productId, quantity }));
+        console.error('Failed to update cart on backend:', error);
+        // If API fails, the local update is already done, so user sees instant feedback
+        // The next cart fetch will sync with backend state
       }
-    } else {
-      dispatch(updateQuantityLocal({ productId, quantity }));
     }
   };
 
