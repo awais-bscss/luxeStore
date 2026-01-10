@@ -160,13 +160,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           }));
 
           onClose();
-
-          // Redirect admins to dashboard after ensuring auth is complete
-          if (result.user.role === "admin" || result.user.role === "superadmin") {
-            setTimeout(() => {
-              router.push("/admin");
-            }, 1000); // Increased delay to ensure cookie is set
-          }
+          // User can access admin dashboard via navbar after email verification
         }
       } else {
         const result = await dispatch(
@@ -193,15 +187,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
           onClose();
 
-          // Redirect after ensuring auth is complete
-          setTimeout(() => {
-            if (result.passwordExpired) {
+          // Only redirect for password expired case
+          if (result.passwordExpired) {
+            setTimeout(() => {
               router.push("/account?tab=settings&reason=password_expired");
-            } else if (result.user.role === "admin" || result.user.role === "superadmin") {
-              router.push("/admin");
-            }
-            // Regular users stay on current page
-          }, 1000); // Increased delay to ensure cookie is set
+            }, 500);
+          }
+          // For admins and regular users, they stay on current page
+          // Admins can access dashboard via navbar link
         }
       }
     } catch (err: any) {
