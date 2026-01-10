@@ -3,9 +3,9 @@
 import React, { useState } from 'react';
 import { StarRating } from './StarRating';
 import { ThumbsUp, Edit, Trash2, CheckCircle } from 'lucide-react';
-import { useToast } from '../../hooks/useToast';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store/store';
+import { useToast } from '@/hooks/useToast';
+import { useAppSelector, useAppDispatch } from '@/hooks/useRedux';
+import { apiClient } from '@/lib/api/client';
 
 interface ReviewCardProps {
   review: {
@@ -28,7 +28,7 @@ interface ReviewCardProps {
   onHelpful?: (reviewId: string) => void;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
 
 export const ReviewCard: React.FC<ReviewCardProps> = ({
   review,
@@ -37,7 +37,9 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
   onHelpful,
 }) => {
   const toast = useToast();
-  const { user } = useSelector((state: RootState) => state.auth);
+  const dispatch = useAppDispatch();
+  const auth = useAppSelector((state) => state.auth);
+  const { user } = auth;
   const [isDeleting, setIsDeleting] = useState(false);
   const [helpfulCount, setHelpfulCount] = useState(review.helpful);
   const [hasMarkedHelpful, setHasMarkedHelpful] = useState(false);
@@ -60,24 +62,18 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
 
     try {
       setIsDeleting(true);
-      const response = await fetch(`${API_URL}/reviews/${review._id}`, {
+      const state = { auth } as any;
+      await apiClient(`/reviews/${review._id}`, {
         method: 'DELETE',
-        credentials: 'include',
-      });
+      }, dispatch, state);
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        toast.success('Success', 'Review deleted successfully');
-        if (onDelete) {
-          onDelete(review._id);
-        }
-      } else {
-        toast.error('Error', data.message || 'Failed to delete review');
+      toast.success('Success', 'Review deleted successfully');
+      if (onDelete) {
+        onDelete(review._id);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Delete error:', error);
-      toast.error('Error', 'An error occurred while deleting the review');
+      toast.error('Error', error.message || 'An error occurred while deleting the review');
     } finally {
       setIsDeleting(false);
     }
@@ -90,26 +86,20 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
     }
 
     try {
-      const response = await fetch(`${API_URL}/reviews/${review._id}/helpful`, {
+      const state = { auth } as any;
+      await apiClient(`/reviews/${review._id}/helpful`, {
         method: 'POST',
-        credentials: 'include',
-      });
+      }, dispatch, state);
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setHelpfulCount(helpfulCount + 1);
-        setHasMarkedHelpful(true);
-        toast.success('Success', 'Thank you for your feedback!');
-        if (onHelpful) {
-          onHelpful(review._id);
-        }
-      } else {
-        toast.error('Error', data.message || 'Failed to mark as helpful');
+      setHelpfulCount(helpfulCount + 1);
+      setHasMarkedHelpful(true);
+      toast.success('Success', 'Thank you for your feedback!');
+      if (onHelpful) {
+        onHelpful(review._id);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Helpful error:', error);
-      toast.error('Error', 'An error occurred');
+      toast.error('Error', error.message || 'An error occurred');
     }
   };
 

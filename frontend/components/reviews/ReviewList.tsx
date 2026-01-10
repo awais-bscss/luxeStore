@@ -4,21 +4,23 @@ import React, { useState, useEffect } from 'react';
 import { ReviewCard } from './ReviewCard';
 import { ReviewForm } from './ReviewForm';
 import { MessageSquare, Filter } from 'lucide-react';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store/store';
-import { useToast } from '../../hooks/useToast';
-import CustomDropdown from '../ui/CustomDropdown';
+import { useAppSelector, useAppDispatch } from '@/hooks/useRedux';
+import { useToast } from '@/hooks/useToast';
+import CustomDropdown from '@/components/ui/CustomDropdown';
+import { apiClient } from '@/lib/api/client';
 
 interface ReviewListProps {
   productId: string;
   onReviewChange?: () => void; // Callback when reviews are added/updated/deleted
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
 
 export const ReviewList: React.FC<ReviewListProps> = ({ productId, onReviewChange }) => {
   const toast = useToast();
-  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const dispatch = useAppDispatch();
+  const auth = useAppSelector((state) => state.auth);
+  const { user, isAuthenticated } = auth;
 
   const [reviews, setReviews] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,22 +44,20 @@ export const ReviewList: React.FC<ReviewListProps> = ({ productId, onReviewChang
   const fetchReviews = async () => {
     try {
       setIsLoading(true);
-      const params = new URLSearchParams({
+      const params: Record<string, string> = {
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
         sort: filters.sort,
-      });
+      };
 
       if (filters.rating) {
-        params.append('rating', filters.rating);
+        params.rating = filters.rating;
       }
 
-      const response = await fetch(
-        `${API_URL}/reviews/product/${productId}?${params}`,
-        { credentials: 'include' }
-      );
-
-      const data = await response.json();
+      const state = { auth } as any;
+      const data = await apiClient(`/reviews/product/${productId}`, {
+        params,
+      }, dispatch, state);
 
       if (data.success) {
         setReviews(data.data.reviews);
@@ -67,9 +67,9 @@ export const ReviewList: React.FC<ReviewListProps> = ({ productId, onReviewChang
           pages: data.data.pagination.pages,
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Fetch reviews error:', error);
-      toast.error('Error', 'Failed to load reviews');
+      toast.error('Error', error.message || 'Failed to load reviews');
     } finally {
       setIsLoading(false);
     }

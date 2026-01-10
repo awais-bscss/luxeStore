@@ -3,7 +3,9 @@
 import React, { useState } from 'react';
 import { StarRating } from './StarRating';
 import { X, Upload, Loader2 } from 'lucide-react';
-import { useToast } from '../../hooks/useToast';
+import { useToast } from '@/hooks/useToast';
+import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
+import { apiClient } from '@/lib/api/client';
 
 interface ReviewFormProps {
   productId: string;
@@ -18,7 +20,7 @@ interface ReviewFormProps {
   onCancel: () => void;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
 
 export const ReviewForm: React.FC<ReviewFormProps> = ({
   productId,
@@ -27,6 +29,9 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
   onCancel,
 }) => {
   const toast = useToast();
+  const dispatch = useAppDispatch();
+  const auth = useAppSelector((state) => state.auth);
+  const state = { auth } as any;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     rating: existingReview?.rating || 0,
@@ -80,8 +85,8 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
       setIsSubmitting(true);
 
       const url = existingReview
-        ? `${API_URL}/reviews/${existingReview._id}`
-        : `${API_URL}/reviews`;
+        ? `/reviews/${existingReview._id}`
+        : `/reviews`;
 
       const method = existingReview ? 'PUT' : 'POST';
 
@@ -89,29 +94,22 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
         ? formData
         : { ...formData, product: productId };
 
-      const response = await fetch(url, {
+      await apiClient(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify(body),
-      });
+      }, dispatch, state);
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        toast.success(
-          'Success',
-          existingReview ? 'Review updated successfully' : 'Review submitted successfully'
-        );
-        onSuccess();
-      } else {
-        toast.error('Error', data.message || 'Failed to submit review');
-      }
-    } catch (error) {
+      toast.success(
+        'Success',
+        existingReview ? 'Review updated successfully' : 'Review submitted successfully'
+      );
+      onSuccess();
+    } catch (error: any) {
       console.error('Submit error:', error);
-      toast.error('Error', 'An error occurred while submitting your review');
+      toast.error('Error', error.message || 'An error occurred while submitting your review');
     } finally {
       setIsSubmitting(false);
     }
@@ -175,8 +173,8 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
           placeholder="Summarize your experience"
           maxLength={100}
           className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 ${errors.title
-              ? 'border-red-500'
-              : 'border-gray-300 dark:border-gray-600'
+            ? 'border-red-500'
+            : 'border-gray-300 dark:border-gray-600'
             }`}
         />
         <div className="flex justify-between mt-1">
@@ -208,8 +206,8 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
           rows={5}
           maxLength={1000}
           className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none ${errors.comment
-              ? 'border-red-500'
-              : 'border-gray-300 dark:border-gray-600'
+            ? 'border-red-500'
+            : 'border-gray-300 dark:border-gray-600'
             }`}
         />
         <div className="flex justify-between mt-1">

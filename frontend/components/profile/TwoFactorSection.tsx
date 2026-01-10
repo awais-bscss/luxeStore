@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Copy, Check, AlertTriangle } from 'lucide-react';
 import QRCode from 'qrcode';
+import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
+import { apiClient } from '@/lib/api/client';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
 
 interface TwoFactorModalProps {
   user: any;
@@ -11,6 +13,8 @@ interface TwoFactorModalProps {
 }
 
 export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({ user, isOpen, onClose }) => {
+  const dispatch = useAppDispatch();
+  const auth = useAppSelector((state) => state.auth);
   const [is2FAEnabled, setIs2FAEnabled] = useState(false);
   const [qrCode, setQrCode] = useState('');
   const [secret, setSecret] = useState('');
@@ -35,12 +39,10 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({ user, isOpen, on
     setMessage(null);
 
     try {
-      const response = await fetch(`${API_URL}/2fa/enable`, {
+      const state = { auth } as any;
+      const data = await apiClient('/2fa/enable', {
         method: 'POST',
-        credentials: 'include',
-      });
-
-      const data = await response.json();
+      }, dispatch, state);
 
       if (data.success) {
         setSecret(data.data.secret);
@@ -49,9 +51,9 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({ user, isOpen, on
       } else {
         setMessage({ type: 'error', text: data.message || 'Failed to enable 2FA' });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Enable 2FA error:', error);
-      setMessage({ type: 'error', text: 'Failed to enable 2FA' });
+      setMessage({ type: 'error', text: error.message || 'Failed to enable 2FA' });
     } finally {
       setIsEnabling(false);
     }
@@ -67,14 +69,12 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({ user, isOpen, on
     setMessage(null);
 
     try {
-      const response = await fetch(`${API_URL}/2fa/verify`, {
+      const state = { auth } as any;
+      const data = await apiClient('/2fa/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ token: verificationCode }),
-      });
-
-      const data = await response.json();
+      }, dispatch, state);
 
       if (data.success) {
         setBackupCodes(data.data.backupCodes);
@@ -88,9 +88,9 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({ user, isOpen, on
       } else {
         setMessage({ type: 'error', text: data.message || 'Invalid verification code' });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Verify 2FA error:', error);
-      setMessage({ type: 'error', text: 'Failed to verify code' });
+      setMessage({ type: 'error', text: error.message || 'Failed to verify code' });
     } finally {
       setIsVerifying(false);
     }
@@ -106,14 +106,12 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({ user, isOpen, on
     setMessage(null);
 
     try {
-      const response = await fetch(`${API_URL}/2fa/disable`, {
+      const state = { auth } as any;
+      const data = await apiClient('/2fa/disable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ password }),
-      });
-
-      const data = await response.json();
+      }, dispatch, state);
 
       if (data.success) {
         setIs2FAEnabled(false);
@@ -125,9 +123,9 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({ user, isOpen, on
       } else {
         setMessage({ type: 'error', text: data.message || 'Failed to disable 2FA' });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Disable 2FA error:', error);
-      setMessage({ type: 'error', text: 'Failed to disable 2FA' });
+      setMessage({ type: 'error', text: error.message || 'Failed to disable 2FA' });
     } finally {
       setIsDisabling(false);
     }
