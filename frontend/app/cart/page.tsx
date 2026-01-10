@@ -29,6 +29,7 @@ export default function CartPage() {
   const router = useRouter();
   const toast = useToast();
   const { items, total } = useSelector((state: RootState) => state.cart);
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const { updateQuantity, removeFromCart, clearCart } = useCart();
   const [showClearModal, setShowClearModal] = useState(false);
 
@@ -47,6 +48,16 @@ export default function CartPage() {
 
   const handleClearCart = () => {
     setShowClearModal(true);
+  };
+
+  const handleCheckout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!isAuthenticated && !user) {
+      toast.error('Login Required', 'Please log in to proceed to checkout');
+      router.push('/login?redirect=/checkout');
+    } else {
+      router.push('/checkout');
+    }
   };
 
   if (items.length === 0) {
@@ -267,13 +278,13 @@ export default function CartPage() {
               )}
 
               {/* Checkout Button */}
-              <Link
-                href="/checkout"
+              <button
+                onClick={handleCheckout}
                 className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2 mb-4"
               >
                 <ShoppingBag className="w-5 h-5" />
                 Proceed to Checkout
-              </Link>
+              </button>
 
               {/* Continue Shopping */}
               <Link

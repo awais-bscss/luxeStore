@@ -33,10 +33,12 @@ function LoginContent() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      if (user?.role === "admin" || user?.role === "superadmin") {
+      if (redirect && redirect !== '/') {
+        router.push(redirect);
+      } else if (user?.role === "admin" || user?.role === "superadmin") {
         router.push("/admin");
       } else {
-        router.push(redirect);
+        router.push("/");
       }
     }
   }, [isAuthenticated, router, redirect, user]);

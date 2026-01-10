@@ -54,8 +54,16 @@ export default function CheckoutPage() {
 
   const { items, total } = useSelector((state: RootState) => state.cart);
   const { currentOrder, isLoading } = useSelector((state: RootState) => state.orders);
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const cartItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && !user) {
+      toast.error('Authentication Required', 'Please log in to proceed with checkout');
+      router.push('/login?redirect=/checkout');
+    }
+  }, [isAuthenticated, user, router, toast]);
 
   // Fetch tax and shipping settings
   useEffect(() => {

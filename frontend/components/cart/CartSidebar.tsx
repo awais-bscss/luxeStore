@@ -8,6 +8,7 @@ import { X, ShoppingCart, Plus, Minus, Trash2, ShoppingBag } from "lucide-react"
 import { useRouter } from "next/navigation";
 import { useCurrency, useExchangeRate } from "../../contexts/SettingsContext";
 import { formatPrice } from "../../lib/currency";
+import { useToast } from "../../hooks/useToast";
 
 interface CartSidebarProps {
   isOpen: boolean;
@@ -19,8 +20,10 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
   const currency = useCurrency();
   const exchangeRate = useExchangeRate();
   const { items, total } = useSelector((state: RootState) => state.cart);
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const { updateQuantity, removeFromCart, clearCart } = useCart();
   const [showClearModal, setShowClearModal] = useState(false);
+  const toast = useToast();
 
   // Lock body scroll when sidebar is open
   useEffect(() => {
@@ -66,7 +69,12 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
 
   const handleCheckout = () => {
     onClose();
-    router.push("/checkout");
+    if (!isAuthenticated && !user) {
+      toast.error('Login Required', 'Please log in to proceed to checkout');
+      router.push("/login?redirect=/checkout");
+    } else {
+      router.push("/checkout");
+    }
   };
 
   const handleViewCart = () => {
