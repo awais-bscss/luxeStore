@@ -161,14 +161,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
           onClose();
 
-          // Small delay to show toast before redirect
-          setTimeout(() => {
-            if (result.user.role === "admin" || result.user.role === "superadmin") {
+          // Redirect admins to dashboard after ensuring auth is complete
+          if (result.user.role === "admin" || result.user.role === "superadmin") {
+            setTimeout(() => {
               router.push("/admin");
-            } else {
-              router.push("/");
-            }
-          }, 500);
+            }, 1000); // Increased delay to ensure cookie is set
+          }
         }
       } else {
         const result = await dispatch(
@@ -195,16 +193,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
           onClose();
 
-          // Small delay to show toast before redirect
+          // Redirect after ensuring auth is complete
           setTimeout(() => {
             if (result.passwordExpired) {
               router.push("/account?tab=settings&reason=password_expired");
             } else if (result.user.role === "admin" || result.user.role === "superadmin") {
               router.push("/admin");
-            } else {
-              router.push("/");
             }
-          }, 500);
+            // Regular users stay on current page
+          }, 1000); // Increased delay to ensure cookie is set
         }
       }
     } catch (err: any) {
