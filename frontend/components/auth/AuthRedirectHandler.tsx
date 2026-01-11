@@ -31,13 +31,17 @@ export function AuthRedirectHandler() {
         return;
       }
 
-      // Redirect admins to dashboard with delay to ensure cookie is set
-      if (user.role === 'admin' || user.role === 'superadmin') {
-        setTimeout(() => {
-          router.push('/admin');
-        }, 1000); // Wait for cookie to be set
-      }
-      // Regular users stay on current page (no redirect needed)
+      // DISABLED: Automatic admin redirect causes middleware race condition
+      // Admins should use the "Admin Dashboard" link in navbar after login
+      // This ensures cookies are fully set before accessing protected routes
+
+      // if (user.role === 'admin' || user.role === 'superadmin') {
+      //   setTimeout(() => {
+      //     router.push('/admin');
+      //   }, 1000);
+      // }
+
+      // All users (including admins) stay on current page after login
     }
   }, [isAuthenticated, user, pathname, router]);
 
