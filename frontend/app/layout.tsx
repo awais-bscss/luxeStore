@@ -4,6 +4,7 @@ import { CartFavoritesSyncProvider } from "@/components/providers/CartFavoritesS
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { MaintenanceModeChecker } from "@/components/MaintenanceModeChecker";
+import { AuthRedirectHandler } from "@/components/auth/AuthRedirectHandler";
 import SessionManager from "@/components/SessionManager";
 import ToastContainer from "@/components/ui/ToastContainer";
 import "@/styles/globals.css";
@@ -37,6 +38,7 @@ export default function RootLayout({
                 <MaintenanceModeChecker>
                   {children}
                 </MaintenanceModeChecker>
+                <AuthRedirectHandler />
                 <SessionManager />
                 <ToastContainer />
               </SettingsProvider>
