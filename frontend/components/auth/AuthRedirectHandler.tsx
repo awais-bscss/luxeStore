@@ -31,9 +31,11 @@ export function AuthRedirectHandler() {
         return;
       }
 
-      // Redirect admins to dashboard
+      // Redirect admins to dashboard with delay to ensure cookie is set
       if (user.role === 'admin' || user.role === 'superadmin') {
-        router.push('/admin');
+        setTimeout(() => {
+          router.push('/admin');
+        }, 1000); // Wait for cookie to be set
       }
       // Regular users stay on current page (no redirect needed)
     }
