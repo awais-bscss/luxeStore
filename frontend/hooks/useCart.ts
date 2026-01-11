@@ -48,38 +48,39 @@ export const useCart = () => {
   };
 
   const removeFromCart = async (productId: string) => {
+    // Optimistic update: Remove from UI immediately
+    console.log('🗑️ Removing from cart (optimistic):', productId);
+    dispatch(removeFromCartLocal(productId));
+
+    // Then sync with backend if authenticated
     if (isAuthenticated) {
       try {
-        console.log('🗑️ Removing from cart (API):', productId);
         await dispatch(removeFromCartAPI(productId)).unwrap();
-        console.log('✅ Successfully removed from cart (backend updated)');
+        console.log('✅ Successfully removed from cart (backend synced)');
       } catch (error: any) {
-        console.error('❌ FAILED to remove from cart (backend NOT updated):', error);
+        console.error('❌ FAILED to remove from cart on backend:', error);
         console.error('Error details:', error.message || error);
-        console.error('Full error object:', error);
-        // DO NOT fallback to local removal - this causes the bug!
-        // Log but don't throw - let the user know via console
+        // Local removal already done, user sees instant feedback
+        // Next cart fetch will sync with backend state
       }
-    } else {
-      console.log('🗑️ Removing from cart (local only - not logged in)');
-      dispatch(removeFromCartLocal(productId));
     }
   };
 
   const clearCart = async () => {
+    // Optimistic update: Clear UI immediately
+    console.log('🧹 Clearing entire cart (optimistic)');
+    dispatch(clearCartLocal());
+
+    // Then sync with backend if authenticated
     if (isAuthenticated) {
       try {
-        console.log('🧹 Clearing entire cart (API)');
         await dispatch(clearCartAPI()).unwrap();
-        console.log('✅ Successfully cleared cart (backend updated)');
+        console.log('✅ Successfully cleared cart (backend synced)');
       } catch (error: any) {
-        console.error('❌ FAILED to clear cart (backend NOT updated):', error);
+        console.error('❌ FAILED to clear cart on backend:', error);
         console.error('Error details:', error.message || error);
-        console.error('Full error object:', error);
+        // Local clear already done, user sees instant feedback
       }
-    } else {
-      console.log('🧹 Clearing cart (local only - not logged in)');
-      dispatch(clearCartLocal());
     }
   };
 
