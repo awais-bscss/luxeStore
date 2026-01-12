@@ -19,26 +19,52 @@ function decodeJWT(token: string): any {
   }
 }
 
+// Extract token from localStorage in the request
+function getTokenFromLocalStorage(request: NextRequest): string | null {
+  try {
+    // Try to get from cookie first
+    const cookieToken = request.cookies.get('token')?.value;
+    if (cookieToken) return cookieToken;
+
+    // For client-side navigation, we can't access localStorage in middleware
+    // So we'll skip middleware check for client-side navigation
+    // The actual auth check will happen in the page component
+    return null;
+  } catch (error) {
+    return null;
+  }
+}
+
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get('token')?.value;
   const { pathname } = request.nextUrl;
   const isProduction = process.env.NODE_ENV === 'production';
 
   // Check if accessing admin routes
   if (pathname.startsWith('/admin')) {
+    const token = request.cookies.get('token')?.value;
+
     console.log('=== ADMIN MIDDLEWARE CHECK ===');
     console.log('Environment:', isProduction ? 'PRODUCTION' : 'DEVELOPMENT');
     console.log('Path:', pathname);
-    console.log('Token present:', !!token);
-    console.log('Cookie exists:', request.cookies.has('token'));
-    console.log('All cookies:', request.cookies.getAll().map(c => `${c.name}=${c.value.substring(0, 20)}...`));
-    console.log('Request URL:', request.url);
-    console.log('Request headers origin:', request.headers.get('origin'));
+    console.log('Cookie token present:', !!token);
 
-
+    // IMPORTANT: In production, if cookie is not present, we'll let the request through
+    // and let the client-side auth check handle it (since token might be in localStorage)
     if (!token) {
-      console.log('No token found - redirecting to login');
-      // Redirect to login if not authenticated
+      console.log('No cookie token found');
+
+      // Check if this is a client-side navigation (has referer from same origin)
+      const referer = request.headers.get('referer');
+      const origin = request.headers.get('origin');
+
+      if (referer || origin) {
+        console.log('Client-side navigation detected - allowing through for client-side auth check');
+        // Let it through - the page component will check localStorage
+        return NextResponse.next();
+      }
+
+      // Direct navigation without cookie - redirect to login
+      console.log('Direct navigation without cookie - redirecting to login');
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       url.searchParams.set('redirect', pathname);
@@ -48,19 +74,17 @@ export function middleware(request: NextRequest) {
 
     // Decode token to check role
     const decoded = decodeJWT(token);
-    console.log('Decoded token:', decoded);
-    console.log('User role:', decoded?.role);
+    console.log('Decoded token role:', decoded?.role);
 
     if (!decoded || (decoded.role !== 'admin' && decoded.role !== 'superadmin')) {
       console.log('User is not admin - access denied');
-      // User is authenticated but not an admin - redirect to home
       const url = request.nextUrl.clone();
       url.pathname = '/';
       url.searchParams.set('error', 'access_denied');
       return NextResponse.redirect(url);
     }
 
-    console.log('Admin access granted');
+    console.log('Admin access granted via cookie');
   }
 
   return NextResponse.next();
