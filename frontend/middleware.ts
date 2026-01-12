@@ -14,6 +14,7 @@ function decodeJWT(token: string): any {
     );
     return JSON.parse(jsonPayload);
   } catch (error) {
+    console.error('JWT decode error:', error);
     return null;
   }
 }
@@ -24,7 +25,12 @@ export function middleware(request: NextRequest) {
 
   // Check if accessing admin routes
   if (pathname.startsWith('/admin')) {
+    console.log('=== ADMIN MIDDLEWARE CHECK ===');
+    console.log('Path:', pathname);
+    console.log('Token present:', !!token);
+
     if (!token) {
+      console.log('No token found - redirecting to login');
       // Redirect to login if not authenticated
       const url = request.nextUrl.clone();
       url.pathname = '/login';
@@ -35,14 +41,19 @@ export function middleware(request: NextRequest) {
 
     // Decode token to check role
     const decoded = decodeJWT(token);
+    console.log('Decoded token:', decoded);
+    console.log('User role:', decoded?.role);
 
     if (!decoded || (decoded.role !== 'admin' && decoded.role !== 'superadmin')) {
+      console.log('User is not admin - access denied');
       // User is authenticated but not an admin - redirect to home
       const url = request.nextUrl.clone();
       url.pathname = '/';
       url.searchParams.set('error', 'access_denied');
       return NextResponse.redirect(url);
     }
+
+    console.log('Admin access granted');
   }
 
   return NextResponse.next();

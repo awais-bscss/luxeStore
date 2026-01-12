@@ -35,7 +35,11 @@ function LoginContent() {
     if (isAuthenticated) {
       // Always redirect admins to admin dashboard
       if (user?.role === "admin" || user?.role === "superadmin") {
-        router.push("/admin");
+        // Add a small delay to ensure cookies are fully set before redirect
+        // This prevents middleware from running before the auth cookie is available
+        setTimeout(() => {
+          router.push("/admin");
+        }, 500);
       } else if (redirect && redirect !== '/') {
         // For regular users, honor the redirect parameter
         router.push(redirect);

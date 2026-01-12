@@ -71,14 +71,19 @@ export default function CustomersPage() {
         setIsLoading(true);
         setError(null);
 
+        console.log('Fetching customers from API...');
         const data = await apiClient('/users/customers', {}, dispatch, state);
+        console.log('API Response:', data);
 
         if (data.success && isMounted) {
+          console.log('Customers data:', data.data.customers);
           setCustomers(data.data.customers || []);
         } else {
-          throw new Error('Failed to fetch customers');
+          console.error('API returned success=false or no data:', data);
+          throw new Error(data.message || 'Failed to fetch customers');
         }
       } catch (err: any) {
+        console.error('Error in fetchCustomers:', err);
         if (err.code === 'SESSION_EXPIRED') {
           toast.error('Session Expired', err.message);
           router.push('/login?redirect=/admin/customers&reason=session_expired');
