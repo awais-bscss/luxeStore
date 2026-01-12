@@ -22,12 +22,19 @@ function decodeJWT(token: string): any {
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value;
   const { pathname } = request.nextUrl;
+  const isProduction = process.env.NODE_ENV === 'production';
 
   // Check if accessing admin routes
   if (pathname.startsWith('/admin')) {
     console.log('=== ADMIN MIDDLEWARE CHECK ===');
+    console.log('Environment:', isProduction ? 'PRODUCTION' : 'DEVELOPMENT');
     console.log('Path:', pathname);
     console.log('Token present:', !!token);
+    console.log('Cookie exists:', request.cookies.has('token'));
+    console.log('All cookies:', request.cookies.getAll().map(c => `${c.name}=${c.value.substring(0, 20)}...`));
+    console.log('Request URL:', request.url);
+    console.log('Request headers origin:', request.headers.get('origin'));
+
 
     if (!token) {
       console.log('No token found - redirecting to login');
