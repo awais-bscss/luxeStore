@@ -379,7 +379,7 @@ export default function CheckoutPage() {
                       required
                       className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="123 Main Street"
-                      disabled={showStripeForm || !!paymentIntentId || isPlacingOrder}
+                      disabled={isPlacingOrder}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -393,7 +393,7 @@ export default function CheckoutPage() {
                         required
                         className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="Lahore"
-                        disabled={showStripeForm || !!paymentIntentId || isPlacingOrder}
+                        disabled={isPlacingOrder}
                       />
                     </div>
                     <div>
@@ -406,7 +406,7 @@ export default function CheckoutPage() {
                         required
                         className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="Punjab"
-                        disabled={showStripeForm || !!paymentIntentId || isPlacingOrder}
+                        disabled={isPlacingOrder}
                       />
                     </div>
                   </div>
@@ -421,7 +421,7 @@ export default function CheckoutPage() {
                         required
                         className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="54000"
-                        disabled={showStripeForm || !!paymentIntentId || isPlacingOrder}
+                        disabled={isPlacingOrder}
                       />
                     </div>
                     <div>
@@ -434,7 +434,7 @@ export default function CheckoutPage() {
                         required
                         className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="03001234567"
-                        disabled={showStripeForm || !!paymentIntentId || isPlacingOrder}
+                        disabled={isPlacingOrder}
                       />
                     </div>
                   </div>
@@ -466,10 +466,15 @@ export default function CheckoutPage() {
                   <div className="space-y-3">
                     <div
                       onClick={() => {
-                        if (showStripeForm || !!paymentIntentId || isPlacingOrder) return;
+                        if (!!paymentIntentId || isPlacingOrder) return;
+                        if (showStripeForm && formData.shippingMethod !== 'standard') {
+                          setShowStripeForm(false);
+                          setClientSecret(null);
+                          localStorage.removeItem('pending_stripe_client_secret');
+                        }
                         setFormData({ ...formData, shippingMethod: 'standard' });
                       }}
-                      className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${(showStripeForm || !!paymentIntentId || isPlacingOrder) ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-300 dark:hover:border-blue-700'
+                      className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${(!!paymentIntentId || isPlacingOrder) ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-300 dark:hover:border-blue-700'
                         } ${formData.shippingMethod === 'standard'
                           ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
                           : 'border-gray-200 dark:border-gray-700'
@@ -503,10 +508,15 @@ export default function CheckoutPage() {
                     {shippingSettings.expressShippingEnabled && (
                       <div
                         onClick={() => {
-                          if (showStripeForm || !!paymentIntentId || isPlacingOrder) return;
+                          if (!!paymentIntentId || isPlacingOrder) return;
+                          if (showStripeForm && formData.shippingMethod !== 'express') {
+                            setShowStripeForm(false);
+                            setClientSecret(null);
+                            localStorage.removeItem('pending_stripe_client_secret');
+                          }
                           setFormData({ ...formData, shippingMethod: 'express' });
                         }}
-                        className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${(showStripeForm || !!paymentIntentId || isPlacingOrder) ? 'opacity-50 cursor-not-allowed' : 'hover:border-purple-300 dark:hover:border-purple-700'
+                        className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${(!!paymentIntentId || isPlacingOrder) ? 'opacity-50 cursor-not-allowed' : 'hover:border-purple-300 dark:hover:border-purple-700'
                           } ${formData.shippingMethod === 'express'
                             ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/20'
                             : 'border-gray-200 dark:border-gray-700'
