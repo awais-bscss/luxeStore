@@ -1,3 +1,4 @@
+import { useRef, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 import {
   addToCartLocal,
@@ -11,10 +12,16 @@ import {
   CartItem,
 } from '@/store/slices/cartSlice';
 
+// Simple debounce function for the hook
+const debouncedSyncs: Record<string, NodeJS.Timeout> = {};
+
 export const useCart = () => {
   const dispatch = useAppDispatch();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const cart = useAppSelector((state) => state.cart);
+
+  // Track pending quantity updates to avoid race conditions
+  const pendingUpdates = useRef<Record<string, number>>({});
 
   const addToCart = async (product: CartItem) => {
     // Optimistic update: Add to UI immediately
@@ -26,60 +33,78 @@ export const useCart = () => {
         await dispatch(addToCartAPI({ productId: product.productId, quantity: product.quantity })).unwrap();
       } catch (error) {
         console.error('Failed to add to cart on backend:', error);
-        // Local update is already done, user sees instant feedback
       }
     }
   };
 
-  const updateQuantity = async (productId: string, quantity: number) => {
-    // Optimistic update: Update UI immediately
+  const updateQuantity = useCallback(async (productId: string, quantity: number) => {
+    // 1. Optimistic update: Update UI immediately
     dispatch(updateQuantityLocal({ productId, quantity }));
 
-    // Then sync with backend if authenticated
+    // 2. Track this update locally
+    pendingUpdates.current[productId] = quantity;
+
+    // 3. Debounced sync with backend if authenticated
     if (isAuthenticated) {
-      try {
-        await dispatch(updateCartItemAPI({ productId, quantity })).unwrap();
-      } catch (error) {
-        console.error('Failed to update cart on backend:', error);
-        // If API fails, the local update is already done, so user sees instant feedback
-        // The next cart fetch will sync with backend state
+      // Clear existing timeout for this product
+      if (debouncedSyncs[productId]) {
+        clearTimeout(debouncedSyncs[productId]);
       }
+
+      // Set new timeout
+      debouncedSyncs[productId] = setTimeout(async () => {
+        const finalQuantity = pendingUpdates.current[productId];
+
+        try {
+          console.log(`🔄 Syncing final quantity ${finalQuantity} for ${productId}`);
+          await dispatch(updateCartItemAPI({ productId, quantity: finalQuantity })).unwrap();
+          // Clear pending after successful sync
+          delete pendingUpdates.current[productId];
+        } catch (error) {
+          console.error('Failed to update cart on backend:', error);
+        } finally {
+          delete debouncedSyncs[productId];
+        }
+      }, 500); // 500ms debounce
     }
-  };
+  }, [dispatch, isAuthenticated]);
 
   const removeFromCart = async (productId: string) => {
+    // Clear any pending syncs for this product
+    if (debouncedSyncs[productId]) {
+      clearTimeout(debouncedSyncs[productId]);
+      delete debouncedSyncs[productId];
+    }
+    delete pendingUpdates.current[productId];
+
     // Optimistic update: Remove from UI immediately
-    console.log('🗑️ Removing from cart (optimistic):', productId);
     dispatch(removeFromCartLocal(productId));
 
     // Then sync with backend if authenticated
     if (isAuthenticated) {
       try {
         await dispatch(removeFromCartAPI(productId)).unwrap();
-        console.log('✅ Successfully removed from cart (backend synced)');
       } catch (error: any) {
         console.error('❌ FAILED to remove from cart on backend:', error);
-        console.error('Error details:', error.message || error);
-        // Local removal already done, user sees instant feedback
-        // Next cart fetch will sync with backend state
       }
     }
   };
 
   const clearCart = async () => {
+    // Clear all pending syncs
+    Object.values(debouncedSyncs).forEach(timeout => clearTimeout(timeout));
+    Object.keys(debouncedSyncs).forEach(key => delete debouncedSyncs[key]);
+    pendingUpdates.current = {};
+
     // Optimistic update: Clear UI immediately
-    console.log('🧹 Clearing entire cart (optimistic)');
     dispatch(clearCartLocal());
 
     // Then sync with backend if authenticated
     if (isAuthenticated) {
       try {
         await dispatch(clearCartAPI()).unwrap();
-        console.log('✅ Successfully cleared cart (backend synced)');
       } catch (error: any) {
         console.error('❌ FAILED to clear cart on backend:', error);
-        console.error('Error details:', error.message || error);
-        // Local clear already done, user sees instant feedback
       }
     }
   };

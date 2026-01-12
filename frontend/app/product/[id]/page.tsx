@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
-import { addToCartLocal } from '@/store/slices/cartSlice';
+import { useCart } from '@/hooks/useCart';
 import { toggleFavoriteLocal } from '@/store/slices/favoritesSlice';
 import { RootState } from '@/store/store';
 import { ReviewList } from '@/components/reviews/ReviewList';
@@ -115,20 +115,25 @@ export default function ProductDetailPage() {
     }
   };
 
+  // Add this near other hooks
+  const { addToCart } = useCart();
+
   const handleAddToCart = () => {
     if (!product) return;
 
-    dispatch(
-      addToCartLocal({
-        productId: product._id,
-        name: product.name,
-        price: product.price,
-        quantity,
-        thumbnail: product.thumbnail,
-        stock: product.stock,
-      })
-    );
+    addToCart({
+      productId: product._id,
+      name: product.name,
+      price: product.price,
+      quantity,
+      thumbnail: product.thumbnail,
+      stock: product.stock,
+    });
+
     toast.success('Added to Cart', `${quantity} ${quantity > 1 ? 'items' : 'item'} added to your cart`);
+
+    // Optional: Open cart sidebar after adding
+    setCartOpen(true);
   };
 
   const handleToggleFavorite = () => {

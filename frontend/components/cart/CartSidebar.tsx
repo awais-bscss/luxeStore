@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useCurrency, useExchangeRate } from "@/contexts/SettingsContext";
 import { formatPrice } from "@/lib/currency";
 import { useToast } from "@/hooks/useToast";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface CartSidebarProps {
   isOpen: boolean;
@@ -46,20 +47,19 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
 
   const handleUpdateQuantity = (productId: string, newQuantity: number, maxStock: number) => {
     if (newQuantity > maxStock) {
-      // Don't allow quantity to exceed stock
+      toast.error('Out of Stock', `Only ${maxStock} items available`);
       return;
     }
 
     if (newQuantity > 0) {
-      updateQuantity(productId, newQuantity); // No await - optimistic update
+      updateQuantity(productId, newQuantity);
     } else {
-      // If quantity is 0, remove the item
-      removeFromCart(productId); // No await
+      removeFromCart(productId);
     }
   };
 
   const handleRemoveItem = (productId: string) => {
-    removeFromCart(productId); // No await
+    removeFromCart(productId);
   };
 
   const handleClearCart = () => {
@@ -82,201 +82,253 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
     router.push("/cart");
   };
 
-  if (!isOpen) return null;
-
   return (
     <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Sidebar */}
-      <div className="fixed right-0 top-0 h-full w-full sm:w-96 bg-white dark:bg-gray-900 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-              Shopping Cart
-            </h2>
-          </div>
-          <button
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            key="cart-sidebar-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
             onClick={onClose}
-            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+          />
+        )}
+
+        {isOpen && (
+          <motion.div
+            key="cart-sidebar-panel"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed right-0 top-0 h-full w-full sm:w-[400px] bg-white dark:bg-gray-900 shadow-2xl z-[101] flex flex-col"
           >
-            <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          </button>
-        </div>
-
-        {/* Cart Items */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5">
-          {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <ShoppingCart className="w-14 h-14 text-gray-300 dark:text-gray-600 mb-3" />
-              <p className="text-gray-600 dark:text-gray-400 text-base font-medium">
-                Your cart is empty
-              </p>
-              <p className="text-gray-500 dark:text-gray-500 text-xs mt-1.5">
-                Add some products to get started
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {items.map((item, index) => (
-                <div
-                  key={`${item.productId}-${index}`}
-                  className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex gap-3">
-                    {/* Product Image */}
-                    {item.thumbnail && (
-                      <img
-                        src={item.thumbnail}
-                        alt={item.name}
-                        className="w-16 h-16 object-cover rounded-lg"
-                      />
-                    )}
-
-                    {/* Product Details */}
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-0.5">
-                        {item.name}
-                      </h3>
-                      <p className="text-blue-600 dark:text-blue-400 font-bold text-sm mb-1">
-                        {formatPrice(item.price, currency, exchangeRate)}
-                      </p>
-                      {/* Stock Info */}
-                      <p className={`text-xs mb-2 ${item.stock < 10 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                        {item.stock > 0 ? `${item.stock} in stock` : 'Out of stock'}
-                      </p>
-
-                      {/* Quantity Controls */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 bg-white dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600">
-                          <button
-                            onClick={() =>
-                              handleUpdateQuantity(item.productId, item.quantity - 1, item.stock)
-                            }
-                            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-l-lg transition-colors"
-                          >
-                            <Minus className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />
-                          </button>
-                          <span className="px-2.5 text-sm font-semibold text-gray-900 dark:text-white">
-                            {item.quantity}
-                          </span>
-                          <button
-                            onClick={() =>
-                              handleUpdateQuantity(item.productId, item.quantity + 1, item.stock)
-                            }
-                            disabled={item.quantity >= item.stock}
-                            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-r-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                          >
-                            <Plus className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />
-                          </button>
-                        </div>
-
-                        {/* Remove Button */}
-                        <button
-                          onClick={() => handleRemoveItem(item.productId)}
-                          className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors group"
-                        >
-                          <Trash2 className="w-4 h-4 text-gray-400 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 sm:p-6 border-b border-gray-100 dark:border-gray-800">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                  <ShoppingCart className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        {items.length > 0 && (
-          <div className="border-t border-gray-200 dark:border-gray-700 p-4 sm:p-5 space-y-3">
-            {/* Total */}
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-base font-semibold text-gray-900 dark:text-white">
-                Total:
-              </span>
-              <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                {formatPrice(total, currency, exchangeRate)}
-              </span>
-            </div>
-
-            {/* Primary Actions - Grid Layout */}
-            <div className="grid grid-cols-2 gap-2.5">
-              {/* Checkout Button */}
-              <button
-                onClick={handleCheckout}
-                className="col-span-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-2.5 sm:py-3 rounded-lg transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl text-sm"
-              >
-                Checkout
-              </button>
-
-              {/* View Full Cart Button */}
-              <button
-                onClick={handleViewCart}
-                className="bg-gray-700 dark:bg-gray-600 hover:bg-gray-800 dark:hover:bg-gray-700 text-white font-semibold py-2.5 rounded-lg transition-all duration-300 flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg"
-              >
-                <ShoppingBag className="w-3.5 h-3.5" />
-                <span className="text-xs">View Cart</span>
-              </button>
-
-              {/* Continue Shopping */}
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                    Shopping Cart
+                  </h2>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                    {items.length} {items.length === 1 ? 'item' : 'items'}
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={onClose}
-                className="border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-300 text-xs"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all duration-300 transform hover:rotate-90"
               >
-                Continue
+                <X className="w-5 h-5 text-gray-400 hover:text-gray-900 dark:hover:text-white" />
               </button>
             </div>
 
-            {/* Secondary Action - Clear Cart */}
-            <button
-              onClick={() => setShowClearModal(true)}
-              className="w-full py-1.5 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors font-medium flex items-center justify-center gap-1.5 group"
-            >
-              <Trash2 className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-              Clear all items
-            </button>
-          </div>
+            {/* Cart Items */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-5 sm:p-6">
+              {items.length === 0 ? (
+                <motion.div
+                  key="empty-cart-msg"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex flex-col items-center justify-center h-full text-center"
+                >
+                  <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+                    <ShoppingCart className="w-10 h-10 text-gray-300 dark:text-gray-600" />
+                  </div>
+                  <p className="text-gray-900 dark:text-white text-lg font-bold">
+                    Your cart is empty
+                  </p>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-2 max-w-[200px] mx-auto">
+                    Looks like you haven't added anything to your cart yet.
+                  </p>
+                  <button
+                    onClick={onClose}
+                    className="mt-6 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-xl"
+                  >
+                    Start Shopping
+                  </button>
+                </motion.div>
+              ) : (
+                <div className="space-y-4">
+                  <AnimatePresence mode="popLayout">
+                    {items.map((item, index) => (
+                      <motion.div
+                        layout
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.2, delay: index * 0.05 }}
+                        key={item.productId || `cart-item-${index}`}
+                        className="group bg-white dark:bg-gray-800/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 hover:border-blue-500/30 dark:hover:border-blue-500/30 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300"
+                      >
+                        <div className="flex gap-4">
+                          {/* Product Image */}
+                          <div className="relative w-24 h-24 flex-shrink-0 group-hover:scale-105 transition-transform duration-500">
+                            {item.thumbnail && (
+                              <img
+                                src={item.thumbnail}
+                                alt={item.name}
+                                className="w-full h-full object-cover rounded-xl shadow-sm"
+                              />
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent rounded-xl pointer-events-none" />
+                          </div>
+
+                          {/* Product Details */}
+                          <div className="flex-1 flex flex-col justify-between min-w-0">
+                            <div>
+                              <div className="flex justify-between items-start gap-2">
+                                <h3 className="font-bold text-gray-900 dark:text-white text-sm line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                  {item.name}
+                                </h3>
+                                <button
+                                  onClick={() => handleRemoveItem(item.productId)}
+                                  className="p-1 text-gray-300 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                              <p className="text-blue-600 dark:text-blue-400 font-extrabold text-sm mt-1">
+                                {formatPrice(item.price, currency, exchangeRate)}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center justify-between mt-3">
+                              {/* Quantity Controls */}
+                              <div className="flex items-center gap-1 bg-gray-50 dark:bg-gray-800 rounded-xl p-1 border border-gray-100 dark:border-gray-700">
+                                <button
+                                  onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1, item.stock)}
+                                  className="p-1.5 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all active:scale-95"
+                                >
+                                  <Minus className="w-3.5 h-3.5" />
+                                </button>
+                                <span className="w-8 text-center text-sm font-bold text-gray-900 dark:text-white">
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1, item.stock)}
+                                  disabled={item.quantity >= item.stock}
+                                  className="p-1.5 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+
+                              <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500">
+                                {item.stock - item.quantity} left
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            {items.length > 0 && (
+              <div className="border-t border-gray-100 dark:border-gray-800 p-6 space-y-4 bg-gray-50/50 dark:bg-gray-900/50">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-gray-500 dark:text-gray-400 text-sm">
+                    <span>Subtotal:</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {formatPrice(total, currency, exchangeRate)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2">
+                    <span className="text-base font-bold text-gray-900 dark:text-white">
+                      Total:
+                    </span>
+                    <span className="text-2xl font-black text-blue-600 dark:text-blue-400 tracking-tight">
+                      {formatPrice(total, currency, exchangeRate)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={handleCheckout}
+                    className="col-span-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 rounded-2xl transition-all duration-500 transform hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-blue-500/20 hover:shadow-xl shadow-blue-500/30 flex items-center justify-center gap-2"
+                  >
+                    Proceed to Checkout
+                  </button>
+                  <button
+                    onClick={handleViewCart}
+                    className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-800 text-gray-900 dark:text-white font-bold py-3.5 rounded-2xl transition-all hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center gap-2 text-sm shadow-sm"
+                  >
+                    <ShoppingBag className="w-4 h-4" />
+                    View Cart
+                  </button>
+                  <button
+                    onClick={() => setShowClearModal(true)}
+                    className="bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 font-bold py-3.5 rounded-2xl transition-all hover:bg-red-100 dark:hover:bg-red-900/20 text-sm flex items-center justify-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Clear
+                  </button>
+                </div>
+              </div>
+            )}
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
 
       {/* Clear Cart Confirmation Modal */}
-      {showClearModal && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
-            onClick={() => setShowClearModal(false)}
-          />
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-5 z-[70] w-full max-w-md mx-4">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-              Clear Cart?
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-5">
-              Are you sure you want to remove all items from your cart? This action cannot be undone.
-            </p>
-            <div className="flex gap-2.5">
-              <button
-                onClick={() => setShowClearModal(false)}
-                className="flex-1 px-4 py-2.5 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
-              >
-                Keep Items
-              </button>
-              <button
-                onClick={handleClearCart}
-                className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors text-sm"
-              >
-                Clear Cart
-              </button>
-            </div>
+      <AnimatePresence>
+        {showClearModal && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <motion.div
+              key="clear-modal-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowClearModal(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              key="clear-modal-content"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-8 w-full max-w-sm overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 p-8 opacity-5">
+                <Trash2 className="w-24 h-24" />
+              </div>
+              <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">
+                Clear all items?
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
+                This will remove all products from your shopping cart. This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowClearModal(false)}
+                  className="flex-1 px-4 py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white font-bold rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleClearCart}
+                  className="flex-1 px-4 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-red-500/20 active:scale-95 text-sm"
+                >
+                  Yes, Clear
+                </button>
+              </div>
+            </motion.div>
           </div>
-        </>
-      )}
+        )}
+      </AnimatePresence>
     </>
   );
 };
+
+
