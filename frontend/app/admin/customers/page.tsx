@@ -76,7 +76,7 @@ export default function CustomersPage() {
         console.log('API Response:', data);
 
         if (data.success && isMounted) {
-          const fetchedCustomers = data.customers || data.data?.customers;
+          const fetchedCustomers = (data as any).customers || data.data?.customers;
           console.log('Customers data:', fetchedCustomers);
           setCustomers(fetchedCustomers || []);
         } else {
