@@ -63,6 +63,8 @@ export default function CheckoutPage() {
     }
   }, [isAuthenticated, user, router, toast]);
 
+  const [isSettingsLoading, setIsSettingsLoading] = useState(true);
+
   // Fetch tax and shipping settings
   useEffect(() => {
     const fetchSettings = async () => {
@@ -83,6 +85,8 @@ export default function CheckoutPage() {
         }
       } catch (error) {
         console.error('Failed to fetch settings:', error);
+      } finally {
+        setIsSettingsLoading(false);
       }
     };
     fetchSettings();
@@ -142,6 +146,17 @@ export default function CheckoutPage() {
     }
   }, []);
 
+  // Preload Stripe library and initial payment intent with a slight delay to settle the page
+  useEffect(() => {
+    getStripe();
+    const timer = setTimeout(() => {
+      if (items.length > 0 && isAuthenticated && !clientSecret && !isCreatingPaymentIntent) {
+        createPaymentIntent();
+      }
+    }, 1500); // 1.5s delay to let the initial page load finish first
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, items.length]);
+
   // Persistence: Save form data when it changes (except payment method)
   useEffect(() => {
     const dataToSave = { ...formData };
@@ -198,6 +213,7 @@ export default function CheckoutPage() {
   };
 
   const createPaymentIntent = async () => {
+    if (clientSecret || isCreatingPaymentIntent) return;
     setIsCreatingPaymentIntent(true);
     try {
       const data = await apiClient('/stripe/create-payment-intent', {
@@ -211,11 +227,13 @@ export default function CheckoutPage() {
       if (data.success) {
         setClientSecret(data.data.clientSecret);
         setShowStripeForm(true);
-        toast.success('Payment Ready', 'Please enter your card details');
       }
     } catch (error: any) {
       console.error('Payment intent creation error:', error);
-      toast.error('Error', error.message || 'Failed to initialize payment');
+      // Only show error if they've actually selected card
+      if (formData.paymentMethod === 'card') {
+        toast.error('Error', error.message || 'Failed to initialize payment');
+      }
     } finally {
       setIsCreatingPaymentIntent(false);
     }
@@ -448,7 +466,12 @@ export default function CheckoutPage() {
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">Shipping Method</h2>
                 </div>
 
-                {total >= shippingSettings.freeShippingThreshold ? (
+                {isSettingsLoading ? (
+                  <div className="space-y-3 animate-pulse">
+                    <div className="h-20 bg-gray-100 dark:bg-gray-700 rounded-xl w-full" />
+                    <div className="h-20 bg-gray-100 dark:bg-gray-700 rounded-xl w-full" />
+                  </div>
+                ) : total >= shippingSettings.freeShippingThreshold ? (
                   <div className="p-4 bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-xl">
                     <div className="flex items-center gap-3">
                       <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -582,70 +605,57 @@ export default function CheckoutPage() {
                   <>
                     <CustomDropdown
                       value={formData.paymentMethod}
-                      onChange={(value) => setFormData({ ...formData, paymentMethod: value as "cod" | "card" })}
+                      onChange={(value) => {
+                        const newMethod = value as "cod" | "card";
+                        setFormData({ ...formData, paymentMethod: newMethod });
+                        if (newMethod === 'card' && !clientSecret && !isCreatingPaymentIntent) {
+                          createPaymentIntent();
+                        }
+                      }}
                       options={[
                         { value: 'cod', label: 'Cash on Delivery' },
                         { value: 'card', label: 'Credit/Debit Card' },
                       ]}
                     />
 
-                    {/* Card Payment Integration */}
-                    {formData.paymentMethod === 'card' && !showStripeForm && (
+                    {/* Card Payment Integration & Stripe Form */}
+                    {formData.paymentMethod === 'card' && (
                       <div className="mt-4">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            createPaymentIntent();
-                            // Optional: Save client secret temporarily
-                          }}
-                          disabled={isCreatingPaymentIntent}
-                          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 shadow-lg flex items-center justify-center gap-2"
-                        >
-                          {isCreatingPaymentIntent ? (
-                            <>
-                              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                              Initializing Payment...
-                            </>
-                          ) : (
-                            <>
-                              <CreditCard className="w-5 h-5" />
-                              Continue to Payment
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Stripe Payment Form */}
-                    {formData.paymentMethod === 'card' && showStripeForm && clientSecret && (
-                      <div className="mt-4">
-                        <Elements
-                          stripe={getStripe()}
-                          options={{
-                            clientSecret,
-                            appearance: {
-                              theme: 'stripe',
-                            },
-                            loader: 'auto',
-                          }}
-                        >
-                          <StripePaymentForm
-                            amount={grandTotal}
-                            onSuccess={(paymentId) => {
-                              setPaymentIntentId(paymentId);
-                              // Sync persistence
-                              localStorage.setItem('pending_payment_intent_id', paymentId);
-                              localStorage.setItem('pending_stripe_client_secret', clientSecret);
-                              toast.success('Payment Successful!', 'You can now place your order');
+                        {!clientSecret || isCreatingPaymentIntent ? (
+                          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center min-h-[250px] animate-pulse">
+                            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4" />
+                            <p className="text-gray-900 dark:text-white font-bold text-lg mb-2">Connecting to Secure Gateway</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">Please wait a moment...</p>
+                          </div>
+                        ) : (
+                          <Elements
+                            stripe={getStripe()}
+                            options={{
+                              clientSecret,
+                              appearance: {
+                                theme: 'stripe',
+                              },
+                              loader: 'auto',
                             }}
-                            onError={(error) => {
-                              toast.error('Payment Failed', error);
-                              setShowStripeForm(false);
-                              setClientSecret(null);
-                              localStorage.removeItem('pending_stripe_client_secret');
-                            }}
-                          />
-                        </Elements>
+                          >
+                            <StripePaymentForm
+                              amount={grandTotal}
+                              onSuccess={(paymentId) => {
+                                setPaymentIntentId(paymentId);
+                                // Sync persistence
+                                localStorage.setItem('pending_payment_intent_id', paymentId);
+                                localStorage.setItem('pending_stripe_client_secret', clientSecret);
+                                toast.success('Payment Successful!', 'You can now place your order');
+                              }}
+                              onError={(error) => {
+                                toast.error('Payment Failed', error);
+                                setShowStripeForm(false);
+                                setClientSecret(null);
+                                localStorage.removeItem('pending_stripe_client_secret');
+                              }}
+                            />
+                          </Elements>
+                        )}
                       </div>
                     )}
                   </>

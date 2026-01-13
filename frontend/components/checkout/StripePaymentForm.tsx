@@ -15,6 +15,7 @@ export default function StripePaymentForm({ onSuccess, onError, amount }: Stripe
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const handlePayment = async () => {
     if (!stripe || !elements || isProcessing || paymentCompleted) {
@@ -60,8 +61,29 @@ export default function StripePaymentForm({ onSuccess, onError, amount }: Stripe
         </p>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700">
-        <PaymentElement />
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 relative min-h-[250px]">
+        {isLoading && (
+          <div className="absolute inset-0 flex flex-col p-4 space-y-4">
+            <div className="flex items-center gap-2 mb-2 animate-pulse">
+              <div className="w-4 h-4 bg-blue-200 dark:bg-blue-800 rounded-full" />
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-48" />
+            </div>
+            <div className="space-y-4 animate-pulse">
+              <div className="h-12 bg-gray-100 dark:bg-gray-700 rounded-lg w-full" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="h-12 bg-gray-100 dark:bg-gray-700 rounded-lg w-full" />
+                <div className="h-12 bg-gray-100 dark:bg-gray-700 rounded-lg w-full" />
+              </div>
+              <div className="h-12 bg-gray-100 dark:bg-gray-700 rounded-lg w-full" />
+            </div>
+            <p className="text-center text-xs text-gray-500 animate-pulse mt-2">
+              Loading secure payment form...
+            </p>
+          </div>
+        )}
+        <div className={isLoading ? 'opacity-0' : 'opacity-100 transition-opacity duration-300'}>
+          <PaymentElement onReady={() => setIsLoading(false)} />
+        </div>
       </div>
 
       <button
