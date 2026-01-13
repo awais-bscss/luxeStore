@@ -4,6 +4,7 @@ import stripeService from '../services/stripe.service';
 import Cart from '../models/Cart.model';
 import { asyncHandler } from '../utils/asyncHandler';
 import { ValidationError } from '../utils/errors';
+import SystemSettings from '../models/SystemSettings.model';
 
 /**
  * Create Payment Intent
@@ -23,7 +24,6 @@ export const createPaymentIntent = asyncHandler(
     }
 
     // Get system settings for accurate calculation
-    const SystemSettings = (await import('../models/SystemSettings.model')).default;
     const settings = await SystemSettings.findOne();
 
     // Calculate total amount in base currency (PKR)

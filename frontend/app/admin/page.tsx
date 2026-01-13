@@ -201,7 +201,7 @@ export default function AdminDashboard() {
         }
 
         // 4. Process Recent Orders
-        if (recentOrderRes.success && recentOrderRes.data.orders) {
+        if (recentOrderRes.success && recentOrderRes.data?.orders) {
           setRecentOrders(recentOrderRes.data.orders);
         }
 

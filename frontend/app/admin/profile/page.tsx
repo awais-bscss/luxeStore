@@ -118,20 +118,22 @@ export default function ProfilePage() {
       if (response.ok && data.success) {
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
 
-        console.log('Updating Redux with:', data.data.user);
+        const userData = data.user || data.data?.user;
 
-        // Update Redux store
-        dispatch({
-          type: 'auth/setCredentials',
-          payload: {
-            user: {
-              ...user,
-              name: data.data.user.name,
-              profileImage: data.data.user.profileImage,
+        if (userData) {
+          // Update Redux store
+          dispatch({
+            type: 'auth/setCredentials',
+            payload: {
+              user: {
+                ...user,
+                name: userData.name || user?.name,
+                profileImage: userData.profileImage || user?.profileImage,
+              },
+              token: user ? (user as any).token : (data.token || ''),
             },
-            token: user ? (user as any).token : '',
-          },
-        });
+          });
+        }
 
         // Reload to update sidebar
         setTimeout(() => {

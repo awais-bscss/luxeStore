@@ -317,7 +317,7 @@ function AdminLayoutContent({
             {user?.profileImage ? (
               <img
                 src={user.profileImage}
-                alt={user.name || 'Admin'}
+                alt={user?.name || 'Admin'}
                 className="h-10 w-10 rounded-full object-cover ring-2 ring-purple-500"
               />
             ) : (

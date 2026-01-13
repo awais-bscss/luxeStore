@@ -45,7 +45,7 @@ export const signup = createAsyncThunk(
         body: JSON.stringify(credentials),
       }, dispatch as any, state);
 
-      return { token: data.token, user: data.user || data.data.user };
+      return { token: data.token, user: data.user || data.data?.user };
     } catch (error: any) {
       return rejectWithValue(error.message || 'Signup failed');
     }
@@ -62,12 +62,28 @@ export const login = createAsyncThunk(
         body: JSON.stringify(credentials),
       }, dispatch as any, state);
 
-      // Normal login (no 2FA)
-      return {
+      console.log('API Response data from /auth/login:', data);
+
+      // Check if 2FA is required (some endpoints return 200 with requiresTwoFactor: true)
+      if (data.requiresTwoFactor) {
+        console.log('2FA required flag detected in response');
+        return rejectWithValue({
+          requiresTwoFactor: true,
+          userId: data.userId,
+          message: data.message,
+        });
+      }
+
+      const loginPayload = {
         token: data.token,
-        user: data.user || data.data.user,
+        user: data.user || data.data?.user,
         passwordExpired: data.passwordExpired || false
       };
+
+      console.log('Returning login success payload:', loginPayload);
+
+      // Normal login (no 2FA)
+      return loginPayload;
     } catch (error: any) {
       // Check if 2FA is required from the error response
       if (error.status === 401 && error.data?.requiresTwoFactor) {
@@ -104,7 +120,7 @@ export const getProfile = createAsyncThunk(
     try {
       const state = getState() as any;
       const data = await apiClient('/auth/profile', {}, dispatch as any, state);
-      return data.data.user;
+      return data.user || data.data?.user;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to fetch profile');
     }
@@ -158,6 +174,14 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         console.log('=== LOGIN FULFILLED REDUCER ===');
         console.log('Action payload:', action.payload);
+
+        if (!action.payload) {
+          console.error('Login fulfilled but payload is missing');
+          state.isLoading = false;
+          state.error = 'Login failed: missing response data';
+          return;
+        }
+
         console.log('User from payload:', action.payload.user);
         console.log('User role from payload:', action.payload.user?.role);
 

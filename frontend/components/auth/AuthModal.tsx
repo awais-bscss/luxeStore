@@ -198,7 +198,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         }
       }
     } catch (err: any) {
-      console.error("Authentication error:", err);
+      console.error("Authentication error caught in AuthModal handleSubmit:", err);
+      if (err instanceof TypeError) {
+        console.error("TypeError details:", err.message, err.stack);
+      }
 
       // Extract error message properly
       let errorMessage = 'An error occurred. Please try again.';
@@ -254,8 +257,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
       if (data.success) {
         // 2FA verified - Update Redux state
+        const userData = data.user || data.data?.user;
+
+        if (!userData) {
+          console.error('2FA Success but no user data found in response:', data);
+          throw new Error('User data missing from verification response');
+        }
+
         dispatch(setCredentials({
-          user: data.data.user,
+          user: userData,
           token: data.token
         }));
 
@@ -270,7 +280,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
         // Full page redirect to ensure session is properly loaded and state is clean
         setTimeout(() => {
-          if (data.data.user.role === 'admin' || data.data.user.role === 'superadmin') {
+          if (userData.role === 'admin' || userData.role === 'superadmin') {
             window.location.href = '/admin';
           } else {
             window.location.href = '/';
