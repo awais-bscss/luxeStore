@@ -530,7 +530,7 @@ export default function ProductsPage() {
         {/* Pagination */}
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} products
+            Showing {pagination.total === 0 ? 0 : ((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} products
           </p>
           <div className="flex items-center space-x-2">
             <button
