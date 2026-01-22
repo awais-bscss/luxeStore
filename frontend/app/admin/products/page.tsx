@@ -110,7 +110,7 @@ export default function ProductsPage() {
 
       if (isMounted.current) {
         setProducts(data.data.products);
-        setPagination(data.pagination || pagination);
+        setPagination(data.data.pagination || pagination);
       }
     } catch (error: any) {
       if (error.code === 'SESSION_EXPIRED') {
