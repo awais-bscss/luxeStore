@@ -179,7 +179,10 @@ export const getProfile = asyncHandler(
  */
 export const getCustomers = asyncHandler(
   async (req: AuthRequest, res: Response): Promise<void> => {
+    console.log('=== GET CUSTOMERS ===');
+    console.log('User:', { id: req.user?._id, role: req.user?.role });
     const { page = 1, limit = 10, search, createdAt } = req.query;
+    console.log('Query:', { page, limit, search });
 
     // Build query
     const query: any = { role: 'user' };
@@ -237,6 +240,12 @@ export const getCustomers = asyncHandler(
       phone: customer.phone,
       location: customer.location,
     }));
+
+    console.log('Sending response:', {
+      success: true,
+      customersCount: formattedCustomers.length,
+      total,
+    });
 
     res.status(200).json({
       success: true,

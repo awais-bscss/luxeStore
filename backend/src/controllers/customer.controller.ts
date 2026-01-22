@@ -9,6 +9,7 @@ import { USER_ROLES } from '../constants';
  */
 export const getAllCustomers = async (_req: Request, res: Response) => {
   try {
+    console.log('=== GET ALL CUSTOMERS ===');
     // Find all users with role 'user' (customers)
     const customers = await User.find({ role: USER_ROLES.USER })
       .select('-password')
@@ -29,6 +30,11 @@ export const getAllCustomers = async (_req: Request, res: Response) => {
       totalSpent: customer.totalSpent || 0,
       lastOrder: customer.lastOrder || null,
     }));
+
+    console.log('Sending response (getAllCustomers):', {
+      success: true,
+      customersCount: customersData.length,
+    });
 
     return res.status(200).json({
       success: true,

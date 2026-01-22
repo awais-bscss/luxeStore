@@ -72,25 +72,41 @@ export default function CustomersPage() {
         setError(null);
 
         console.log('Fetching customers from API...');
-        const data = await apiClient('/users/customers', {}, dispatch, state);
-        console.log('API Response:', data);
+        // Try the dedicated customers endpoint instead of the nested user one
+        const data = await apiClient('/customers', {}, dispatch, state);
+        console.log('API Response Structure:', {
+          hasSuccess: !!data.success,
+          success: data.success,
+          hasData: !!data.data,
+          dataType: typeof data.data,
+          dataKeys: data.data ? Object.keys(data.data) : []
+        });
 
-        if (data.success && isMounted) {
-          const fetchedCustomers = (data as any).customers || data.data?.customers;
-          console.log('Customers data:', fetchedCustomers);
-          setCustomers(fetchedCustomers || []);
-        } else {
-          console.error('API returned success=false or no data:', data);
-          throw new Error(data.message || 'Failed to fetch customers');
+        if (!data.success || !data.data) {
+          console.error('API Response Check Failed:', { 
+            success: data.success, 
+            hasData: !!data.data,
+            message: data.message 
+          });
+          throw new Error(data.message || 'Failed to fetch customers: Invalid response structure');
+        }
+
+        if (isMounted) {
+          const fetchedCustomers = Array.isArray(data.data) ? data.data : (data.data.customers || []);
+          console.log('Successfully fetched customers:', fetchedCustomers.length);
+          setCustomers(fetchedCustomers);
         }
       } catch (err: any) {
+        if (!isMounted) return; // Ignore errors if component is unmounted
+
         console.error('Error in fetchCustomers:', err);
         if (err.code === 'SESSION_EXPIRED') {
           toast.error('Session Expired', err.message);
           router.push('/login?redirect=/admin/customers&reason=session_expired');
+        } else if (err.code === 'API_ERROR' || err.code === 'NETWORK_ERROR') {
+          setError(err.message);
         } else {
-          console.error('Error fetching customers:', err);
-          if (isMounted) setError(err.message || 'Failed to load customers');
+          setError(err.message || 'An unexpected error occurred while loading customers');
         }
       } finally {
         if (isMounted) setIsLoading(false);
