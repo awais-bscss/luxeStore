@@ -42,7 +42,6 @@ LuxeStore is organized as a monorepo for ease of development:
 LuxeStore/
 ├── frontend/        # Next.js Application (Port 3000)
 ├── backend/         # Node.js API Service (Port 5000)
-└── MD/              # Historical documentation and fix logs (Internal)
 ```
 
 ---
