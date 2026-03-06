@@ -10,23 +10,23 @@ LuxeStore is a full-stack, high-performance e-commerce solution designed for mod
 
 ---
 
-## 🌟 Key Highlights
+## Key Highlights
 
-### 🎨 Frontend (Next.js 14)
+### Frontend (Next.js 14)
 *   **Aesthetic Design**: Modern, clean, and premium UI with smooth transitions.
 *   **Dual Themes**: Seamless Light/Dark mode integration.
 *   **Performance**: Server-side rendering and image optimization for lightning-fast loads.
 *   **Responsive**: Fully optimized for mobile, tablet, and desktop experiences.
 *   **State Management**: Complex state handled efficiently with Redux Toolkit.
 
-### ⚙️ Backend (Node.js & Express)
+### Backend (Node.js & Express)
 *   **Secure Auth**: JWT-based authentication with role-based access control (RBAC).
 *   **Verified Accounts**: Complete email verification and password reset flows.
 *   **Payment Ready**: Integrated with Stripe for secure transactional processing.
 *   **Media Hosting**: Dynamic image management via Cloudinary.
 *   **Scalable DB**: MongoDB integration with advanced schema design.
 
-### 🛡️ Admin Dashboard
+### Admin Dashboard
 *   **Analytics**: Real-time sales and customer growth insights.
 *   **Inventory Control**: Advanced product, stock, and category management.
 *   **Order Fulfillment**: End-to-end order tracking and status management.
@@ -34,7 +34,7 @@ LuxeStore is a full-stack, high-performance e-commerce solution designed for mod
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 LuxeStore is organized as a monorepo for ease of development:
 
@@ -47,7 +47,7 @@ LuxeStore/
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Clone the repository
 ```bash
@@ -75,7 +75,7 @@ npm run dev
 
 ---
 
-## 🔑 Demo Credentials
+## Demo Credentials
 
 For demonstration and testing purposes:
 
@@ -87,7 +87,7 @@ For demonstration and testing purposes:
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 | Sphere | Technologies |
 | :--- | :--- |
@@ -99,7 +99,7 @@ For demonstration and testing purposes:
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
