@@ -88,6 +88,24 @@ export default function ProductsPage() {
     }
   }, [showActions]);
 
+  // Lock body scroll whenever any modal is open
+  useEffect(() => {
+    const anyOpen = viewModal.show || deleteModal.show;
+    if (!anyOpen) return;
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, [viewModal.show, deleteModal.show]);
+
   useEffect(() => {
     fetchProducts();
   }, [token, pagination.page, selectedCategory, selectedStatus, debouncedSearch]);

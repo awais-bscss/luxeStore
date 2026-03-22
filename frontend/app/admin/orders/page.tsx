@@ -52,6 +52,24 @@ export default function AdminOrdersPage() {
     }));
   }, [dispatch, token, statusFilter, paymentFilter, currentPage, itemsPerPage]);
 
+  // Lock body scroll whenever any modal is open
+  useEffect(() => {
+    const anyOpen = showStatusModal || showPaymentModal || showBlockedModal;
+    if (!anyOpen) return;
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, [showStatusModal, showPaymentModal, showBlockedModal]);
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -148,7 +166,7 @@ export default function AdminOrdersPage() {
         {/* Info Banner */}
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
@@ -422,7 +440,7 @@ export default function AdminOrdersPage() {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
             onClick={() => setShowStatusModal(false)}
           />
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 z-[60] w-full max-w-md mx-4">
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 z-60 w-full max-w-md mx-4">
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
               Update Order Status
             </h3>
@@ -456,7 +474,7 @@ export default function AdminOrdersPage() {
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
               onClick={() => setShowPaymentModal(false)}
             />
-            <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 z-[60] w-full max-w-md mx-4">
+            <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 z-60 w-full max-w-md mx-4">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                 Update Payment Status
               </h3>
@@ -487,7 +505,7 @@ export default function AdminOrdersPage() {
         showBlockedModal && (
           <>
             <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50" />
-            <div className="fixed inset-0 flex items-center justify-center z-[60] p-4">
+            <div className="fixed inset-0 flex items-center justify-center z-60 p-4">
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-8 relative">
                 <button
                   onClick={() => {

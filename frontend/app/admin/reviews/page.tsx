@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 import CustomDropdown from '@/components/ui/CustomDropdown';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -64,6 +65,12 @@ export default function AdminReviewsPage() {
     limit: 10,
     total: 0,
     pages: 0,
+  });
+
+  // Delete confirmation modal state
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; reviewId: string | null }>({
+    open: false,
+    reviewId: null,
   });
 
   // Check if user is admin
@@ -126,10 +133,10 @@ export default function AdminReviewsPage() {
         // Filter by search term
         if (searchTerm) {
           filteredReviews = filteredReviews.filter((r: Review) =>
-            r.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            r.comment.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            r.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            r.product.name.toLowerCase().includes(searchTerm.toLowerCase())
+            r.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            r.comment?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            r.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            r.product?.name?.toLowerCase().includes(searchTerm.toLowerCase())
           );
         }
 
@@ -182,11 +189,13 @@ export default function AdminReviewsPage() {
       toast.error('Permission Denied', 'Only Super Admins can permanently delete reviews');
       return;
     }
+    // Open the confirm modal instead of window.confirm
+    setDeleteModal({ open: true, reviewId });
+  };
 
-    if (!window.confirm('Are you sure you want to PERMANENTLY delete this review? This action cannot be undone.')) {
-      return;
-    }
-
+  const confirmDeleteReview = async () => {
+    if (!deleteModal.reviewId) return;
+    const reviewId = deleteModal.reviewId;
     try {
       const response = await fetch(`${API_URL}/reviews/${reviewId}`, {
         method: 'DELETE',
@@ -224,6 +233,17 @@ export default function AdminReviewsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.open}
+        onClose={() => setDeleteModal({ open: false, reviewId: null })}
+        onConfirm={confirmDeleteReview}
+        type="danger"
+        title="Delete Review"
+        message="Are you sure you want to permanently delete this review? This action cannot be undone."
+        confirmText="Yes, Delete"
+        cancelText="Cancel"
+      />
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -334,14 +354,20 @@ export default function AdminReviewsPage() {
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
                   {/* Product Info */}
                   <div className="flex items-center gap-3 sm:gap-4 flex-1">
-                    <img
-                      src={review.product.thumbnail}
-                      alt={review.product.name}
-                      className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg shadow-sm"
-                    />
+                    {review.product?.thumbnail ? (
+                      <img
+                        src={review.product.thumbnail}
+                        alt={review.product?.name || 'Deleted product'}
+                        className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg shadow-sm"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center shrink-0">
+                        <MessageSquare className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+                      </div>
+                    )}
                     <div className="min-w-0">
                       <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base truncate">
-                        {review.product.name}
+                        {review.product?.name || <span className="italic text-gray-400">Deleted product</span>}
                       </h3>
                       <div className="flex items-center gap-1 mt-1">
                         {[...Array(5)].map((_, i) => (
@@ -405,11 +431,11 @@ export default function AdminReviewsPage() {
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4" />
-                      <span className="font-medium">{review.user.name}</span>
+                      <span className="font-medium">{review.user?.name || 'Deleted user'}</span>
                     </div>
                     <div className="flex items-center gap-2 max-w-[200px] sm:max-w-none">
                       <Mail className="w-4 h-4" />
-                      <span className="truncate">{review.user.email}</span>
+                      <span className="truncate">{review.user?.email || '—'}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />

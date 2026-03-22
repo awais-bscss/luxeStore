@@ -75,7 +75,9 @@ export async function apiClient<T = any>(
     });
 
     // Global session expiration handling (401 Unauthorized)
-    if (response.status === 401 && dispatch) {
+    // Skip auth endpoints — a 401 there means wrong credentials, not expired session
+    const isAuthEndpoint = endpoint.startsWith('/auth/') || endpoint === '/auth';
+    if (response.status === 401 && dispatch && !isAuthEndpoint) {
       console.warn('Session expired - triggering logout');
       dispatch(logout());
       // Throw standard error object for handling in thunks

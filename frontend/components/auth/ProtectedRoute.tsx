@@ -19,7 +19,7 @@ export default function ProtectedRoute({ children, requireAdmin = false, allowPa
     if (!isLoading) {
       if (!isAuthenticated) {
         // Not authenticated - redirect to login page
-        router.push("/login?redirect=" + encodeURIComponent(window.location.pathname));
+        router.push("/?auth=required&redirect=" + encodeURIComponent(window.location.pathname));
         return;
       }
 

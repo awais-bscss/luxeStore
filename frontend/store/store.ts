@@ -8,6 +8,7 @@ import toastReducer from '@/store/slices/toastSlice';
 import authReducer from '@/store/slices/authSlice';
 import themeReducer from '@/store/slices/themeSlice';
 import orderReducer from '@/store/slices/orderSlice';
+import blogReducer from '@/store/slices/blogSlice';
 
 // PERSIST CONFIGURATION
 const persistConfig = {
@@ -25,6 +26,7 @@ const appReducer = combineReducers({
   auth: authReducer,
   theme: themeReducer,
   orders: orderReducer,
+  blogs: blogReducer,
 });
 
 // ROOT REDUCER WITH LOGOUT RESET

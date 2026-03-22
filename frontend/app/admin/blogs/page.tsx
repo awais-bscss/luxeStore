@@ -8,73 +8,71 @@ import {
   Calendar, User, Tag, FileText, Upload
 } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
+import { useAppDispatch } from '@/hooks/useRedux';
+import {
+  fetchBlogs,
+  createBlog,
+  updateBlog,
+  deleteBlog,
+  toggleBlogStatus,
+  uploadBlogImage,
+  Blog,
+  BlogFormData,
+} from '@/store/slices/blogSlice';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
-interface Blog {
-  _id: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  content: string;
-  featuredImage?: string;
-  author: {
-    _id: string;
-    name: string;
-    email: string;
-  };
-  category: string;
-  tags: string[];
-  isPublished: boolean;
-  publishedAt?: string;
-  views: number;
-  createdAt: string;
-  updatedAt: string;
-}
+// ─── Default form state ───────────────────────────────────────────────────────
+const emptyForm: BlogFormData = {
+  title: '',
+  excerpt: '',
+  content: '',
+  category: '',
+  tags: '',
+  featuredImage: '',
+  isPublished: false,
+};
 
 export default function AdminBlogsPage() {
   const toast = useToast();
-  const { user } = useSelector((state: RootState) => state.auth);
+  const dispatch = useAppDispatch();
 
-  const [blogs, setBlogs] = useState<Blog[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { blogs, isLoading, isSubmitting } = useSelector((state: RootState) => state.blogs);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState<BlogFormData>(emptyForm);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-  const [formData, setFormData] = useState({
-    title: '',
-    excerpt: '',
-    content: '',
-    category: '',
-    tags: '',
-    featuredImage: '',
-    isPublished: false,
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; blogId: string | null }>({
+    open: false,
+    blogId: null,
   });
 
+  // ─── Fetch on mount ─────────────────────────────────────────────────────────
   useEffect(() => {
-    fetchBlogs();
-  }, []);
+    dispatch(fetchBlogs());
+  }, [dispatch]);
 
-  const fetchBlogs = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/blogs`, {
-        credentials: 'include',
-      });
-      const data = await response.json();
-      if (data.success) {
-        setBlogs(data.data.blogs);
-      }
-    } catch (error) {
-      console.error('Error fetching blogs:', error);
-      toast.error('Error', 'Failed to fetch blogs');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // ─── Scroll lock ────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const anyOpen = showModal || deleteModal.open;
+    if (!anyOpen) return;
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, [showModal, deleteModal.open]);
 
+  // ─── Modal helpers ──────────────────────────────────────────────────────────
   const handleOpenModal = (blog?: Blog) => {
     if (blog) {
       setEditingBlog(blog);
@@ -89,15 +87,7 @@ export default function AdminBlogsPage() {
       });
     } else {
       setEditingBlog(null);
-      setFormData({
-        title: '',
-        excerpt: '',
-        content: '',
-        category: '',
-        tags: '',
-        featuredImage: '',
-        isPublished: false,
-      });
+      setFormData(emptyForm);
     }
     setShowModal(true);
   };
@@ -105,121 +95,103 @@ export default function AdminBlogsPage() {
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingBlog(null);
-    setFormData({
-      title: '',
-      excerpt: '',
-      content: '',
-      category: '',
-      tags: '',
-      featuredImage: '',
-      isPublished: false,
-    });
+    setFormData(emptyForm);
   };
 
+  // ─── Submit (create / update) ────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const tagsArray = formData.tags
-        .split(',')
-        .map(tag => tag.trim())
-        .filter(tag => tag);
-
-      const blogData = {
-        ...formData,
-        tags: tagsArray,
-      };
-
-      const url = editingBlog
-        ? `${API_URL}/blogs/${editingBlog._id}`
-        : `${API_URL}/blogs`;
-
-      const method = editingBlog ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(blogData),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success('Success', editingBlog ? 'Blog updated successfully' : 'Blog created successfully');
+    if (editingBlog) {
+      const result = await dispatch(updateBlog({ id: editingBlog._id, formData }));
+      if (updateBlog.fulfilled.match(result)) {
+        toast.success('Success', 'Blog updated successfully');
         handleCloseModal();
-        fetchBlogs();
       } else {
-        toast.error('Error', data.message || 'Failed to save blog');
+        toast.error('Error', (result.payload as string) || 'Failed to update blog');
       }
-    } catch (error) {
-      console.error('Error saving blog:', error);
-      toast.error('Error', 'Failed to save blog');
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      const result = await dispatch(createBlog(formData));
+      if (createBlog.fulfilled.match(result)) {
+        toast.success('Success', 'Blog created successfully');
+        handleCloseModal();
+      } else {
+        toast.error('Error', (result.payload as string) || 'Failed to create blog');
+      }
     }
   };
 
+  // ─── Toggle publish ──────────────────────────────────────────────────────────
   const handleToggleStatus = async (blogId: string) => {
-    try {
-      const response = await fetch(`${API_URL}/blogs/${blogId}/toggle-status`, {
-        method: 'PATCH',
-        credentials: 'include',
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success('Success', data.message);
-        fetchBlogs();
-      } else {
-        toast.error('Error', data.message || 'Failed to toggle status');
-      }
-    } catch (error) {
-      console.error('Error toggling status:', error);
-      toast.error('Error', 'Failed to toggle status');
+    const result = await dispatch(toggleBlogStatus(blogId));
+    if (toggleBlogStatus.fulfilled.match(result)) {
+      toast.success('Success', result.payload.isPublished ? 'Blog published' : 'Blog unpublished');
+    } else {
+      toast.error('Error', (result.payload as string) || 'Failed to toggle status');
     }
   };
 
-  const handleDelete = async (blogId: string) => {
-    if (!confirm('Are you sure you want to delete this blog?')) return;
+  // ─── Delete ──────────────────────────────────────────────────────────────────
+  const handleDelete = (blogId: string) => {
+    setDeleteModal({ open: true, blogId });
+  };
 
-    try {
-      const response = await fetch(`${API_URL}/blogs/${blogId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success('Success', 'Blog deleted successfully');
-        fetchBlogs();
-      } else {
-        toast.error('Error', data.message || 'Failed to delete blog');
-      }
-    } catch (error) {
-      console.error('Error deleting blog:', error);
-      toast.error('Error', 'Failed to delete blog');
+  const confirmDelete = async () => {
+    if (!deleteModal.blogId) return;
+    const result = await dispatch(deleteBlog(deleteModal.blogId));
+    if (deleteBlog.fulfilled.match(result)) {
+      toast.success('Success', 'Blog deleted successfully');
+    } else {
+      toast.error('Error', (result.payload as string) || 'Failed to delete blog');
     }
   };
 
-  const filteredBlogs = blogs.filter(blog => {
-    const query = searchQuery.toLowerCase();
+  // ─── Image upload ────────────────────────────────────────────────────────────
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Error', 'Image size must be less than 5MB');
+      return;
+    }
+    setIsUploadingImage(true);
+    const result = await dispatch(uploadBlogImage(file));
+    setIsUploadingImage(false);
+    if (uploadBlogImage.fulfilled.match(result)) {
+      setFormData((prev) => ({ ...prev, featuredImage: result.payload }));
+      toast.success('Success', 'Image uploaded successfully');
+    } else {
+      toast.error('Error', (result.payload as string) || 'Failed to upload image');
+    }
+    e.target.value = '';
+  };
+
+  // ─── Filtered list ───────────────────────────────────────────────────────────
+  const filteredBlogs = blogs.filter((blog) => {
+    const q = searchQuery.toLowerCase();
     return (
-      blog.title.toLowerCase().includes(query) ||
-      blog.excerpt.toLowerCase().includes(query) ||
-      blog.category.toLowerCase().includes(query) ||
-      blog.author.name.toLowerCase().includes(query) ||
-      blog.tags.some(tag => tag.toLowerCase().includes(query))
+      blog.title.toLowerCase().includes(q) ||
+      blog.excerpt.toLowerCase().includes(q) ||
+      blog.category.toLowerCase().includes(q) ||
+      blog.author.name.toLowerCase().includes(q) ||
+      blog.tags.some((tag) => tag.toLowerCase().includes(q))
     );
   });
 
+  // ─── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="p-6">
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.open}
+        onClose={() => setDeleteModal({ open: false, blogId: null })}
+        onConfirm={confirmDelete}
+        type="danger"
+        title="Delete Blog Post"
+        message="Are you sure you want to delete this blog post? This action cannot be undone."
+        confirmText="Yes, Delete"
+        cancelText="Cancel"
+      />
+
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -233,7 +205,6 @@ export default function AdminBlogsPage() {
       {/* Actions Bar */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
         <div className="flex flex-col md:flex-row gap-4 justify-between">
-          {/* Search */}
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -244,8 +215,6 @@ export default function AdminBlogsPage() {
               className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
-
-          {/* Add Button */}
           <button
             onClick={() => handleOpenModal()}
             className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
@@ -264,11 +233,11 @@ export default function AdminBlogsPage() {
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Published</div>
-          <div className="text-2xl font-bold text-green-600">{blogs.filter(b => b.isPublished).length}</div>
+          <div className="text-2xl font-bold text-green-600">{blogs.filter((b) => b.isPublished).length}</div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Drafts</div>
-          <div className="text-2xl font-bold text-yellow-600">{blogs.filter(b => !b.isPublished).length}</div>
+          <div className="text-2xl font-bold text-yellow-600">{blogs.filter((b) => !b.isPublished).length}</div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Views</div>
@@ -342,7 +311,7 @@ export default function AdminBlogsPage() {
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${blog.isPublished
                       ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
                       : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-                      }`}>
+                    }`}>
                       {blog.isPublished ? 'Published' : 'Draft'}
                     </span>
                   </div>
@@ -414,7 +383,7 @@ export default function AdminBlogsPage() {
         </div>
       )}
 
-      {/* Create/Edit Modal */}
+      {/* Create / Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
@@ -514,8 +483,6 @@ export default function AdminBlogsPage() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Featured Image
                 </label>
-
-                {/* Image Preview */}
                 {formData.featuredImage && (
                   <div className="relative mb-3">
                     <img
@@ -532,48 +499,11 @@ export default function AdminBlogsPage() {
                     </button>
                   </div>
                 )}
-
-                {/* Upload Button */}
                 <div className="flex gap-2">
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-
-                      // Validate file size (max 5MB)
-                      if (file.size > 5 * 1024 * 1024) {
-                        toast.error('Error', 'Image size must be less than 5MB');
-                        return;
-                      }
-
-                      try {
-                        const formData = new FormData();
-                        formData.append('image', file);
-
-                        const response = await fetch(`${API_URL}/upload/blog-image`, {
-                          method: 'POST',
-                          credentials: 'include',
-                          body: formData,
-                        });
-
-                        const data = await response.json();
-
-                        if (data.success) {
-                          setFormData(prev => ({ ...prev, featuredImage: data.data.url }));
-                          toast.success('Success', 'Image uploaded successfully');
-                        } else {
-                          toast.error('Error', data.message || 'Failed to upload image');
-                        }
-                      } catch (error) {
-                        console.error('Upload error:', error);
-                        toast.error('Error', 'Failed to upload image');
-                      }
-
-                      // Reset input
-                      e.target.value = '';
-                    }}
+                    onChange={handleImageUpload}
                     className="hidden"
                     id="blog-image-upload"
                   />
@@ -581,9 +511,13 @@ export default function AdminBlogsPage() {
                     htmlFor="blog-image-upload"
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-purple-500 dark:hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all cursor-pointer"
                   >
-                    <Upload className="w-5 h-5" />
+                    {isUploadingImage ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Upload className="w-5 h-5" />
+                    )}
                     <span className="font-medium">
-                      {formData.featuredImage ? 'Change Image' : 'Upload Image'}
+                      {isUploadingImage ? 'Uploading...' : formData.featuredImage ? 'Change Image' : 'Upload Image'}
                     </span>
                   </label>
                 </div>

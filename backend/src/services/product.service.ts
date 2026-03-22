@@ -1,4 +1,5 @@
 import Product from '../models/Product.model';
+import Review from '../models/Review.model';
 import { ValidationError, NotFoundError } from '../utils/errors';
 
 class ProductService {
@@ -124,10 +125,15 @@ class ProductService {
   }
 
   async deleteProduct(id: string) {
-    const product = await Product.findByIdAndDelete(id);
+    const product = await Product.findById(id);
     if (!product) {
       throw new NotFoundError('Product not found');
     }
+
+    // Delete all reviews for this product first (cascade delete)
+    await Review.deleteMany({ product: id });
+
+    await product.deleteOne();
     return product;
   }
 

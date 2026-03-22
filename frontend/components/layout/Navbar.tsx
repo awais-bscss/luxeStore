@@ -3,7 +3,7 @@
 // IMPORTS
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/hooks/useRedux";
 import { RootState } from "@/store/store";
 import { logout } from "@/store/slices/authSlice";
@@ -44,6 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onCartOpen }) => {
   const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
 
   const cartItems = useAppSelector((state: RootState) => state.cart.items);
@@ -106,6 +107,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onCartOpen }) => {
   };
 
 
+
+  // Auto-open AuthModal when redirected here with ?auth=required
+  useEffect(() => {
+    if (searchParams.get('auth') === 'required') {
+      setAuthDropdownOpen(true);
+      // Clean the param from the URL without a full navigation
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('auth');
+      const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+      window.history.replaceState(null, '', newUrl);
+    }
+  }, [searchParams]);
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
