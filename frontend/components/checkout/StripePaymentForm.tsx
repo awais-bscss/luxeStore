@@ -49,7 +49,7 @@ export default function StripePaymentForm({ onSuccess, onError, amount }: Stripe
 
   return (
     <div className="space-y-4">
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-4 rounded-xl border border-blue-200 dark:border-blue-800">
+      <div className="bg-linear-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-4 rounded-xl border border-blue-200 dark:border-blue-800">
         <div className="flex items-center gap-2 mb-2">
           <Lock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
           <span className="text-sm font-semibold text-blue-900 dark:text-blue-300">
@@ -63,21 +63,13 @@ export default function StripePaymentForm({ onSuccess, onError, amount }: Stripe
 
       <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 relative min-h-[250px]">
         {isLoading && (
-          <div className="absolute inset-0 flex flex-col p-4 space-y-4">
-            <div className="flex items-center gap-2 mb-2 animate-pulse">
-              <div className="w-4 h-4 bg-blue-200 dark:bg-blue-800 rounded-full" />
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-48" />
-            </div>
-            <div className="space-y-4 animate-pulse">
-              <div className="h-12 bg-gray-100 dark:bg-gray-700 rounded-lg w-full" />
-              <div className="grid grid-cols-2 gap-4">
-                <div className="h-12 bg-gray-100 dark:bg-gray-700 rounded-lg w-full" />
-                <div className="h-12 bg-gray-100 dark:bg-gray-700 rounded-lg w-full" />
-              </div>
-              <div className="h-12 bg-gray-100 dark:bg-gray-700 rounded-lg w-full" />
-            </div>
-            <p className="text-center text-xs text-gray-500 animate-pulse mt-2">
-              Loading secure payment form...
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-gray-900 dark:text-white font-bold text-lg mb-2 animate-pulse">
+              Loading Secure Payment Form
+            </p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm animate-pulse">
+              Please wait while we initialize the secure gateway...
             </p>
           </div>
         )}
@@ -90,7 +82,7 @@ export default function StripePaymentForm({ onSuccess, onError, amount }: Stripe
         type="button"
         onClick={handlePayment}
         disabled={!stripe || isProcessing || paymentCompleted}
-        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 shadow-lg flex items-center justify-center gap-2"
+        className="w-full bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 shadow-lg flex items-center justify-center gap-2"
       >
         {paymentCompleted ? (
           <>

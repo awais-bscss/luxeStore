@@ -624,8 +624,8 @@ export default function CheckoutPage() {
                         {!clientSecret || isCreatingPaymentIntent ? (
                           <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center min-h-[250px] animate-pulse">
                             <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4" />
-                            <p className="text-gray-900 dark:text-white font-bold text-lg mb-2">Connecting to Secure Gateway</p>
-                            <p className="text-gray-500 dark:text-gray-400 text-sm">Please wait a moment...</p>
+                            <p className="text-gray-900 dark:text-white font-bold text-lg mb-2">Initializing Secure Payment</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">Connecting to secure gateway...</p>
                           </div>
                         ) : (
                           <Elements
