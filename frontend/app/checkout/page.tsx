@@ -9,7 +9,7 @@ import { clearCartLocal } from "@/store/slices/cartSlice";
 import { Navbar } from "@/components/layout/Navbar";
 import { CartSidebar } from "@/components/cart/CartSidebar";
 import CustomDropdown from "@/components/ui/CustomDropdown";
-import { ShoppingCart, CheckCircle, MapPin, User, Phone, Wallet, AlertTriangle, Mail, X, CreditCard, Truck } from "lucide-react";
+import { ShoppingCart, CheckCircle, MapPin, User, Phone, Wallet, AlertTriangle, Mail, X, CreditCard, Truck, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 import { useCurrency, useExchangeRate } from "@/contexts/SettingsContext";
 import { formatPrice } from "@/lib/currency";
@@ -317,7 +317,7 @@ export default function CheckoutPage() {
   // Only show empty cart if cart is truly empty AND not placing order AND order hasn't been placed
   if (items.length === 0 && !isPlacingOrder && !orderPlaced) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-slate-900 dark:to-gray-900">
+      <div className="min-h-screen bg-linear-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-slate-900 dark:to-gray-900">
         <Navbar onCartOpen={() => setCartOpen(true)} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
           <div className="text-center">
@@ -326,7 +326,7 @@ export default function CheckoutPage() {
             <p className="text-gray-600 dark:text-gray-400 mb-8">Add some products to your cart before checking out.</p>
             <button
               onClick={() => router.push("/")}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl font-bold hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
+              className="bg-linear-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl font-bold hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
             >
               Continue Shopping
             </button>
@@ -339,7 +339,7 @@ export default function CheckoutPage() {
 
   if (isPlacingOrder && currentOrder) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-slate-900 dark:to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-slate-900 dark:to-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-12 max-w-md">
             <CheckCircle className="w-24 h-24 mx-auto mb-6 text-green-500" />
@@ -353,10 +353,18 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-slate-900 dark:to-gray-900">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-slate-900 dark:to-gray-900">
       <Navbar onCartOpen={() => setCartOpen(true)} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <button
+          onClick={() => router.push("/")}
+          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 mb-6 transition-colors group"
+        >
+          <ChevronLeft className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" />
+          <span className="font-medium">Back to Shopping</span>
+        </button>
+
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-8">Checkout</h1>
 
         {/* Email Verification Warning Banner - Only for standard users */}
@@ -678,7 +686,7 @@ export default function CheckoutPage() {
               <button
                 type="submit"
                 disabled={isLoading || isPlacingOrder || isCreatingPaymentIntent || (formData.paymentMethod === 'card' && !paymentIntentId)}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 shadow-lg flex items-center justify-center gap-2"
+                className="w-full bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 shadow-lg flex items-center justify-center gap-2"
               >
                 {isLoading || isPlacingOrder ? (
                   <>
