@@ -17,9 +17,11 @@ import {
   Truck
 } from "lucide-react";
 import Link from "next/link";
+import { useSettings } from "@/contexts/SettingsContext";
 
 export const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
+  const { settings } = useSettings();
 
   const footerLinks = {
     shop: [
@@ -71,7 +73,7 @@ export const Footer: React.FC = () => {
   ];
 
   return (
-    <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-300">
+    <footer className="bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-300">
       {/* <div className="border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -131,7 +133,7 @@ export const Footer: React.FC = () => {
                   className="w-full h-full object-contain"
                 />
               </div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                 LuxeStore
               </h2>
             </div>
@@ -165,7 +167,7 @@ export const Footer: React.FC = () => {
                     className="relative inline-block text-gray-400 hover:text-blue-400 transition-colors duration-300 text-sm group"
                   >
                     {link.name}
-                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-400 group-hover:w-full transition-all duration-300"></span>
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-linear-to-r from-blue-400 to-purple-400 group-hover:w-full transition-all duration-300"></span>
                   </Link>
                 </li>
               ))}
@@ -182,7 +184,7 @@ export const Footer: React.FC = () => {
                     className="relative inline-block text-gray-400 hover:text-blue-400 transition-colors duration-300 text-sm group"
                   >
                     {link.name}
-                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-400 group-hover:w-full transition-all duration-300"></span>
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-linear-to-r from-blue-400 to-purple-400 group-hover:w-full transition-all duration-300"></span>
                   </Link>
                 </li>
               ))}
@@ -199,7 +201,7 @@ export const Footer: React.FC = () => {
                     className="relative inline-block text-gray-400 hover:text-blue-400 transition-colors duration-300 text-sm group"
                   >
                     {link.name}
-                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-400 group-hover:w-full transition-all duration-300"></span>
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-linear-to-r from-blue-400 to-purple-400 group-hover:w-full transition-all duration-300"></span>
                   </Link>
                 </li>
               ))}
@@ -216,7 +218,7 @@ export const Footer: React.FC = () => {
                     className="relative inline-block text-gray-400 hover:text-blue-400 transition-colors duration-300 text-sm group"
                   >
                     {link.name}
-                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-400 group-hover:w-full transition-all duration-300"></span>
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-linear-to-r from-blue-400 to-purple-400 group-hover:w-full transition-all duration-300"></span>
                   </Link>
                 </li>
               ))}
@@ -252,16 +254,21 @@ export const Footer: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-400 mr-2">We accept:</span>
-              <div className="flex gap-2">
-                {["VISA", "MC", "AMEX", "PP"].map((method, index) => (
-                  <div
-                    key={index}
-                    className="bg-gray-800 px-3 py-1 rounded text-xs font-bold text-gray-400 border border-gray-700"
-                  >
-                    {method}
-                  </div>
-                ))}
+              <span className="text-sm text-gray-400 mr-2 uppercase">We accept:</span>
+              <div className="flex gap-2 flex-wrap">
+                {settings.stripeEnabled && (
+                  <>
+                    <div className="bg-gray-800 px-3 py-1 rounded text-xs font-bold text-gray-400 border border-gray-700">VISA</div>
+                    <div className="bg-gray-800 px-3 py-1 rounded text-xs font-bold text-gray-400 border border-gray-700">MC</div>
+                    <div className="bg-gray-800 px-3 py-1 rounded text-xs font-bold text-gray-400 border border-gray-700">AMEX</div>
+                  </>
+                )}
+                {settings.paypalEnabled && (
+                  <div className="bg-gray-800 px-3 py-1 rounded text-xs font-bold text-gray-400 border border-gray-700">PP</div>
+                )}
+                {settings.codEnabled && (
+                  <div className="bg-gray-800 px-3 py-1 rounded text-xs font-bold text-gray-400 border border-gray-700 uppercase">COD</div>
+                )}
               </div>
             </div>
           </div>

@@ -39,7 +39,7 @@ export const getSettings = asyncHandler(
 
         // Payment Settings
         stripeEnabled: true,
-        paypalEnabled: true,
+        paypalEnabled: false,
         codEnabled: false,
         taxRate: 10,
         includeTaxInPrices: false,

@@ -10,6 +10,9 @@ interface SystemSettings {
   storeName: string;
   storeEmail: string;
   maintenanceMode: boolean;
+  stripeEnabled: boolean;
+  paypalEnabled: boolean;
+  codEnabled: boolean;
   // Add other settings as needed
 }
 
@@ -31,6 +34,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     storeName: 'LuxeStore',
     storeEmail: 'admin@luxestore.com',
     maintenanceMode: false,
+    stripeEnabled: true,
+    paypalEnabled: false,
+    codEnabled: false,
   });
   const [loading, setLoading] = useState(true);
 
@@ -69,6 +75,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             storeName: data.data.settings.storeName || 'LuxeStore',
             storeEmail: data.data.settings.storeEmail || 'admin@luxestore.com',
             maintenanceMode: data.data.settings.maintenanceMode || false,
+            stripeEnabled: data.data.settings.stripeEnabled !== undefined ? data.data.settings.stripeEnabled : true,
+            paypalEnabled: data.data.settings.paypalEnabled !== undefined ? data.data.settings.paypalEnabled : true,
+            codEnabled: data.data.settings.codEnabled !== undefined ? data.data.settings.codEnabled : false,
           };
 
           if (isInitial && retryCount === 0) {
