@@ -9,6 +9,8 @@ export interface User {
   isEmailVerified?: boolean;
   profileImage?: string;
   twoFactorEnabled?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface AuthState {
