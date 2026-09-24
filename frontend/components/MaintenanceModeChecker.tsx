@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
@@ -13,7 +13,6 @@ export function MaintenanceModeChecker({ children }: { children: React.ReactNode
   const pathname = usePathname();
   const { user } = useSelector((state: RootState) => state.auth);
   const { settings, loading: settingsLoading } = useSettings();
-  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
     if (settingsLoading) return;
@@ -33,21 +32,7 @@ export function MaintenanceModeChecker({ children }: { children: React.ReactNode
         router.push('/');
       }
     }
-
-    setIsChecking(false);
   }, [settings, settingsLoading, pathname, user, router]);
-
-  // Show loading only on first check
-  if (isChecking && !settings.maintenanceMode) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   return <>{children}</>;
 }

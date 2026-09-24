@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 // COMPONENT
 export const HeroSection: React.FC = () => {
@@ -84,10 +85,13 @@ export const HeroSection: React.FC = () => {
         >
           {/* Background Image */}
           <div className="absolute inset-0">
-            <img
+            <Image
               src={slide.image}
               alt={slide.title}
-              className="w-full h-full object-cover"
+              fill
+              priority={index === 0}
+              className="object-cover"
+              sizes="100vw"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/30"></div>
           </div>

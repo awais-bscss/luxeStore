@@ -47,40 +47,29 @@ export default function AnalyticsPage() {
       try {
         setLoading(true);
 
-        // Fetch order statistics
-        const ordersResponse = await fetch(`${API_URL}/orders/stats/overview`, {
-          credentials: 'include',
-        });
+        // Fetch order stats, customers, and products in parallel
+        const [ordersResponse, customersResponse, productsResponse] = await Promise.all([
+          fetch(`${API_URL}/orders/stats/overview`, { credentials: 'include' }),
+          fetch(`${API_URL}/users/customers`, { credentials: 'include' }),
+          fetch(`${API_URL}/products`, { credentials: 'include' }),
+        ]);
 
-        // Fetch customer count
-        const customersResponse = await fetch(`${API_URL}/users/customers`, {
-          credentials: 'include',
-        });
+        const [ordersData, customersData, productsData] = await Promise.all([
+          ordersResponse.ok ? ordersResponse.json() : Promise.resolve(null),
+          customersResponse.ok ? customersResponse.json() : Promise.resolve(null),
+          productsResponse.ok ? productsResponse.json() : Promise.resolve(null),
+        ]);
 
-        // Fetch product count
-        const productsResponse = await fetch(`${API_URL}/products`, {
-          credentials: 'include',
-        });
-
-        if (ordersResponse.ok) {
-          const ordersData = await ordersResponse.json();
-          if (ordersData.success) {
-            setOrderStats(ordersData.data);
-          }
+        if (ordersData?.success) {
+          setOrderStats(ordersData.data);
         }
 
-        if (customersResponse.ok) {
-          const customersData = await customersResponse.json();
-          if (customersData.success) {
-            setCustomerCount(customersData.data?.pagination?.total || 0);
-          }
+        if (customersData?.success) {
+          setCustomerCount(customersData.data?.pagination?.total || 0);
         }
 
-        if (productsResponse.ok) {
-          const productsData = await productsResponse.json();
-          if (productsData.success) {
-            setProductCount(productsData.data?.pagination?.total || 0);
-          }
+        if (productsData?.success) {
+          setProductCount(productsData.data?.pagination?.total || 0);
         }
       } catch (error) {
         console.error('Error fetching analytics:', error);

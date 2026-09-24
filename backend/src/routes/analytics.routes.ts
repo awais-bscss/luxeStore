@@ -3,6 +3,9 @@ import { protect } from '../middleware/auth';
 import { requirePermission } from '../middleware/permissions';
 import { RESOURCES, ACTIONS } from '../constants';
 import { asyncHandler } from '../utils/asyncHandler';
+import orderService from '../services/order.service';
+import User from '../models/User.model';
+import Product from '../models/Product.model';
 
 const router = Router();
 
@@ -12,14 +15,21 @@ router.get(
   protect,
   requirePermission(RESOURCES.ANALYTICS, ACTIONS.READ),
   asyncHandler(async (_req: Request, res: Response) => {
+    const [orderStats, totalCustomers, totalProducts] = await Promise.all([
+      orderService.getOrderStats(),
+      User.countDocuments({ role: 'customer' }),
+      Product.countDocuments(),
+    ]);
+
     res.status(200).json({
       success: true,
       message: 'Analytics dashboard data',
       data: {
-        totalRevenue: 0,
-        totalOrders: 0,
-        totalCustomers: 0,
-        totalProducts: 0,
+        totalRevenue: orderStats.totalRevenue,
+        totalOrders: orderStats.totalOrders,
+        totalCustomers,
+        totalProducts,
+        orderStats,
       },
     });
   })

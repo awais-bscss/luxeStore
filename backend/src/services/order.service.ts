@@ -390,16 +390,25 @@ class OrderService {
   }
 
   async getOrderStats() {
-    const totalOrders = await Order.countDocuments();
-    const pendingOrders = await Order.countDocuments({ orderStatus: 'pending' });
-    const processingOrders = await Order.countDocuments({ orderStatus: 'processing' });
-    const shippedOrders = await Order.countDocuments({ orderStatus: 'shipped' });
-    const deliveredOrders = await Order.countDocuments({ orderStatus: 'delivered' });
-    const cancelledOrders = await Order.countDocuments({ orderStatus: 'cancelled' });
-
-    const totalRevenue = await Order.aggregate([
-      { $match: { orderStatus: { $ne: 'cancelled' } } },
-      { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+    const [
+      totalOrders,
+      pendingOrders,
+      processingOrders,
+      shippedOrders,
+      deliveredOrders,
+      cancelledOrders,
+      totalRevenue,
+    ] = await Promise.all([
+      Order.countDocuments(),
+      Order.countDocuments({ orderStatus: 'pending' }),
+      Order.countDocuments({ orderStatus: 'processing' }),
+      Order.countDocuments({ orderStatus: 'shipped' }),
+      Order.countDocuments({ orderStatus: 'delivered' }),
+      Order.countDocuments({ orderStatus: 'cancelled' }),
+      Order.aggregate([
+        { $match: { orderStatus: { $ne: 'cancelled' } } },
+        { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+      ]),
     ]);
 
     return {

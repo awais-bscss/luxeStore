@@ -50,9 +50,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         credentials: 'include',
       });
 
-      if (response.status === 503 && retryCount < 3) {
-        console.log(`Settings API returned 503, retrying (${retryCount + 1}/3)...`);
-        await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
+      if (response.status === 503 && retryCount < 2) {
+        console.log(`Settings API returned 503, retrying (${retryCount + 1}/2)...`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
         return fetchSettings(isInitial, retryCount + 1);
       }
 
@@ -90,9 +90,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         console.error('Failed to fetch settings, status:', response.status);
       }
     } catch (error) {
-      if (retryCount < 3) {
-        console.log(`Settings fetch error, retrying (${retryCount + 1}/3)...`, error);
-        await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
+      if (retryCount < 2) {
+        console.log(`Settings fetch error, retrying (${retryCount + 1}/2)...`, error);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
         return fetchSettings(isInitial, retryCount + 1);
       }
 
