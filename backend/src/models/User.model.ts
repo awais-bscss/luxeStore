@@ -170,6 +170,10 @@ userSchema.methods.generateAuthToken = function (): string {
   );
 };
 
+// Indexes for role-based counts/filtering and sorting
+userSchema.index({ role: 1 });
+userSchema.index({ createdAt: -1 });
+
 const User = mongoose.model<IUserDocument>('User', userSchema);
 
 export default User;

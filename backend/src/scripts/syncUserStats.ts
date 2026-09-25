@@ -1,5 +1,3 @@
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
 import mongoose from 'mongoose';
 import User from '../models/User.model';
 import Order from '../models/Order.model';

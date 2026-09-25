@@ -5,8 +5,21 @@ import SystemSettings from '../models/SystemSettings.model';
 import { UnauthorizedError, ValidationError } from '../utils/errors';
 import mongoose from 'mongoose';
 
+let cachedSettings: any = null;
+let lastSettingsFetchTime = 0;
+const SETTINGS_CACHE_TTL = 60 * 1000; // 60 seconds TTL
+
 export const getSettings = asyncHandler(
   async (_req: AuthRequest, res: Response): Promise<void> => {
+    const now = Date.now();
+    if (cachedSettings && (now - lastSettingsFetchTime < SETTINGS_CACHE_TTL)) {
+      res.status(200).json({
+        success: true,
+        data: { settings: cachedSettings },
+      });
+      return;
+    }
+
     let settings = await SystemSettings.findOne();
 
     if (!settings) {
@@ -60,6 +73,9 @@ export const getSettings = asyncHandler(
         cacheDuration: 3600,
       });
     }
+
+    cachedSettings = settings;
+    lastSettingsFetchTime = Date.now();
 
     res.status(200).json({
       success: true,
@@ -118,6 +134,9 @@ export const updateSettings = asyncHandler(
       await settings.save();
     }
 
+    cachedSettings = settings;
+    lastSettingsFetchTime = Date.now();
+
     res.status(200).json({
       success: true,
       message: 'Settings updated successfully',
@@ -137,6 +156,10 @@ export const clearCache = asyncHandler(
     }
 
     try {
+      // Invalidate in-memory settings cache
+      cachedSettings = null;
+      lastSettingsFetchTime = 0;
+
       // Clear rate limiter cache
       const { cleanupRateLimitStore } = require('../middleware/rateLimit');
       cleanupRateLimitStore();

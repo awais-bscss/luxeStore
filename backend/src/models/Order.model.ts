@@ -157,6 +157,12 @@ const orderSchema = new Schema<IOrder>(
   }
 );
 
+// Indexes for fast querying, filtering, and sorting
+orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index({ orderStatus: 1 });
+orderSchema.index({ orderNumber: 1 });
+orderSchema.index({ createdAt: -1 });
+
 // Generate order number before saving
 orderSchema.pre('save', async function (next) {
   if (!this.orderNumber) {

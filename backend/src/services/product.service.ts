@@ -81,7 +81,8 @@ class ProductService {
         .populate('createdBy', 'name email')
         .sort(sortOption)
         .skip(skip)
-        .limit(Number(limit)),
+        .limit(Number(limit))
+        .lean(),
       Product.countDocuments(query),
     ]);
 
@@ -97,13 +98,13 @@ class ProductService {
   }
 
   async getProductById(id: string, populateCreator = false) {
-    let query = Product.findById(id);
+    let query: any = Product.findById(id);
 
     if (populateCreator) {
       query = query.populate('createdBy', 'name email');
     }
 
-    const product = await query;
+    const product = await query.lean();
     if (!product) {
       throw new NotFoundError('Product not found');
     }

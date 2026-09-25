@@ -1,5 +1,3 @@
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 

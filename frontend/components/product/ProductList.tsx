@@ -15,22 +15,16 @@ import { ProductGridSkeleton } from "@/components/ui/Skeleton";
 export const ProductList: React.FC = () => {
   const { isDarkMode } = useTheme();
   const dispatch = useDispatch<AppDispatch>();
-  const { filteredProducts, isLoading } = useSelector(
+  const { products, filteredProducts, isLoading } = useSelector(
     (state: RootState) => state.products
   );
 
   useEffect(() => {
-    let isMounted = true;
-
-    // Only fetch if products list is empty to avoid redundant calls
-    if (filteredProducts.length === 0 && !isLoading) {
+    // Only fetch if initial products list is empty and not already loading
+    if (products.length === 0 && !isLoading) {
       dispatch(fetchProducts());
     }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [dispatch, filteredProducts.length, isLoading]);
+  }, [dispatch, products.length, isLoading]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [jumpDropdownOpen, setJumpDropdownOpen] = useState(false);

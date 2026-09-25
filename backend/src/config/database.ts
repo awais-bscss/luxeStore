@@ -4,8 +4,7 @@ import config from './index';
 let isConnected = false;
 
 const connectDB = async (): Promise<void> => {
-  if (isConnected) {
-    console.log('Using existing MongoDB connection');
+  if (isConnected || mongoose.connection.readyState === 1) {
     return;
   }
 
